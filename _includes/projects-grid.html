@@ -1,0 +1,139 @@
+{% comment %} site.data.projects: export D1 em build. O filtro default do Liquid NÃO substitui array vazio []. {% endcomment %}
+{% assign all_projects = site.data.projects %}
+{% if all_projects == nil or all_projects.size == 0 %}
+  {% assign all_projects = site.projects %}
+{% endif %}
+{% comment %}
+  Home: show_on_home; 5 colunas. D1: home_col 1–5 (esq.→dir.); índice coluna = home_col - 1.
+  Legado 0–4: trata-se como índice. Inválido ou vazio: round-robin por "order".
+{% endcomment %}
+{% assign home_candidates = all_projects | where_exp: "p", "p.show_on_home == true or p.show_on_home == 1" %}
+{% assign sorted_projects = home_candidates | sort: "order" %}
+{% assign col0 = "" | split: "" %}
+{% assign col1 = "" | split: "" %}
+{% assign col2 = "" | split: "" %}
+{% assign col3 = "" | split: "" %}
+{% assign col4 = "" | split: "" %}
+{% for p in sorted_projects %}
+  {% assign i = forloop.index0 %}
+  {% if p.home_col == nil or p.home_col == "" %}
+    {% assign eff = i | modulo: 5 %}
+  {% else %}
+    {% assign hc = p.home_col | plus: 0 %}
+    {% if hc >= 1 and hc <= 5 %}
+      {% assign eff = hc | minus: 1 %}
+    {% elsif hc >= 0 and hc <= 4 %}
+      {% assign eff = hc %}
+    {% else %}
+      {% assign eff = i | modulo: 5 %}
+    {% endif %}
+  {% endif %}
+  {% if eff == 0 %}{% assign col0 = col0 | push: p %}
+  {% elsif eff == 1 %}{% assign col1 = col1 | push: p %}
+  {% elsif eff == 2 %}{% assign col2 = col2 | push: p %}
+  {% elsif eff == 3 %}{% assign col3 = col3 | push: p %}
+  {% else %}{% assign col4 = col4 | push: p %}
+  {% endif %}
+{% endfor %}
+{% assign col0 = col0 | sort: "order" %}
+{% assign col1 = col1 | sort: "order" %}
+{% assign col2 = col2 | sort: "order" %}
+{% assign col3 = col3 | sort: "order" %}
+{% assign col4 = col4 | sort: "order" %}
+{% comment %} Total: {{ sorted_projects.size }} {% endcomment %}
+<div id="masonry-container" class="masonry-container">
+  <div class="projects-grid projects-grid--cols" data-total-projects="{{ sorted_projects.size }}">
+    <div class="projects-col" data-col="0" role="list">{% for project in col0 %}{% include home-project-item.html project=project dcol=0 %}{% endfor %}</div>
+    <div class="projects-col" data-col="1" role="list">{% for project in col1 %}{% include home-project-item.html project=project dcol=1 %}{% endfor %}</div>
+    <div class="projects-col" data-col="2" role="list">{% for project in col2 %}{% include home-project-item.html project=project dcol=2 %}{% endfor %}</div>
+    <div class="projects-col" data-col="3" role="list">{% for project in col3 %}{% include home-project-item.html project=project dcol=3 %}{% endfor %}</div>
+    <div class="projects-col" data-col="4" role="list">{% for project in col4 %}{% include home-project-item.html project=project dcol=4 %}{% endfor %}</div>
+  </div>
+</div>
+
+<script>
+document.addEventListener("DOMContentLoaded", () => {
+  const items = document.querySelectorAll(".project-item");
+  var videoMap = new Map();
+
+  items.forEach((item) => {
+    var videoEl = item.querySelector(".project-hover-video");
+    if (!videoEl) return;
+
+    var thumbEl = item.querySelector(".project-thumbnail");
+    var state = { loaded: false, loading: false };
+    videoMap.set(item, { videoEl: videoEl, thumbEl: thumbEl, state: state });
+
+    item.addEventListener("mouseenter", () => playVideo(videoEl, thumbEl, state));
+    item.addEventListener("mouseleave", () => hideVideo(videoEl, thumbEl));
+    item.addEventListener("focus", () => playVideo(videoEl, thumbEl, state));
+    item.addEventListener("blur", () => hideVideo(videoEl, thumbEl));
+    item.addEventListener("touchstart", () => loadVideo(videoEl, state), { once: true, passive: true });
+  });
+
+  var observer = new IntersectionObserver((entries) => {
+    entries.forEach((entry) => {
+      if (!entry.isIntersecting) return;
+      var data = videoMap.get(entry.target);
+      if (data) {
+        loadVideo(data.videoEl, data.state);
+        observer.unobserve(entry.target);
+      }
+    });
+  }, { rootMargin: "200px" });
+
+  videoMap.forEach((_data, item) => observer.observe(item));
+
+  function loadVideo(videoEl, state) {
+    if (state.loaded || state.loading) return;
+    var sourceEl = videoEl.querySelector("source");
+    if (!(sourceEl && sourceEl.src) && !videoEl.currentSrc) return;
+    state.loading = true;
+
+    if (videoEl.readyState >= 2) {
+      state.loaded = true;
+      state.loading = false;
+      return;
+    }
+
+    videoEl.addEventListener("canplay", () => {
+      state.loaded = true;
+      state.loading = false;
+    }, { once: true });
+    videoEl.addEventListener("error", () => { state.loading = false; }, { once: true });
+
+    try { videoEl.load(); } catch (_) { state.loading = false; }
+  }
+
+  function playVideo(videoEl, thumbEl, state) {
+    if (!state.loaded && !state.loading) loadVideo(videoEl, state);
+
+    if (videoEl.readyState < 2 && !state.loaded) {
+      videoEl.addEventListener("canplay", () => tryPlay(videoEl, thumbEl), { once: true });
+      return;
+    }
+    tryPlay(videoEl, thumbEl);
+  }
+
+  function tryPlay(videoEl, thumbEl) {
+    var p = videoEl.play();
+    if (p !== undefined) {
+      p.then(() => {
+        videoEl.style.opacity = "1";
+        videoEl.classList.add("playing");
+        if (thumbEl) thumbEl.style.opacity = "0";
+      }).catch(() => {
+        if (thumbEl) thumbEl.style.opacity = "1";
+      });
+    }
+  }
+
+  function hideVideo(videoEl, thumbEl) {
+    videoEl.pause();
+    videoEl.currentTime = 0;
+    videoEl.style.opacity = "0";
+    videoEl.classList.remove("playing");
+    if (thumbEl) thumbEl.style.opacity = "1";
+  }
+});
+</script>
