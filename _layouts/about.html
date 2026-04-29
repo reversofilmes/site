@@ -8,7 +8,7 @@ layout: none
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>{{ page.title }} | {{ site.title }}</title>
-  <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600&family=Poppins:wght@400;500&display=swap" rel="stylesheet" />
+  <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600&family=Poppins:wght@400;500;900&display=swap" rel="stylesheet" />
 
   {% include header.html %}
   
@@ -85,13 +85,19 @@ layout: none
       <div class="about-content-wrapper">
         <h2 class="about-section-title">Serviços</h2>
         <div class="servicos-list">
+          {% assign all_projects = site.data.projects %}
+          {% if all_projects == nil or all_projects.size == 0 %}
+            {% assign all_projects = site.projects %}
+          {% endif %}
           {% assign service_types_set = "" | split: "," %}
-          {% for project in site.projects %}
-            {% for service_type in project.service_types %}
-              {% unless service_types_set contains service_type %}
-                {% assign service_types_set = service_types_set | push: service_type %}
-              {% endunless %}
-            {% endfor %}
+          {% for project in all_projects %}
+            {% if project.service_types %}
+              {% for service_type in project.service_types %}
+                {% unless service_types_set contains service_type %}
+                  {% assign service_types_set = service_types_set | push: service_type %}
+                {% endunless %}
+              {% endfor %}
+            {% endif %}
           {% endfor %}
           {% assign sorted_services = service_types_set | sort %}
           {% for service_type in sorted_services %}
@@ -106,11 +112,11 @@ layout: none
       </div>
     </section>
   </div>
-  
+
   {% include bottom-nav.html %}
   
   <!-- GSAP for bottom nav animations -->
-  <script src="https://cdn.jsdelivr.net/npm/gsap@3/dist/gsap.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/gsap@3.14.2/dist/gsap.min.js" crossorigin="anonymous"></script>
   <script src="{{ '/assets/js/page-transitions.js' | relative_url }}"></script>
   <script src="{{ '/assets/js/bottom-nav.js' | relative_url }}"></script>
 </body>

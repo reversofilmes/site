@@ -7,13 +7,15 @@
   z-index: 2000;
   background-color: rgba(0, 0, 0, 0.95);
   backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
   border-top: 1px solid rgba(255, 0, 0, 0.3);
   padding: 1rem 0;
   pointer-events: none;
-  /* Ensure menu always stays visible during page transitions */
   opacity: 1 !important;
   visibility: visible !important;
   display: block !important;
+  -webkit-user-select: none;
+  user-select: none;
 }
 
 .bottom-nav-container {
@@ -33,21 +35,21 @@
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 0.5rem;
+  justify-content: flex-end;
+  gap: 0.35rem;
   text-decoration: none;
   color: #ff0000;
-  transition: all 0.3s ease;
+  transition: color 0.3s ease;
   position: relative;
-  padding: 0.5rem;
+  padding: 0.35rem 0.25rem;
   overflow: visible;
-  /* Prevent text selection on desktop too */
-  -webkit-user-select: none;
-  -moz-user-select: none;
-  -ms-user-select: none;
-  user-select: none;
+  -webkit-tap-highlight-color: transparent;
 }
 
-/* Center icon is bigger - styles applied to child elements */
+.bottom-nav-item::after {
+  content: none;
+}
+
 .bottom-nav-item-center .bottom-nav-icon {
   width: 60px;
   height: 60px;
@@ -68,6 +70,16 @@
   transition: transform 0.3s ease;
 }
 
+.bottom-nav-icon .fa-solid {
+  font-family: "Font Awesome 6 Free", sans-serif;
+  font-weight: 900;
+}
+
+.bottom-nav-icon .fa-brands {
+  font-family: "Font Awesome 6 Brands", sans-serif;
+  font-weight: 400;
+}
+
 .bottom-nav-logo {
   width: 100%;
   height: auto;
@@ -77,30 +89,31 @@
 
 .bottom-nav-label {
   font-family: 'Montserrat', sans-serif;
-  font-size: 0.9rem;
+  font-size: 0.72rem;
   font-weight: 500;
   text-transform: uppercase;
   letter-spacing: 0.05em;
-  opacity: 0;
-  transform: translateY(10px);
-  transition: opacity 0.3s ease, transform 0.3s ease;
+  opacity: 1;
+  order: -1;
   white-space: nowrap;
-  position: absolute;
-  top: -35px;
-  left: 50%;
-  transform: translateX(-50%) translateY(10px);
+  position: relative;
+  left: auto;
+  top: auto;
+  transform: none;
   pointer-events: none;
-  background-color: black;
-  padding: 0.25rem 0.5rem;
-  max-width: 120px;
+  background: none;
+  padding: 0;
+  max-width: 100%;
+  text-align: center;
   overflow: hidden;
   text-overflow: ellipsis;
+  line-height: 1.15;
+  transition: color 0.3s ease;
 }
 
 .bottom-nav-item:hover .bottom-nav-label,
 .bottom-nav-item:focus .bottom-nav-label {
-  opacity: 1;
-  transform: translateX(-50%) translateY(0);
+  color: #ff6666;
 }
 
 .bottom-nav-item:hover .bottom-nav-icon,
@@ -114,78 +127,53 @@
   color: #ff3333;
 }
 
-/* Mobile: App-style navigation */
+/* Mobile */
 @media (max-width: 768px) {
   .bottom-nav {
-    padding: 1rem 0;
-    /* Prevent text selection on entire nav */
-    -webkit-user-select: none;
-    -moz-user-select: none;
-    -ms-user-select: none;
-    user-select: none;
-    -webkit-tap-highlight-color: transparent;
-    -webkit-touch-callout: none;
+    padding: 0.65rem 0 0.85rem;
+    backdrop-filter: none;
+    -webkit-backdrop-filter: none;
   }
-  
+
   .bottom-nav-container {
-    gap: 0.75rem;
-    padding: 0 0.5rem;
+    gap: 0.35rem;
+    padding: 0 0.35rem;
     justify-content: space-around;
-    /* Prevent text selection */
-    -webkit-user-select: none;
-    -moz-user-select: none;
-    -ms-user-select: none;
-    user-select: none;
+    align-items: flex-end;
   }
-  
+
   .bottom-nav-icon {
-    width: 45px;
-    height: 45px;
-    font-size: 1.5rem;
+    width: 40px;
+    height: 40px;
+    font-size: 1.35rem;
   }
-  
+
   .bottom-nav-label {
-    display: none !important;
-    visibility: hidden !important;
-    opacity: 0 !important;
+    font-size: 0.5rem;
+    letter-spacing: 0.02em;
+    white-space: normal;
+    max-width: 100%;
+    line-height: 1.1;
+    min-height: 2.2em;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
   }
-  
+
   .bottom-nav-item {
-    gap: 0.25rem;
-    padding: 0.25rem;
+    gap: 0.2rem;
+    padding: 0.15rem 0.1rem;
     flex: 1;
     min-width: 0;
-    /* Prevent text selection and tap highlight */
-    -webkit-user-select: none;
-    -moz-user-select: none;
-    -ms-user-select: none;
-    user-select: none;
-    -webkit-tap-highlight-color: transparent;
-    -webkit-touch-callout: none;
   }
-  
-  .bottom-nav-item * {
-    /* Prevent text selection on all child elements */
-    -webkit-user-select: none;
-    -moz-user-select: none;
-    -ms-user-select: none;
-    user-select: none;
-    -webkit-tap-highlight-color: transparent;
-    -webkit-touch-callout: none;
-  }
-  
-  .bottom-nav-icon {
-    /* Prevent tap highlight on icons */
-    -webkit-tap-highlight-color: transparent;
-    -webkit-touch-callout: none;
-  }
-  
+
   .bottom-nav-item-center .bottom-nav-icon {
     width: 50px;
     height: 50px;
     font-size: 1.75rem;
   }
-  
+
   .bottom-nav-item-center .bottom-nav-logo {
     max-height: 50px;
   }
@@ -193,50 +181,48 @@
 
 @media (max-width: 480px) {
   .bottom-nav {
-    padding: 0.875rem 0;
+    padding: 0.55rem 0 0.75rem;
   }
-  
+
   .bottom-nav-container {
-    gap: 0.5rem;
-    padding: 0 0.25rem;
+    gap: 0.25rem;
+    padding: 0 0.2rem;
   }
-  
+
   .bottom-nav-icon {
-    width: 40px;
-    height: 40px;
-    font-size: 1.25rem;
+    width: 36px;
+    height: 36px;
+    font-size: 1.15rem;
   }
-  
+
   .bottom-nav-label {
-    display: none !important;
-    visibility: hidden !important;
-    opacity: 0 !important;
+    font-size: 0.45rem;
   }
-  
+
   .bottom-nav-item-center .bottom-nav-icon {
     width: 45px;
     height: 45px;
     font-size: 1.5rem;
   }
-  
+
   .bottom-nav-item-center .bottom-nav-logo {
     max-height: 45px;
   }
 }
 
-/* Ensure bottom nav doesn't overlap content */
-body {
-  padding-bottom: 100px;
+/* Espaço para a bottom-nav — Home (.is-home) usa menu lateral, sem barra inferior */
+body:not(.is-home) {
+  padding-bottom: 120px;
 }
 
 @media (max-width: 768px) {
-  body {
-    padding-bottom: 110px;
+  body:not(.is-home) {
+    padding-bottom: 140px;
   }
 }
 
 @media (max-width: 480px) {
-  body {
-    padding-bottom: 100px;
+  body:not(.is-home) {
+    padding-bottom: 130px;
   }
 }

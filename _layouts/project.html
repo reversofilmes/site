@@ -8,7 +8,7 @@ layout: none
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>{{ page.title }} | {{ site.title }}</title>
-  <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600&family=Poppins:wght@400;500&display=swap" rel="stylesheet" />
+  <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600&family=Poppins:wght@400;500;900&display=swap" rel="stylesheet" />
 
   {% include header.html %}
   
@@ -41,46 +41,48 @@ layout: none
       {% endif %}
     </header>
 
-    <!-- Thumbnail Image -->
-    {% if page.thumbnail %}
-      <section class="project-thumbnail-section">
-        <img 
-          src="{{ page.thumbnail | relative_url }}" 
-          alt="{{ page.title }}"
-          class="project-thumbnail-image"
-          loading="eager"
-        />
+    {% if page.description and page.description != "" %}
+      <section class="project-description-section">
+        <div class="project-description-inner markdown-body">
+          {{ page.description | markdownify }}
+        </div>
       </section>
     {% endif %}
 
     <!-- Content -->
     <main class="project-content">
-      <!-- YouTube Video -->
-      {% if page.youtube_url %}
+      <!-- YouTube -->
+      {% assign _yt = page.youtube_url | default: '' | strip %}
+      {% if _yt != '' %}
+        {% include project-youtube-id.html url=_yt %}
+        {% if youtube_video_id != '' %}
         <section class="project-video-section">
           <h2 class="section-title">Vídeo</h2>
           <div class="video-container">
-            {% assign youtube_id = page.youtube_url | replace: 'https://www.youtube.com/watch?v=', '' | replace: 'https://youtube.com/watch?v=', '' | replace: 'https://youtu.be/', '' | replace: 'https://www.youtu.be/', '' | split: '&' | first %}
-            <iframe 
-              src="https://www.youtube.com/embed/{{ youtube_id }}?rel=0" 
-              frameborder="0" 
-              allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" 
+            <iframe
+              src="https://www.youtube.com/embed/{{ youtube_video_id }}?rel=0&modestbranding=1&playsinline=1"
+              title="{{ page.title | escape }} — vídeo no YouTube"
+              frameborder="0"
+              allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
               allowfullscreen
+              referrerpolicy="strict-origin-when-cross-origin"
               class="youtube-embed"
-              loading="lazy"
             ></iframe>
           </div>
         </section>
+        {% endif %}
       {% endif %}
 
-      <!-- PixieSet Gallery -->
-      {% if page.pixieset_url %}
+      <!-- Pixieset -->
+      {% assign _px = page.pixieset_url | default: '' | strip %}
+      {% assign _pxl = _px | downcase %}
+      {% if _px != '' and _pxl contains 'pixieset.com' %}
         <section class="project-gallery-section">
           <h2 class="section-title">Galeria de Fotos</h2>
           <div class="pixieset-wrapper">
             <div class="pixieset-scrollable-container">
               <iframe 
-                src="{{ page.pixieset_url }}" 
+                src="{{ _px }}" 
                 frameborder="0" 
                 allowfullscreen
                 class="pixieset-embed"
@@ -89,19 +91,25 @@ layout: none
             </div>
           </div>
           <div class="pixieset-link-wrapper">
-            <a href="{{ page.pixieset_url }}" target="_blank" rel="noopener" class="pixieset-external-link">
+            <a href="{{ _px }}" target="_blank" rel="noopener" class="pixieset-external-link">
               <i class="fa-solid fa-external-link"></i> Abrir galeria completa em nova aba
             </a>
           </div>
         </section>
       {% endif %}
+
+      {% if content != "" %}
+        <section class="project-body-section project-markdown-body">
+          {{ content }}
+        </section>
+      {% endif %}
     </main>
   </div>
-  
+
   {% include bottom-nav.html %}
   
   <!-- GSAP for bottom nav animations -->
-  <script src="https://cdn.jsdelivr.net/npm/gsap@3/dist/gsap.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/gsap@3.14.2/dist/gsap.min.js" crossorigin="anonymous"></script>
   <script src="{{ '/assets/js/page-transitions.js' | relative_url }}"></script>
   <script src="{{ '/assets/js/bottom-nav.js' | relative_url }}"></script>
 </body>

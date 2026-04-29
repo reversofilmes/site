@@ -1,374 +1,139 @@
-{% assign home_projects = site.projects | where: "show_on_home", true %}
-{% comment %} Sort by home_order (ascending), fallback to order, then date {% endcomment %}
-{% assign sorted_projects = home_projects | sort: "date_mmddyyyy" | reverse %}
-{% assign sorted_projects = sorted_projects | sort: "order" %}
-{% assign sorted_projects = sorted_projects | sort: "home_order" %}
-{% comment %} Total projects to display: {{ sorted_projects.size }} {% endcomment %}
+{% comment %} site.data.projects: export D1 em build. O filtro default do Liquid NÃO substitui array vazio []. {% endcomment %}
+{% assign all_projects = site.data.projects %}
+{% if all_projects == nil or all_projects.size == 0 %}
+  {% assign all_projects = site.projects %}
+{% endif %}
+{% comment %}
+  Home: show_on_home; 5 colunas. D1: home_col 1–5 (esq.→dir.); índice coluna = home_col - 1.
+  Legado 0–4: trata-se como índice. Inválido ou vazio: round-robin por "order".
+{% endcomment %}
+{% assign home_candidates = all_projects | where_exp: "p", "p.show_on_home == true or p.show_on_home == 1" %}
+{% assign sorted_projects = home_candidates | sort: "order" %}
+{% assign col0 = "" | split: "" %}
+{% assign col1 = "" | split: "" %}
+{% assign col2 = "" | split: "" %}
+{% assign col3 = "" | split: "" %}
+{% assign col4 = "" | split: "" %}
+{% for p in sorted_projects %}
+  {% assign i = forloop.index0 %}
+  {% if p.home_col == nil or p.home_col == "" %}
+    {% assign eff = i | modulo: 5 %}
+  {% else %}
+    {% assign hc = p.home_col | plus: 0 %}
+    {% if hc >= 1 and hc <= 5 %}
+      {% assign eff = hc | minus: 1 %}
+    {% elsif hc >= 0 and hc <= 4 %}
+      {% assign eff = hc %}
+    {% else %}
+      {% assign eff = i | modulo: 5 %}
+    {% endif %}
+  {% endif %}
+  {% if eff == 0 %}{% assign col0 = col0 | push: p %}
+  {% elsif eff == 1 %}{% assign col1 = col1 | push: p %}
+  {% elsif eff == 2 %}{% assign col2 = col2 | push: p %}
+  {% elsif eff == 3 %}{% assign col3 = col3 | push: p %}
+  {% else %}{% assign col4 = col4 | push: p %}
+  {% endif %}
+{% endfor %}
+{% assign col0 = col0 | sort: "order" %}
+{% assign col1 = col1 | sort: "order" %}
+{% assign col2 = col2 | sort: "order" %}
+{% assign col3 = col3 | sort: "order" %}
+{% assign col4 = col4 | sort: "order" %}
+{% comment %} Total: {{ sorted_projects.size }} {% endcomment %}
 <div id="masonry-container" class="masonry-container">
-  <div class="projects-grid" data-total-projects="{{ sorted_projects.size }}">
-    {% for project in sorted_projects %}
-      <a href="{{ project.url | relative_url }}" class="project-item" aria-label="{{ project.title }}" data-project-title="{{ project.title }}" data-size="{{ project.home_size | default: '1x1' }}" data-home-order="{{ project.home_order | default: 999 }}">
-      <div class="project-thumbnail-container">
-        {% if project.hover_preview %}
-          <video 
-            class="project-hover-video" 
-            muted 
-            playsinline 
-            loop 
-            preload="metadata"
-            poster="{{ project.thumbnail | relative_url }}"
-            webkit-playsinline="true">
-            <source src="{{ project.hover_preview | relative_url }}" type="video/mp4">
-          </video>
-        {% endif %}
-        <img 
-          src="{{ project.thumbnail | relative_url }}" 
-          alt="{{ project.title }}"
-          class="project-thumbnail"
-          loading="lazy"
-        />
-      </div>
-      <div class="project-overlay">
-        <h3 class="project-title">{{ project.title }}</h3>
-        {% if project.client %}
-          <p class="project-client">{{ project.client }}</p>
-        {% endif %}
-      </div>
-      </a>
-    {% endfor %}
+  <div class="projects-grid projects-grid--cols" data-total-projects="{{ sorted_projects.size }}">
+    <div class="projects-col" data-col="0" role="list">{% for project in col0 %}{% include home-project-item.html project=project dcol=0 %}{% endfor %}</div>
+    <div class="projects-col" data-col="1" role="list">{% for project in col1 %}{% include home-project-item.html project=project dcol=1 %}{% endfor %}</div>
+    <div class="projects-col" data-col="2" role="list">{% for project in col2 %}{% include home-project-item.html project=project dcol=2 %}{% endfor %}</div>
+    <div class="projects-col" data-col="3" role="list">{% for project in col3 %}{% include home-project-item.html project=project dcol=3 %}{% endfor %}</div>
+    <div class="projects-col" data-col="4" role="list">{% for project in col4 %}{% include home-project-item.html project=project dcol=4 %}{% endfor %}</div>
   </div>
 </div>
 
 <script>
-// Video hover functionality is preserved below
 document.addEventListener("DOMContentLoaded", () => {
-  const projectItems = document.querySelectorAll(".project-item");
-  
-  // Hover video functionality - each video handled independently
-  console.log('=== Initializing video hover functionality ===');
-  console.log('Total project items:', projectItems.length);
-  
-  projectItems.forEach((item, index) => {
-    const video = item.querySelector(".project-hover-video");
-    const thumbnail = item.querySelector(".project-thumbnail");
-    const projectTitle = item.getAttribute("data-project-title") || `Project ${index + 1}`;
-    
-    if (!video) {
-      console.log(`[${projectTitle}] No video element found`);
+  const items = document.querySelectorAll(".project-item");
+  var videoMap = new Map();
+
+  items.forEach((item) => {
+    var videoEl = item.querySelector(".project-hover-video");
+    if (!videoEl) return;
+
+    var thumbEl = item.querySelector(".project-thumbnail");
+    var state = { loaded: false, loading: false };
+    videoMap.set(item, { videoEl: videoEl, thumbEl: thumbEl, state: state });
+
+    item.addEventListener("mouseenter", () => playVideo(videoEl, thumbEl, state));
+    item.addEventListener("mouseleave", () => hideVideo(videoEl, thumbEl));
+    item.addEventListener("focus", () => playVideo(videoEl, thumbEl, state));
+    item.addEventListener("blur", () => hideVideo(videoEl, thumbEl));
+    item.addEventListener("touchstart", () => loadVideo(videoEl, state), { once: true, passive: true });
+  });
+
+  var observer = new IntersectionObserver((entries) => {
+    entries.forEach((entry) => {
+      if (!entry.isIntersecting) return;
+      var data = videoMap.get(entry.target);
+      if (data) {
+        loadVideo(data.videoEl, data.state);
+        observer.unobserve(entry.target);
+      }
+    });
+  }, { rootMargin: "200px" });
+
+  videoMap.forEach((_data, item) => observer.observe(item));
+
+  function loadVideo(videoEl, state) {
+    if (state.loaded || state.loading) return;
+    var sourceEl = videoEl.querySelector("source");
+    if (!(sourceEl && sourceEl.src) && !videoEl.currentSrc) return;
+    state.loading = true;
+
+    if (videoEl.readyState >= 2) {
+      state.loaded = true;
+      state.loading = false;
       return;
     }
-    
-    const sourceElement = video.querySelector('source');
-    const videoSrc = sourceElement?.src || video.src || video.currentSrc;
-    console.log(`[${projectTitle}] Video found`);
-    console.log(`[${projectTitle}] Source element:`, sourceElement);
-    console.log(`[${projectTitle}] Source src:`, sourceElement?.src);
-    console.log(`[${projectTitle}] Video src:`, video.src);
-    console.log(`[${projectTitle}] Video currentSrc:`, video.currentSrc);
-    console.log(`[${projectTitle}] Initial readyState:`, video.readyState);
-    console.log(`[${projectTitle}] Video networkState:`, video.networkState);
-    
-    // Create isolated state for each video using a closure
-    (function(videoEl, thumbEl, itemEl, title) {
-      let isLoaded = false;
-      let isLoading = false;
-      let canPlayHandler = null;
-      let errorHandler = null;
-      
-      // Clean up function
-      const cleanup = () => {
-        if (canPlayHandler) {
-          videoEl.removeEventListener("canplay", canPlayHandler);
-          canPlayHandler = null;
-        }
-        if (errorHandler) {
-          videoEl.removeEventListener("error", errorHandler);
-          errorHandler = null;
-        }
-      };
-      
-      // Load video function
-      const loadVideo = () => {
-        console.log(`[${title}] loadVideo() called - isLoaded: ${isLoaded}, isLoading: ${isLoading}, readyState: ${videoEl.readyState}`);
-        console.log(`[${title}] Video currentSrc:`, videoEl.currentSrc || 'empty');
-        console.log(`[${title}] Video networkState:`, videoEl.networkState);
-        
-        if (isLoaded || isLoading) {
-          console.log(`[${title}] loadVideo() skipped - already loaded or loading`);
-          return;
-        }
-        
-        // Check if video has a valid source
-        const sourceEl = videoEl.querySelector('source');
-        const hasSource = sourceEl && sourceEl.src;
-        const hasCurrentSrc = videoEl.currentSrc;
-        
-        if (!hasSource && !hasCurrentSrc) {
-          console.error(`[${title}] ❌ No video source found!`);
-          console.error(`[${title}] Source element:`, sourceEl);
-          console.error(`[${title}] Source src:`, sourceEl?.src);
-          return;
-        }
-        
-        isLoading = true;
-        console.log(`[${title}] Starting video load...`);
-        
-        // Check if video already has data
-        if (videoEl.readyState >= 2) {
-          isLoaded = true;
-          isLoading = false;
-          videoEl.setAttribute("data-ready", "true");
-          console.log(`[${title}] Video already has data (readyState: ${videoEl.readyState})`);
-          return;
-        }
-        
-        // Set up event handlers
-        canPlayHandler = () => {
-          isLoaded = true;
-          isLoading = false;
-          videoEl.setAttribute("data-ready", "true");
-          console.log(`[${title}] ✅ Video can play! readyState: ${videoEl.readyState}, duration: ${videoEl.duration}s`);
-          cleanup();
-        };
-        
-        errorHandler = (e) => {
-          isLoading = false;
-          console.error(`[${title}] ❌ Video failed to load`);
-          console.error(`[${title}] Video src:`, videoEl.src);
-          console.error(`[${title}] Video currentSrc:`, videoEl.currentSrc);
-          console.error(`[${title}] Network state:`, videoEl.networkState);
-          console.error(`[${title}] Ready state:`, videoEl.readyState);
-          if (videoEl.error) {
-            console.error(`[${title}] Video error code:`, videoEl.error.code);
-            console.error(`[${title}] Video error message:`, videoEl.error.message);
-            // Error codes: 1=MEDIA_ERR_ABORTED, 2=MEDIA_ERR_NETWORK, 3=MEDIA_ERR_DECODE, 4=MEDIA_ERR_SRC_NOT_SUPPORTED
-            const errorMessages = {
-              1: 'MEDIA_ERR_ABORTED - The user aborted the loading',
-              2: 'MEDIA_ERR_NETWORK - A network error occurred',
-              3: 'MEDIA_ERR_DECODE - The video could not be decoded',
-              4: 'MEDIA_ERR_SRC_NOT_SUPPORTED - The video source is not supported'
-            };
-            console.error(`[${title}] Error meaning:`, errorMessages[videoEl.error.code] || 'Unknown error');
-          }
-          console.error(`[${title}] Error event:`, e);
-          cleanup();
-        };
-        
-        // Add additional event listeners for debugging
-        videoEl.addEventListener("loadstart", () => {
-          console.log(`[${title}] 📥 loadstart event - readyState: ${videoEl.readyState}, networkState: ${videoEl.networkState}`);
-          console.log(`[${title}] currentSrc:`, videoEl.currentSrc);
-        }, { once: true });
-        
-        videoEl.addEventListener("progress", () => {
-          console.log(`[${title}] 📈 progress - readyState: ${videoEl.readyState}, buffered: ${videoEl.buffered.length} ranges`);
-        });
-        
-        videoEl.addEventListener("loadedmetadata", () => {
-          console.log(`[${title}] 📊 loadedmetadata - readyState: ${videoEl.readyState}, duration: ${videoEl.duration}s`);
-          console.log(`[${title}] currentSrc:`, videoEl.currentSrc);
-        }, { once: true });
-        
-        videoEl.addEventListener("loadeddata", () => {
-          console.log(`[${title}] 📦 loadeddata - readyState: ${videoEl.readyState}`);
-        }, { once: true });
-        
-        videoEl.addEventListener("canplaythrough", () => {
-          console.log(`[${title}] 🎯 canplaythrough - readyState: ${videoEl.readyState}`);
-        }, { once: true });
-        
-        videoEl.addEventListener("canplay", canPlayHandler, { once: true });
-        videoEl.addEventListener("error", errorHandler, { once: true });
-        
-        // Force load
-        try {
-          console.log(`[${title}] Calling video.load()...`);
-          console.log(`[${title}] Before load - networkState: ${videoEl.networkState}, readyState: ${videoEl.readyState}`);
-          console.log(`[${title}] Video src attribute:`, videoEl.getAttribute('src') || 'none');
-          console.log(`[${title}] Video currentSrc:`, videoEl.currentSrc || 'empty');
-          console.log(`[${title}] Source elements:`, Array.from(videoEl.querySelectorAll('source')).map(s => ({
-            src: s.src,
-            type: s.type,
-            hasSrc: !!s.src
-          })));
-          
-          // If using source tag, ensure it's properly set
-          if (sourceEl && !videoEl.currentSrc) {
-            console.log(`[${title}] Source element found but currentSrc is empty, checking source src...`);
-            if (sourceEl.src) {
-              console.log(`[${title}] Source has src:`, sourceEl.src);
-            } else {
-              console.error(`[${title}] ❌ Source element has no src!`);
-              console.error(`[${title}] Source element attributes:`, Array.from(sourceEl.attributes).map(a => `${a.name}="${a.value}"`));
-            }
-          }
-          
-          videoEl.load();
-          console.log(`[${title}] video.load() called successfully`);
-          console.log(`[${title}] Immediately after load - networkState: ${videoEl.networkState}, readyState: ${videoEl.readyState}`);
-          
-          // Check if load actually started
-          setTimeout(() => {
-            console.log(`[${title}] 500ms after load - networkState: ${videoEl.networkState}, readyState: ${videoEl.readyState}`);
-            console.log(`[${title}] currentSrc:`, videoEl.currentSrc || 'still empty');
-            if (videoEl.networkState === 3) { // NETWORK_NO_SOURCE
-              console.error(`[${title}] ❌ Network error: No source found!`);
-              console.error(`[${title}] Video src:`, videoEl.src);
-              console.error(`[${title}] Video currentSrc:`, videoEl.currentSrc);
-              console.error(`[${title}] Source elements:`, videoEl.querySelectorAll('source'));
-              isLoading = false;
-            } else if (videoEl.networkState === 2) { // NETWORK_LOADING
-              console.log(`[${title}] ✅ Video is loading (networkState: 2)`);
-            }
-          }, 500);
-          
-          // Check again after 2 seconds
-          setTimeout(() => {
-            if (!isLoaded && isLoading) {
-              console.warn(`[${title}] ⏱️ Still loading after 2 seconds - networkState: ${videoEl.networkState}, readyState: ${videoEl.readyState}`);
-              console.warn(`[${title}] currentSrc:`, videoEl.currentSrc || 'still empty');
-              if (videoEl.error) {
-                console.error(`[${title}] Video error detected:`, videoEl.error);
-              }
-            }
-          }, 2000);
-        } catch (e) {
-          console.error(`[${title}] ❌ Error calling video.load():`, e);
-          isLoading = false;
-          cleanup();
-        }
-      };
-      
-      // Play video function
-      const playVideo = () => {
-        console.log(`[${title}] 🖱️ playVideo() called - isLoaded: ${isLoaded}, isLoading: ${isLoading}, readyState: ${videoEl.readyState}`);
-        
-        // Load if not already loaded
-        if (!isLoaded && !isLoading) {
-          console.log(`[${title}] Video not loaded, calling loadVideo()...`);
-          loadVideo();
-        }
-        
-        // Wait for video to be ready if needed
-        if (!isLoaded) {
-          console.log(`[${title}] Waiting for video to be ready...`);
-          const waitForReady = () => {
-            if (videoEl.readyState >= 2 || isLoaded) {
-              console.log(`[${title}] Video ready, attempting to play...`);
-              tryPlay();
-            } else {
-              console.log(`[${title}] Video not ready yet (readyState: ${videoEl.readyState}), waiting for canplay event...`);
-              const readyHandler = () => {
-                console.log(`[${title}] canplay event received, attempting to play...`);
-                videoEl.removeEventListener("canplay", readyHandler);
-                tryPlay();
-              };
-              videoEl.addEventListener("canplay", readyHandler, { once: true });
-              
-              // Timeout after 2 seconds
-              setTimeout(() => {
-                if (!isLoaded) {
-                  console.warn(`[${title}] ⏱️ Timeout waiting for video to be ready`);
-                  videoEl.removeEventListener("canplay", readyHandler);
-                  if (thumbEl) thumbEl.style.opacity = "1";
-                }
-              }, 2000);
-            }
-          };
-          
-          waitForReady();
-        } else {
-          console.log(`[${title}] Video already loaded, attempting to play immediately...`);
-          tryPlay();
-        }
-        
-        function tryPlay() {
-          console.log(`[${title}] 🎬 tryPlay() - readyState: ${videoEl.readyState}, paused: ${videoEl.paused}, currentTime: ${videoEl.currentTime}`);
-          
-          const playPromise = videoEl.play();
-          
-          if (playPromise !== undefined) {
-            console.log(`[${title}] play() promise returned`);
-            playPromise
-              .then(() => {
-                console.log(`[${title}] ✅ Video playing successfully!`);
-                videoEl.style.opacity = "1";
-                videoEl.classList.add("playing");
-                if (thumbEl) thumbEl.style.opacity = "0";
-              })
-              .catch((error) => {
-                console.error(`[${title}] ❌ First play() attempt failed:`, error);
-                console.error(`[${title}] Error details:`, error.message || error);
-                // Play failed, try once more after a brief delay
-                setTimeout(() => {
-                  console.log(`[${title}] Retrying play() after delay...`);
-                  videoEl.play()
-                    .then(() => {
-                      console.log(`[${title}] ✅ Video playing on retry!`);
-                      videoEl.style.opacity = "1";
-                      videoEl.classList.add("playing");
-                      if (thumbEl) thumbEl.style.opacity = "0";
-                    })
-                    .catch((retryError) => {
-                      console.error(`[${title}] ❌ Retry play() also failed:`, retryError);
-                      // Final fallback - show thumbnail
-                      if (thumbEl) thumbEl.style.opacity = "1";
-                    });
-                }, 200);
-              });
-          } else {
-            console.warn(`[${title}] ⚠️ play() returned undefined`);
-          }
-        }
-      };
-      
-      // Hide video function
-      const hideVideo = () => {
-        console.log(`[${title}] 🖱️ hideVideo() called`);
-        videoEl.pause();
-        videoEl.currentTime = 0;
-        videoEl.style.opacity = "0";
-        videoEl.classList.remove("playing");
+
+    videoEl.addEventListener("canplay", () => {
+      state.loaded = true;
+      state.loading = false;
+    }, { once: true });
+    videoEl.addEventListener("error", () => { state.loading = false; }, { once: true });
+
+    try { videoEl.load(); } catch (_) { state.loading = false; }
+  }
+
+  function playVideo(videoEl, thumbEl, state) {
+    if (!state.loaded && !state.loading) loadVideo(videoEl, state);
+
+    if (videoEl.readyState < 2 && !state.loaded) {
+      videoEl.addEventListener("canplay", () => tryPlay(videoEl, thumbEl), { once: true });
+      return;
+    }
+    tryPlay(videoEl, thumbEl);
+  }
+
+  function tryPlay(videoEl, thumbEl) {
+    var p = videoEl.play();
+    if (p !== undefined) {
+      p.then(() => {
+        videoEl.style.opacity = "1";
+        videoEl.classList.add("playing");
+        if (thumbEl) thumbEl.style.opacity = "0";
+      }).catch(() => {
         if (thumbEl) thumbEl.style.opacity = "1";
-      };
-      
-      // Event listeners
-      itemEl.addEventListener("mouseenter", playVideo);
-      itemEl.addEventListener("mouseleave", hideVideo);
-      itemEl.addEventListener("focus", playVideo);
-      itemEl.addEventListener("blur", hideVideo);
-      
-      // Preload video when item comes into view
-      const observer = new IntersectionObserver((entries) => {
-        entries.forEach(entry => {
-          if (entry.isIntersecting) {
-            console.log(`[${title}] 👁️ Item entered viewport, preloading video...`);
-            loadVideo();
-            observer.unobserve(itemEl);
-          }
-        });
-      }, {
-        rootMargin: "200px"
       });
-      
-      observer.observe(itemEl);
-      console.log(`[${title}] IntersectionObserver set up`);
-      
-      // Also preload on touch for mobile
-      itemEl.addEventListener("touchstart", () => {
-        console.log(`[${title}] 📱 Touch detected, preloading video...`);
-        loadVideo();
-      }, { once: true, passive: true });
-      
-      console.log(`[${title}] ✅ Video hover handlers initialized`);
-      
-    })(video, thumbnail, item, projectTitle);
-  });
-  
-  // Summary
-  const videosFound = document.querySelectorAll(".project-hover-video").length;
-  console.log('=== Video initialization complete ===');
-  console.log(`Total videos found: ${videosFound}`);
-  console.log('Hover over project items to see video loading/playing logs');
+    }
+  }
+
+  function hideVideo(videoEl, thumbEl) {
+    videoEl.pause();
+    videoEl.currentTime = 0;
+    videoEl.style.opacity = "0";
+    videoEl.classList.remove("playing");
+    if (thumbEl) thumbEl.style.opacity = "1";
+  }
 });
 </script>

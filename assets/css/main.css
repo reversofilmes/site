@@ -13,7 +13,7 @@ body {
 }
 
 /* Prevent flicker - hide content until transition script runs */
-body:not(.page-loaded) > *:not(.bottom-nav):not(script):not(link):not(style):not(meta):not(.intro-text-container) {
+body:not(.page-loaded) > *:not(.bottom-nav):not(script):not(link):not(style):not(meta):not(.home-nav):not(.home-hero):not(#home-below) {
   opacity: 0 !important;
   visibility: hidden !important;
   transform: translateY(20px) scale(0.98) !important;
@@ -253,20 +253,7 @@ html {
   }
 }
 
-/* Body layout for home page with projects grid */
-body .projects-grid {
-  position: relative;
-  width: 100%;
-  min-height: 100vh;
-  pointer-events: none;
-  opacity: 0;
-  transition: opacity 1s ease-in-out;
-}
-
-body .projects-grid.visible {
-  pointer-events: auto;
-  opacity: 1;
-}
+/* projects-grid: hidden until intro reveals it (.visible added by JS) */
 
 .logo-container {
   flex: 1;
@@ -476,6 +463,8 @@ a:hover::after {
   overflow-x: hidden;
   box-sizing: border-box;
   pointer-events: none;
+  /* Margem lateral = GUTTER (14) em masonry-init.js; respiro antes do rodapé */
+  padding: 0 14px clamp(3.5rem, 8vw, 6.5rem);
 }
 
 .masonry-container.grid-enabled {
@@ -487,48 +476,55 @@ a:hover::after {
   max-width: 100%;
   min-height: 100vh;
   position: relative;
-  opacity: 0;
-  transition: opacity 0.3s ease;
-  box-sizing: border-box;
-  pointer-events: none;
-}
-
-.projects-grid.visible {
   opacity: 1;
+  box-sizing: border-box;
   pointer-events: auto;
 }
 
+/* 5 colunas empilhadas (sem Packery) — vãos inexistentes; gap = espaçamento H/V */
+.projects-grid--cols {
+  display: grid;
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  align-items: start;
+  gap: 14px;
+  min-height: 0;
+}
+
+.projects-col {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  min-width: 0;
+  width: 100%;
+}
+
 .project-item {
-  position: absolute;
+  position: relative;
   display: block;
-  /* Width will be set by JavaScript based on data-size */
+  flex: 0 0 auto;
+  width: 100%;
+  /* altura/ largura afinadas em JS para data-size */
   overflow: hidden;
   text-decoration: none;
   color: inherit;
   background-color: #000;
-  border: 2px solid #000;
-  opacity: 0;
+  border: 0;
+  border-radius: 10px;
+  opacity: 1;
   cursor: pointer;
   transition: transform 0.3s ease;
   box-sizing: border-box;
+}
+
+.project-item.is-pack-hidden {
+  display: none !important;
 }
 
 .project-item:hover,
 .project-item:focus {
   transform: scale(1.02);
   z-index: 5;
-  border-color: rgba(255, 0, 0, 0.3);
-}
-
-@keyframes fadeInItem {
-  from {
-    opacity: 0;
-    transform: scale(0.9);
-  }
-  to {
-    opacity: 1;
-    transform: scale(1);
-  }
+  box-shadow: 0 0 0 1px rgba(255, 0, 0, 0.3);
 }
 
 .project-item:focus {
@@ -537,10 +533,8 @@ a:hover::after {
   z-index: 10;
 }
 
-.project-item:hover,
-.project-item:focus {
-  transform: scale(1.02);
-  z-index: 5;
+.project-item::after {
+  content: none;
 }
 
 .project-thumbnail-container {
@@ -554,10 +548,20 @@ a:hover::after {
   width: 100%;
   height: 100%;
   object-fit: cover;
+  object-position: center center;
   display: block;
   transition: opacity 0.4s ease;
   opacity: 1;
   background-color: #000;
+}
+
+.project-item[data-size="1x1"] .project-thumbnail {
+  object-position: center 22%;
+}
+.project-item[data-size="1x1.5"] .project-thumbnail,
+.project-item[data-size="1x2"] .project-thumbnail,
+.project-item[data-size="1x3"] .project-thumbnail {
+  object-position: center center;
 }
 
 .project-hover-video {
@@ -567,11 +571,21 @@ a:hover::after {
   width: 100%;
   height: 100%;
   object-fit: cover;
+  object-position: center center;
   opacity: 0;
   transition: opacity 0.4s ease;
   z-index: 2;
   pointer-events: none;
   background-color: #000;
+}
+
+.project-item[data-size="1x1"] .project-hover-video {
+  object-position: center 22%;
+}
+.project-item[data-size="1x1.5"] .project-hover-video,
+.project-item[data-size="1x2"] .project-hover-video,
+.project-item[data-size="1x3"] .project-hover-video {
+  object-position: center center;
 }
 
 .project-hover-video.playing {
@@ -611,6 +625,15 @@ a:hover::after {
   font-family: 'Montserrat', sans-serif;
   text-transform: uppercase;
   letter-spacing: 0.05em;
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 4;
+  overflow: hidden;
+}
+
+.project-item[data-size="1x1"] .project-title {
+  -webkit-line-clamp: 2;
+  font-size: clamp(0.7rem, 1.6vw, 0.95rem);
 }
 
 .project-client {
@@ -619,6 +642,10 @@ a:hover::after {
   font-weight: 400;
   font-family: 'Poppins', sans-serif;
   opacity: 0.9;
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+  overflow: hidden;
 }
 
 /* Packery will handle responsive layout */
@@ -686,7 +713,7 @@ a:hover::after {
   text-transform: uppercase;
   letter-spacing: 0.05em;
   cursor: pointer;
-  transition: all 0.3s ease;
+  transition: transform 0.3s ease, background-color 0.3s ease, border-color 0.3s ease;
   -webkit-tap-highlight-color: rgba(255, 0, 0, 0.2);
   touch-action: manipulation;
   min-height: 44px; /* Touch target size */
@@ -729,10 +756,32 @@ a:hover::after {
   background-color: rgba(255, 0, 0, 0.05);
   border: 1px solid rgba(255, 0, 0, 0.2);
   border-radius: 8px;
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+  overflow: hidden;
+}
+
+.filters-section-grid {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
   gap: 2rem;
-  overflow: hidden;
+}
+
+.filters-section-footer {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  width: 100%;
+  padding-top: 1rem;
+  margin-top: 0.25rem;
+  border-top: 1px solid rgba(255, 0, 0, 0.15);
+}
+
+.clear-filters-btn--footer {
+  margin-left: auto;
 }
 
 /* Filter transition animations */
@@ -750,7 +799,7 @@ a:hover::after {
 
 .filter-enter-end {
   opacity: 1;
-  max-height: 1000px;
+  max-height: 2600px;
   margin-bottom: 3rem;
   padding-top: 2rem;
   padding-bottom: 2rem;
@@ -762,7 +811,7 @@ a:hover::after {
 
 .filter-leave-start {
   opacity: 1;
-  max-height: 1000px;
+  max-height: 2600px;
   margin-bottom: 3rem;
   padding-top: 2rem;
   padding-bottom: 2rem;
@@ -784,11 +833,11 @@ a:hover::after {
   }
   
   .filter-enter-end {
-    max-height: 2000px; /* Allow more height on mobile */
+    max-height: 3200px;
   }
   
   .filter-leave-start {
-    max-height: 2000px;
+    max-height: 3200px;
   }
 }
 
@@ -830,52 +879,56 @@ a:hover::after {
   color: rgba(255, 0, 0, 0.5);
 }
 
-.filter-checkboxes {
+/* Projetos: tipos de serviço como pílulas (estética alinhada à Home; wrap, sem scroll) */
+.filter-group--services {
+  min-width: 0;
+}
+
+.projects-filter-service-btns {
   display: flex;
-  flex-direction: column;
-  gap: 0.75rem;
-  max-height: 200px;
-  overflow-y: auto;
-  padding-right: 0.5rem;
-}
-
-.filter-checkboxes::-webkit-scrollbar {
-  width: 6px;
-}
-
-.filter-checkboxes::-webkit-scrollbar-track {
-  background: rgba(0, 0, 0, 0.3);
-  border-radius: 3px;
-}
-
-.filter-checkboxes::-webkit-scrollbar-thumb {
-  background: rgba(255, 0, 0, 0.5);
-  border-radius: 3px;
-}
-
-.filter-checkboxes::-webkit-scrollbar-thumb:hover {
-  background: rgba(255, 0, 0, 0.7);
-}
-
-.checkbox-label {
-  display: flex;
+  flex-wrap: wrap;
+  gap: 0.65rem;
   align-items: center;
-  gap: 0.75rem;
+}
+
+.projects-page .projects-filter__btn {
+  flex: 0 0 auto;
+  padding: 0.85rem 1.3rem;
+  font-size: 0.88rem;
+  border-radius: 28px;
+  white-space: nowrap;
   cursor: pointer;
   font-family: 'Poppins', sans-serif;
-  font-size: 0.95rem;
-  transition: opacity 0.3s ease;
+  line-height: 1.2;
+  -webkit-tap-highlight-color: rgba(255, 0, 0, 0.2);
+  touch-action: manipulation;
 }
 
-.checkbox-label:hover {
-  opacity: 0.8;
+.projects-page .projects-filter__btn:focus-visible {
+  outline: 3px solid rgba(255, 0, 0, 0.5);
+  outline-offset: 2px;
 }
 
-.checkbox-label input[type="checkbox"] {
-  width: 18px;
-  height: 18px;
-  cursor: pointer;
-  accent-color: #ff0000;
+.projects-filter__btn--active {
+  background-color: rgba(255, 0, 0, 0.2) !important;
+  border-color: #ff0000 !important;
+  box-shadow: 0 4px 12px rgba(255, 0, 0, 0.3);
+  transform: translateY(-2px);
+}
+
+@media (min-width: 1025px) {
+  .projects-page .projects-filter__btn {
+    padding: 0.8rem 1.35rem;
+    font-size: 0.9rem;
+    letter-spacing: 0.04em;
+  }
+}
+
+@media (max-width: 768px) {
+  .projects-page .projects-filter__btn {
+    padding: 0.8rem 1.15rem;
+    font-size: 0.86rem;
+  }
 }
 
 .filter-empty {
@@ -896,7 +949,7 @@ a:hover::after {
   text-transform: uppercase;
   letter-spacing: 0.05em;
   cursor: pointer;
-  transition: all 0.3s ease;
+  transition: transform 0.3s ease, background-color 0.3s ease;
 }
 
 .clear-filters-btn:hover:not(:disabled) {
@@ -936,7 +989,11 @@ a:hover::after {
   overflow: hidden;
   text-decoration: none;
   color: inherit;
-  transition: all 0.3s ease;
+  transition: transform 0.3s ease, border-color 0.3s ease, box-shadow 0.3s ease;
+}
+
+.project-card-simple::after {
+  content: none;
 }
 
 .project-card-simple:hover,
@@ -1041,8 +1098,11 @@ a:hover::after {
   overflow: hidden;
   text-decoration: none;
   color: inherit;
-  transition: all 0.3s ease;
-  animation: fadeInItem 0.5s ease forwards;
+  transition: transform 0.3s ease, border-color 0.3s ease, box-shadow 0.3s ease;
+}
+
+.project-card::after {
+  content: none;
 }
 
 .project-card:hover,
@@ -1174,8 +1234,12 @@ a:hover::after {
   }
 
   .filters-section {
-    grid-template-columns: 1fr;
     padding: 1.5rem;
+    gap: 1.25rem;
+  }
+
+  .filters-section-grid {
+    grid-template-columns: 1fr;
     gap: 1.5rem;
   }
 
@@ -1217,6 +1281,22 @@ a:hover::after {
   .filters-section {
     padding: 1rem;
     gap: 1rem;
+  }
+
+  .filters-section-grid {
+    gap: 1rem;
+  }
+
+  .filters-section-footer {
+    flex-direction: row;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+  }
+
+  .clear-filters-btn--footer {
+    margin-left: auto;
+    width: auto;
   }
 
   .filter-input,
@@ -1323,7 +1403,7 @@ a:hover::after {
   text-decoration: none;
   border: 1px solid rgba(255, 0, 0, 0.3);
   border-radius: 4px;
-  transition: all 0.3s ease;
+  transition: transform 0.3s ease, color 0.3s ease, border-color 0.3s ease, background-color 0.3s ease;
   cursor: pointer;
 }
 
@@ -1332,6 +1412,24 @@ a:hover::after {
   border-color: rgba(255, 0, 0, 0.6);
   background-color: rgba(255, 0, 0, 0.1);
   transform: translateY(-2px);
+}
+
+.project-description-section {
+  max-width: 900px;
+  margin: 0 auto 2rem;
+  padding: 0 2rem;
+  text-align: left;
+}
+
+.project-description-inner {
+  font-family: 'Poppins', sans-serif;
+  font-size: 1rem;
+  line-height: 1.65;
+  color: rgba(255, 255, 255, 0.88);
+}
+
+.project-description-inner p {
+  margin: 0 0 0.75rem;
 }
 
 /* Thumbnail Section */
@@ -1470,7 +1568,7 @@ a:hover::after {
   font-family: 'Montserrat', sans-serif;
   text-transform: uppercase;
   letter-spacing: 0.05em;
-  transition: all 0.3s ease;
+  transition: transform 0.3s ease, color 0.3s ease, border-color 0.3s ease, background-color 0.3s ease;
   padding: 0.75rem 1.5rem;
   border: 1px solid rgba(255, 0, 0, 0.3);
   border-radius: 4px;
@@ -1524,7 +1622,7 @@ a:hover::after {
 }
 
 /* Firefox */
-* {
+html {
   scrollbar-width: thin;
   scrollbar-color: rgba(255, 0, 0, 0.4) #000;
 }
@@ -1688,7 +1786,7 @@ a:hover::after {
   background-color: rgba(255, 0, 0, 0.05);
   border: 2px solid rgba(255, 0, 0, 0.2);
   border-radius: 8px;
-  transition: all 0.3s ease;
+  transition: transform 0.3s ease, border-color 0.3s ease, background-color 0.3s ease, box-shadow 0.3s ease;
 }
 
 .processo-item:hover {
@@ -1757,7 +1855,7 @@ a:hover::after {
   font-family: 'Poppins', sans-serif;
   text-transform: uppercase;
   letter-spacing: 0.05em;
-  transition: all 0.3s ease;
+  transition: transform 0.3s ease, background-color 0.3s ease, border-color 0.3s ease, box-shadow 0.3s ease;
   text-decoration: none;
   color: #ff0000;
 }
@@ -1910,105 +2008,176 @@ a:hover::after {
   }
 }
 
-/* Curupire-se Page */
+/* Curupire-se: página travada ao viewport — rolagem só dentro do iframe do Google */
+html.curupire-se-root {
+  height: 100%;
+  height: 100dvh;
+  overflow: hidden;
+}
+
+body.curupire-se-body {
+  height: 100%;
+  height: 100dvh;
+  max-height: 100dvh;
+  margin: 0;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  box-sizing: border-box;
+}
+
 .curupire-se-page {
-  min-height: 100vh;
+  flex: 1 1 auto;
+  min-height: 0;
+  width: 100%;
   background-color: #000;
   color: #ff0000;
-  padding: 2rem 2rem 8rem;
-  padding-top: 2rem;
+  padding: clamp(0.75rem, 2.5vw, 1.5rem) clamp(1rem, 4vw, 2rem)
+    calc(6.25rem + env(safe-area-inset-bottom, 0px));
   display: flex;
-  align-items: flex-start;
-  justify-content: center;
+  flex-direction: column;
+  align-items: center;
+  box-sizing: border-box;
 }
 
 .form-container {
+  flex: 1 1 auto;
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
   max-width: 900px;
   width: 100%;
   margin: 0 auto;
-  padding-top: 0;
 }
 
 .form-page-title {
   font-family: 'Montserrat', sans-serif;
-  font-size: 3rem;
+  font-size: clamp(1.5rem, 5vw, 3rem);
   font-weight: 600;
   text-transform: uppercase;
   letter-spacing: 0.1em;
   text-align: center;
-  margin: 0 0 1rem 0;
+  margin: 0 0 0.5rem 0;
   color: #ff0000;
   line-height: 1.2;
+  flex-shrink: 0;
 }
 
 .form-page-subtitle {
   font-family: 'Poppins', sans-serif;
-  font-size: 1.25rem;
+  font-size: clamp(0.95rem, 2.2vw, 1.25rem);
   text-align: center;
-  margin: 0 0 3rem 0;
+  margin: 0 0 1rem 0;
   color: rgba(255, 0, 0, 0.8);
+  flex-shrink: 0;
 }
 
+/* Moldura escura: o branco vem só do iframe (Google), não do container — integra ao tema da página */
 .google-form-wrapper {
   position: relative;
+  flex: 1 1 auto;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
   width: 100%;
-  min-height: 800px;
-  background-color: #ffffff;
+  padding: clamp(10px, 2.5vw, 14px);
+  border-radius: 20px;
+  background: linear-gradient(
+    155deg,
+    rgba(255, 0, 0, 0.07) 0%,
+    rgba(12, 12, 12, 0.98) 38%,
+    #050505 100%
+  );
   border: 1px solid rgba(255, 0, 0, 0.2);
-  border-radius: 8px;
+  box-shadow:
+    0 28px 60px -18px rgba(0, 0, 0, 0.75),
+    inset 0 1px 0 rgba(255, 255, 255, 0.045);
+}
+
+.google-form-wrapper::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 18%;
+  right: 18%;
+  height: 3px;
+  border-radius: 0 0 6px 6px;
+  background: linear-gradient(90deg, transparent, #cc0000 20%, #ff1a1a 50%, #cc0000 80%, transparent);
+  opacity: 0.95;
+  pointer-events: none;
+}
+
+.google-form-frame {
+  position: relative;
+  flex: 1 1 auto;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  border-radius: 12px;
   overflow: hidden;
-  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+  background: #0a0a0a;
 }
 
 .google-form-embed {
+  flex: 1 1 auto;
+  align-self: stretch;
   width: 100%;
+  min-height: 0;
   height: 100%;
-  min-height: 800px;
   border: none;
   display: block;
 }
 
+/* Mobile / estreito: menos “gutter” lateral + moldura fina para o iframe usar quase toda a largura */
 @media (max-width: 768px) {
-  .curupire-se-page {
-    padding: 1.5rem 1.5rem 8rem;
-    padding-top: 1.5rem;
-  }
-  
   .form-page-title {
-    font-size: 2rem;
     letter-spacing: 0.09em;
   }
-  
-  .form-page-subtitle {
-    font-size: 1rem;
-    margin-bottom: 2rem;
+
+  .curupire-se-page {
+    padding-top: 0.75rem;
+    padding-left: max(0.65rem, env(safe-area-inset-left, 0px));
+    padding-right: max(0.65rem, env(safe-area-inset-right, 0px));
+    padding-bottom: calc(6rem + env(safe-area-inset-bottom, 0px));
   }
-  
+
+  .form-container {
+    max-width: none;
+  }
+
   .google-form-wrapper {
-    min-height: 600px;
+    padding: 8px 5px;
+    border-radius: 16px;
   }
-  
-  .google-form-embed {
-    min-height: 600px;
+
+  .google-form-frame {
+    border-radius: 10px;
   }
 }
 
 @media (max-width: 480px) {
-  .curupire-se-page {
-    padding: 1rem 1rem 8rem;
-    padding-top: 1rem;
+  .form-page-subtitle {
+    margin-bottom: 0.65rem;
   }
-  
+
   .form-page-title {
-    font-size: 1.5rem;
-    letter-spacing: 0.08em;
+    font-size: clamp(1.35rem, 7vw, 2.25rem);
+    padding-inline: 0.15rem;
   }
-  
+
+  .curupire-se-page {
+    padding-top: 0.5rem;
+    padding-left: max(0.35rem, env(safe-area-inset-left, 0px));
+    padding-right: max(0.35rem, env(safe-area-inset-right, 0px));
+    padding-bottom: calc(5.75rem + env(safe-area-inset-bottom, 0px));
+  }
+
   .google-form-wrapper {
-    min-height: 500px;
+    padding: 5px 3px;
+    border-radius: 14px;
   }
-  
-  .google-form-embed {
-    min-height: 500px;
+
+  .google-form-frame {
+    border-radius: 9px;
   }
 }

@@ -8,7 +8,7 @@ layout: none
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>{{ page.title }} | {{ site.title }}</title>
-  <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600&family=Poppins:wght@400;500&display=swap" rel="stylesheet" />
+  <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600&family=Poppins:wght@400;500;900&display=swap" rel="stylesheet" />
 
   {% include header.html %}
   
@@ -16,9 +16,9 @@ layout: none
 
   <link rel="stylesheet" href="{{ '/assets/css/main.css' | relative_url }}">
   <link rel="stylesheet" href="{{ '/assets/css/bottom-nav.css' | relative_url }}">
-  
+
   <!-- Alpine.js -->
-  <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
+  <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.15.8/dist/cdn.min.js" crossorigin="anonymous"></script>
 </head>
 <body>
   <div class="projects-page" x-data="projectsPage('{{ '/projects.json' | relative_url }}')" x-init="init()">
@@ -39,71 +39,53 @@ layout: none
 
     <!-- Filters Section -->
     <div class="filters-section" x-show="showFilters" x-transition:enter="filter-enter" x-transition:enter-start="filter-enter-start" x-transition:enter-end="filter-enter-end" x-transition:leave="filter-leave" x-transition:leave-start="filter-leave-start" x-transition:leave-end="filter-leave-end">
-      <!-- Search Input -->
-      <div class="filter-group">
-        <label for="search-input" class="filter-label">Buscar</label>
-        <input 
-          type="text" 
-          id="search-input"
-          class="filter-input" 
-          placeholder="Buscar por título, cliente ou tipo de serviço..."
-          x-model="searchTerm"
-          @input="updateFilters()"
-        />
-      </div>
-
-      <!-- Service Types Filter -->
-      <div class="filter-group">
-        <label class="filter-label">Tipos de Serviço</label>
-        <div class="filter-checkboxes" x-show="availableServiceTypes.length > 0">
-          <template x-for="serviceType in availableServiceTypes" :key="serviceType">
-            <label class="checkbox-label">
-              <input 
-                type="checkbox" 
-                :value="serviceType"
-                x-model="selectedServiceTypes"
-                @change="updateFilters()"
-              />
-              <span x-text="serviceType"></span>
-            </label>
-          </template>
+      <div class="filters-section-grid">
+        <!-- Search Input -->
+        <div class="filter-group">
+          <label for="search-input" class="filter-label">Buscar</label>
+          <input 
+            type="text" 
+            id="search-input"
+            class="filter-input" 
+            placeholder="Buscar por título, cliente ou tipo de serviço..."
+            x-model="searchTerm"
+            @input="updateFilters()"
+          />
         </div>
-        <p x-show="availableServiceTypes.length === 0" class="filter-empty">Carregando...</p>
+
+        <!-- Service types: botões em pílula (multi-select, como na Home) -->
+        <div class="filter-group filter-group--services">
+          <label class="filter-label">Tipos de Serviço</label>
+          <p x-show="loading" class="filter-empty">Carregando...</p>
+          <div class="projects-filter-service-btns" x-show="!loading && availableServiceTypes.length > 0">
+            <template x-for="serviceType in availableServiceTypes" :key="serviceType">
+              <button
+                type="button"
+                class="servico-link projects-filter__btn"
+                :class="{ 'projects-filter__btn--active': selectedServiceTypes.includes(serviceType) }"
+                @click="toggleServiceType(serviceType)"
+                x-text="serviceType"
+              ></button>
+            </template>
+          </div>
+          <p x-show="!loading && availableServiceTypes.length === 0" class="filter-empty">Nenhum tipo listado</p>
+        </div>
+
       </div>
 
-      <!-- Year Filter -->
-      <div class="filter-group">
-        <label for="year-select" class="filter-label">Ano</label>
-        <select 
-          id="year-select"
-          class="filter-select" 
-          x-model="selectedYear"
-          @change="updateFilters()"
-        >
-          <option value="">Todos os anos</option>
-          <template x-for="year in availableYears" :key="year">
-            <option :value="year" x-text="year"></option>
-          </template>
-        </select>
-      </div>
-
-      <!-- Clear Filters Button -->
-      <div class="filter-group">
-        <button 
-          class="clear-filters-btn" 
+      <div class="filters-section-footer">
+        <p class="results-count">
+          <span x-text="filteredProjects.length"></span>
+          <span x-text="filteredProjects.length === 1 ? 'projeto encontrado' : 'projetos encontrados'"></span>
+        </p>
+        <button
+          type="button"
+          class="clear-filters-btn clear-filters-btn--footer"
           @click="clearFilters()"
           :disabled="!hasActiveFilters()"
         >
           Limpar Filtros
         </button>
-      </div>
-
-      <!-- Results Count -->
-      <div class="filter-group">
-        <p class="results-count">
-          <span x-text="filteredProjects.length"></span> 
-          <span x-text="filteredProjects.length === 1 ? 'projeto encontrado' : 'projetos encontrados'"></span>
-        </p>
       </div>
     </div>
 
@@ -139,14 +121,13 @@ layout: none
     <!-- Empty State -->
     <div class="empty-state" x-show="!loading && !error && filteredProjects.length === 0" x-cloak>
       <p>Nenhum projeto encontrado com os filtros selecionados.</p>
-      <button class="clear-filters-btn" @click="clearFilters()">Limpar Filtros</button>
     </div>
   </div>
 
   {% include bottom-nav.html %}
   
   <!-- GSAP for bottom nav animations -->
-  <script src="https://cdn.jsdelivr.net/npm/gsap@3/dist/gsap.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/gsap@3.14.2/dist/gsap.min.js" crossorigin="anonymous"></script>
   <script src="{{ '/assets/js/page-transitions.js' | relative_url }}"></script>
   <script src="{{ '/assets/js/projects.js' | relative_url }}"></script>
   <script src="{{ '/assets/js/bottom-nav.js' | relative_url }}"></script>

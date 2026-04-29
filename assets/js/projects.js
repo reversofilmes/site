@@ -1,6 +1,115 @@
 /**
  * Alpine.js data and methods for the Projects page
+ * Listagem: sempre por date_mmddyyyy (mais recente primeiro), após filtros Buscar + Tipos de serviço.
  */
+
+/**
+ * Códigos curtos na URL (iniciais por palavra; caracteres especiais ignorados).
+ * Resolve colisões e evita ambiguidade por prefixo (ex.: E vs EC).
+ */
+function stripDiacritics(s) {
+  return String(s || '')
+    .normalize('NFD')
+    .replace(/\p{M}/gu, '');
+}
+
+function lettersCompact(name) {
+  return stripDiacritics(name).replace(/[^A-Za-z]/g, '').toUpperCase();
+}
+
+function preferredInitials(name) {
+  const parts = stripDiacritics(name)
+    .split(/[\s&/–—,.]+/)
+    .map((p) => p.trim())
+    .filter(Boolean);
+  let code = '';
+  for (const part of parts) {
+    if (/^\d+$/.test(part)) continue;
+    const m = part.match(/[A-Za-z]/);
+    if (m) code += m[0].toUpperCase();
+  }
+  const c = lettersCompact(name);
+  if (!code && c) return c[0];
+  return code;
+}
+
+function hasPrefixConflict(candidate, codes) {
+  const up = candidate.toUpperCase();
+  for (const u of codes) {
+    if (!u) continue;
+    if (u === up) return true;
+    if (u.startsWith(up) || up.startsWith(u)) return true;
+  }
+  return false;
+}
+
+function buildServiceUrlMaps(labels) {
+  const sorted = [
+    ...new Set(labels.map((x) => String(x || '').trim()).filter(Boolean)),
+  ].sort((a, b) => a.localeCompare(b, 'pt-BR'));
+
+  const labelToCode = new Map();
+  const assigned = [];
+
+  const rows = sorted.map((label) => ({
+    label,
+    pref: preferredInitials(label),
+    compact: lettersCompact(label),
+  }));
+
+  rows.sort((a, b) => {
+    if (b.pref.length !== a.pref.length) return b.pref.length - a.pref.length;
+    return a.label.localeCompare(b.label, 'pt-BR');
+  });
+
+  for (const { label, pref, compact } of rows) {
+    if (!compact) {
+      const code = `S${labelToCode.size + 1}`;
+      assigned.push(code);
+      labelToCode.set(label, code);
+      continue;
+    }
+
+    let chosen = null;
+
+    if (pref && !hasPrefixConflict(pref, assigned)) {
+      chosen = pref.toUpperCase();
+    }
+
+    if (!chosen) {
+      let n = Math.max(pref.length || 1, 1);
+      while (n <= compact.length) {
+        const cand = compact.slice(0, n);
+        if (!hasPrefixConflict(cand, assigned)) {
+          chosen = cand;
+          break;
+        }
+        n += 1;
+      }
+    }
+
+    if (!chosen) {
+      let base = (pref && pref.slice(0, 3)) || compact.slice(0, 3);
+      let i = 2;
+      while (hasPrefixConflict(`${base}${i}`, assigned)) i += 1;
+      chosen = `${base}${i}`;
+    }
+
+    assigned.push(chosen);
+    labelToCode.set(label, chosen);
+  }
+
+  const toCode = {};
+  const fromCode = {};
+  labelToCode.forEach((code, label) => {
+    const k = String(code).toUpperCase();
+    toCode[label] = k;
+    fromCode[k] = label;
+  });
+
+  return { toCode, fromCode };
+}
+
 function projectsPage(projectsJsonUrl) {
   return {
     allProjects: [],
@@ -8,59 +117,113 @@ function projectsPage(projectsJsonUrl) {
     loading: true,
     error: null,
     projectsJsonUrl: projectsJsonUrl || '/projects.json',
-    
-    // Filter state
+
     searchTerm: '',
     selectedServiceTypes: [],
-    selectedYear: '',
     showFilters: false,
-    
-    // Available filter options (populated from projects)
+
     availableServiceTypes: [],
-    availableYears: [],
-    
-    // URL sync debounce timer
+
+    /** label canónico → código URL (ex. "ANIMAÇÃO & MOTION GRAPHICS" → "AMG") */
+    _serviceToUrlCode: {},
+    /** código URL → label (maiúsculas) */
+    _urlCodeToService: {},
+
     urlSyncTimer: null,
-    
+
+    _dateSortKey(s) {
+      const raw = String(s || '').replace(/\D/g, '');
+      if (raw.length !== 8) return '00000000';
+      const mm = raw.slice(0, 2);
+      const dd = raw.slice(2, 4);
+      const yyyy = raw.slice(4, 8);
+      return `${yyyy}${mm}${dd}`;
+    },
+
+    _sortByDateDesc(list) {
+      list.sort((a, b) => {
+        const ka = this._dateSortKey(a.date_mmddyyyy);
+        const kb = this._dateSortKey(b.date_mmddyyyy);
+        if (ka !== kb) return kb.localeCompare(ka);
+        const sa = a.slug || a.url || '';
+        const sb = b.slug || b.url || '';
+        return sa.localeCompare(sb, 'pt-BR');
+      });
+    },
+
+    _unescapeUrlToken(raw) {
+      let v = String(raw || '');
+      for (let i = 0; i < 4; i++) {
+        try {
+          const d = decodeURIComponent(v.replace(/\+/g, ' '));
+          if (d === v) break;
+          v = d;
+        } catch (_) {
+          break;
+        }
+      }
+      return v;
+    },
+
     /**
-     * Initialize the page - fetch projects and set up filters
+     * Associa string da URL ao nome completo do serviço (URLs antigas com nome + percent-encoding).
      */
+    _matchServiceTypeFromUrl(raw, allowedSet) {
+      let v = String(raw || '').trim();
+      if (!v) return null;
+      if (allowedSet.has(v)) return v;
+      for (let i = 0; i < 4; i++) {
+        try {
+          const d = decodeURIComponent(v.replace(/\+/g, ' '));
+          if (d === v) break;
+          v = d.trim();
+          if (allowedSet.has(v)) return v;
+        } catch (_) {
+          break;
+        }
+      }
+      return null;
+    },
+
+    /**
+     * Resolve um token do hash: código curto, nome completo ou legado codificado.
+     */
+    _resolveServiceCandidate(raw, allowedSet) {
+      const v = String(raw || '').trim();
+      if (!v) return null;
+      if (allowedSet.has(v)) return v;
+
+      const fromCode = this._urlCodeToService[v.toUpperCase()];
+      if (fromCode && allowedSet.has(fromCode)) return fromCode;
+
+      return this._matchServiceTypeFromUrl(v, allowedSet);
+    },
+
     async init() {
       try {
         this.loading = true;
         const response = await fetch(this.projectsJsonUrl);
-        
+
         if (!response.ok) {
           throw new Error(`HTTP error! status: ${response.status}`);
         }
-        
-        const projects = await response.json();
-        
-        // Sort projects: newest first (year desc, then date_mmddyyyy desc)
-        projects.sort((a, b) => {
-          if (b.year !== a.year) {
-            return b.year - a.year;
-          }
-          // If same year, sort by date_mmddyyyy descending
-          return b.date_mmddyyyy.localeCompare(a.date_mmddyyyy);
-        });
-        
+
+        const raw = await response.json();
+        const projects = Array.isArray(raw) ? raw : [];
+
         this.allProjects = projects;
-        this.filteredProjects = projects;
-        
-        // Extract unique service types and years
+        this.filteredProjects = projects.slice();
+        this._sortByDateDesc(this.filteredProjects);
+
         this.extractFilterOptions();
-        
-        // Check URL hash for pre-selected filters (after options are extracted)
-        // Use setTimeout to ensure Alpine has finished initializing
+
         setTimeout(() => {
           this.applyUrlFilters();
-          // If filters are applied from URL, show the filter section
           if (window.location.hash && window.location.hash.length > 1) {
             this.showFilters = true;
           }
         }, 0);
-        
+
         this.loading = false;
       } catch (err) {
         console.error('Error loading projects:', err);
@@ -68,173 +231,153 @@ function projectsPage(projectsJsonUrl) {
         this.loading = false;
       }
     },
-    
+
     /**
-     * Apply filters from URL hash parameters
-     * Supports format: #search=term&service=ARTISTICOS&service=Type2&year=2025
+     * Hash: #search=... opcional;
+     *   - #service=AMG (código curto) ou nome completo (legado / links Jekyll)
+     *   - #services=AMG,AC,EC (vários códigos, separados por vírgula)
+     * Legado: #services= com | entre nomes; #service= repetido; codificação dupla.
      */
     applyUrlFilters() {
-      if (window.location.hash) {
-        const hash = window.location.hash.substring(1); // Remove #
-        const params = new URLSearchParams(hash);
-        
-        // Apply search term filter
-        const searchParam = params.get('search');
-        if (searchParam) {
-          this.searchTerm = decodeURIComponent(searchParam);
+      if (!window.location.hash || window.location.hash.length <= 1) return;
+      const hash = window.location.hash.substring(1);
+      const params = new URLSearchParams(hash);
+
+      const searchParam = params.get('search');
+      if (searchParam) {
+        this.searchTerm = this._unescapeUrlToken(searchParam);
+      }
+
+      const bundled = params.get('services');
+      const legacyRepeated = params.getAll('service');
+      const candidates = [];
+
+      if (bundled) {
+        bundled.split(/[|,]/).forEach((s) => {
+          const t = s.trim();
+          if (t) candidates.push(t);
+        });
+      }
+      legacyRepeated.forEach((s) => {
+        const t = (s || '').trim();
+        if (t) candidates.push(t);
+      });
+
+      const allowed = new Set(this.availableServiceTypes);
+      const resolved = [];
+      const seen = new Set();
+      candidates.forEach((c) => {
+        const norm = this._resolveServiceCandidate(c, allowed);
+        if (norm && !seen.has(norm)) {
+          seen.add(norm);
+          resolved.push(norm);
         }
-        
-        // Apply service type filters (support multiple)
-        const serviceParams = params.getAll('service');
-        if (serviceParams.length > 0) {
-          this.selectedServiceTypes = serviceParams
-            .map(param => decodeURIComponent(param))
-            .filter(service => this.availableServiceTypes.includes(service));
-        }
-        
-        // Apply year filter
-        const yearParam = params.get('year');
-        if (yearParam && this.availableYears.includes(parseInt(yearParam))) {
-          this.selectedYear = yearParam;
-        }
-        
-        // Update filters if any were applied
-        if (searchParam || serviceParams.length > 0 || yearParam) {
-          this.updateFilters();
-        }
+      });
+      this.selectedServiceTypes = resolved;
+
+      if (searchParam || candidates.length > 0) {
+        this.updateFilters();
       }
     },
-    
-    /**
-     * Extract unique service types and years from all projects
-     */
+
     extractFilterOptions() {
       const serviceTypesSet = new Set();
-      const yearsSet = new Set();
-      
-      this.allProjects.forEach(project => {
-        // Add all service types
+
+      this.allProjects.forEach((project) => {
         if (project.service_types && Array.isArray(project.service_types)) {
-          project.service_types.forEach(type => {
+          project.service_types.forEach((type) => {
             if (type && type.trim()) {
               serviceTypesSet.add(type.trim());
             }
           });
         }
-        
-        // Add year
-        if (project.year) {
-          yearsSet.add(project.year);
-        }
       });
-      
-      // Sort service types alphabetically
+
       this.availableServiceTypes = Array.from(serviceTypesSet).sort();
-      
-      // Sort years descending
-      this.availableYears = Array.from(yearsSet).sort((a, b) => b - a);
+      const maps = buildServiceUrlMaps(this.availableServiceTypes);
+      this._serviceToUrlCode = maps.toCode;
+      this._urlCodeToService = maps.fromCode;
     },
-    
-    /**
-     * Update filtered projects based on current filter state
-     */
+
+    toggleServiceType(serviceType) {
+      const sel = this.selectedServiceTypes;
+      const i = sel.indexOf(serviceType);
+      if (i === -1) {
+        this.selectedServiceTypes = [...sel, serviceType];
+      } else {
+        this.selectedServiceTypes = sel.filter((s) => s !== serviceType);
+      }
+      this.updateFilters();
+    },
+
     updateFilters() {
       let filtered = [...this.allProjects];
-      
-      // Filter by search term
+
       if (this.searchTerm.trim()) {
         const searchLower = this.searchTerm.toLowerCase().trim();
-        filtered = filtered.filter(project => {
+        filtered = filtered.filter((project) => {
           return project.search_blob && project.search_blob.toLowerCase().includes(searchLower);
         });
       }
-      
-      // Filter by service types
+
       if (this.selectedServiceTypes.length > 0) {
-        filtered = filtered.filter(project => {
+        filtered = filtered.filter((project) => {
           if (!project.service_types || !Array.isArray(project.service_types)) {
             return false;
           }
-          // Check if project has at least one of the selected service types
-          return this.selectedServiceTypes.some(selectedType => 
-            project.service_types.some(projectType => 
-              projectType && projectType.trim() === selectedType
-            )
+          return this.selectedServiceTypes.some((selectedType) =>
+            project.service_types.some(
+              (projectType) => projectType && projectType.trim() === selectedType,
+            ),
           );
         });
       }
-      
-      // Filter by year
-      if (this.selectedYear) {
-        filtered = filtered.filter(project => {
-          return project.year && project.year.toString() === this.selectedYear;
-        });
-      }
-      
+
+      this._sortByDateDesc(filtered);
       this.filteredProjects = filtered;
-      
-      // Sync filters to URL (debounced for search input)
+
       this.syncFiltersToUrl();
     },
-    
-    /**
-     * Sync current filter state to URL hash
-     */
+
     syncFiltersToUrl() {
-      // Clear existing timer
       if (this.urlSyncTimer) {
         clearTimeout(this.urlSyncTimer);
       }
-      
-      // Debounce URL updates (especially for search input)
+
       this.urlSyncTimer = setTimeout(() => {
         const params = new URLSearchParams();
-        
-        // Add search term
+
         if (this.searchTerm.trim()) {
-          params.set('search', encodeURIComponent(this.searchTerm.trim()));
+          params.set('search', this.searchTerm.trim());
         }
-        
-        // Add service types (multiple values)
-        this.selectedServiceTypes.forEach(serviceType => {
-          params.append('service', encodeURIComponent(serviceType));
-        });
-        
-        // Add year
-        if (this.selectedYear) {
-          params.set('year', this.selectedYear);
+
+        const types = this.selectedServiceTypes;
+        const enc = (label) => this._serviceToUrlCode[label] || label;
+
+        if (types.length === 1) {
+          params.set('service', enc(types[0]));
+        } else if (types.length > 1) {
+          params.set('services', types.map(enc).join(','));
         }
-        
-        // Update URL hash without page reload
+
         const newHash = params.toString();
         const newUrl = newHash ? `#${newHash}` : '';
-        
-        // Only update if hash actually changed to avoid unnecessary history entries
+
         if (window.location.hash !== newUrl) {
           history.pushState(null, '', window.location.pathname + newUrl);
         }
-      }, 300); // 300ms debounce for search input
+      }, 300);
     },
-    
-    /**
-     * Clear all filters
-     */
+
     clearFilters() {
       this.searchTerm = '';
       this.selectedServiceTypes = [];
-      this.selectedYear = '';
       this.updateFilters();
-      // Clear URL hash
       history.pushState(null, '', window.location.pathname);
     },
-    
-    /**
-     * Check if any filters are active
-     */
+
     hasActiveFilters() {
-      return this.searchTerm.trim() !== '' || 
-             this.selectedServiceTypes.length > 0 || 
-             this.selectedYear !== '';
-    }
+      return this.searchTerm.trim() !== '' || this.selectedServiceTypes.length > 0;
+    },
   };
 }
