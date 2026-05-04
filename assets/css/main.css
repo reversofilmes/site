@@ -633,11 +633,13 @@ a:hover::after {
   display: -webkit-box;
   -webkit-box-orient: vertical;
   -webkit-line-clamp: 4;
+  line-clamp: 4;
   overflow: hidden;
 }
 
 .project-item[data-size="1x1"] .project-title {
   -webkit-line-clamp: 2;
+  line-clamp: 2;
   font-size: clamp(0.7rem, 1.6vw, 0.95rem);
 }
 
@@ -650,6 +652,7 @@ a:hover::after {
   display: -webkit-box;
   -webkit-box-orient: vertical;
   -webkit-line-clamp: 2;
+  line-clamp: 2;
   overflow: hidden;
 }
 
