@@ -1,9 +1,10 @@
 /**
  * Home — 5 colunas com empilhamento vertical + redistribuição dinâmica ao filtrar.
  *
- * Modo "__all__" (sem filtro): itens nas colunas originais definidas por home_col/order.
- * Modo filtrado: itens que casam são redistribuídos com greedy shortest-column-first
- *   (ordenados por data desc) para eliminar buracos e garantir boa ocupação visual.
+ * Modo "__all__" (sem filtro): itens nas colunas originais definidas por home_col/order (Liquid).
+ * Modo filtrado: greedy shortest-column-first (ordenados por data desc), excepto mobile ≤767px — uma coluna.
+ *
+ * Mobile ≤767px + "__all__": pilha única; ordem global por data-order ASC, desempate data-home-col ASC.
  */
 var resizeTimeout = null;
 var homeEntranceAnimationDone = false;
@@ -13,6 +14,18 @@ var HOME_GRID_COLUMNS = 5;
 var INITIAL_VISIBLE = 25;
 var LOAD_STEP = 8;
 var HIDDEN = 'is-pack-hidden';
+
+/** Desktop/tablet vs mobile — alinhar com CSS @media (max-width: 767px) */
+var lastMobileLayout = null;
+
+function isMobileHomeGrid() {
+  return typeof window.matchMedia === 'function'
+    && window.matchMedia('(max-width: 767px)').matches;
+}
+
+function getEffectiveColumns() {
+  return isMobileHomeGrid() ? 1 : HOME_GRID_COLUMNS;
+}
 
 var state = {
   filter: '__all__',
@@ -62,9 +75,11 @@ function getGridTrackWidth(sizingEl) {
 
 function calculateColumnWidth(sizingEl) {
   var W = getGridTrackWidth(sizingEl);
-  var col = (W - 4 * GUTTER) / HOME_GRID_COLUMNS;
+  var cols = getEffectiveColumns();
+  var gutterTotal = Math.max(0, cols - 1) * GUTTER;
+  var col = (W - gutterTotal) / cols;
   var columnWidth = Math.max(1, Math.floor(col * 1000) / 1000);
-  return { columnWidth: columnWidth, rowHeight: columnWidth, columns: HOME_GRID_COLUMNS };
+  return { columnWidth: columnWidth, rowHeight: columnWidth, columns: cols };
 }
 
 /* ─── tamanho de itens ─── */
@@ -99,6 +114,12 @@ function getOrderValue(item) {
   if (o == null || o === '') return 999999;
   var n = parseInt(String(o), 10);
   return Number.isFinite(n) ? n : 999999;
+}
+
+function getHomeColValue(item) {
+  var c = item.getAttribute('data-home-col');
+  var n = parseInt(String(c), 10);
+  return Number.isFinite(n) ? n : 999;
 }
 
 function sizeItem(item, columnWidth, rowHeight, columns) {
@@ -168,6 +189,25 @@ function restoreOriginalPositions() {
   });
 }
 
+/** Mobile + filtro “TODOS”: uma coluna, ordem global order ASC, desempate home_col ASC */
+function layoutMobileAllMode() {
+  var container = document.getElementById('masonry-container');
+  if (!container || !originalColumnItems.length) return;
+  var cols = Array.from(container.querySelectorAll('.projects-col'));
+  if (!cols.length) return;
+  var flat = [];
+  originalColumnItems.forEach(function (colItems) {
+    colItems.forEach(function (item) { flat.push(item); });
+  });
+  flat.sort(function (a, b) {
+    var oa = getOrderValue(a);
+    var ob = getOrderValue(b);
+    if (oa !== ob) return oa - ob;
+    return getHomeColValue(a) - getHomeColValue(b);
+  });
+  flat.forEach(function (item) { cols[0].appendChild(item); });
+}
+
 /* ─── redistribuição (greedy shortest-column-first) ─── */
 
 function redistributeItems() {
@@ -184,6 +224,11 @@ function redistributeItems() {
     if (db !== da) return db - da;
     return getOrderValue(a) - getOrderValue(b);
   });
+
+  if (isMobileHomeGrid()) {
+    matching.forEach(function (item) { cols[0].appendChild(item); });
+    return;
+  }
 
   var colHeights = [];
   for (var i = 0; i < HOME_GRID_COLUMNS; i++) colHeights.push(0);
@@ -207,6 +252,9 @@ function getRasterOrderItems() {
   var cols = Array.from(cont.querySelectorAll('.projects-col'));
   if (cols.length < HOME_GRID_COLUMNS) {
     return Array.from(cont.querySelectorAll('.project-item'));
+  }
+  if (isMobileHomeGrid()) {
+    return cols[0] ? Array.from(cols[0].querySelectorAll('.project-item')) : [];
   }
   var buckets = cols.map(function (cel) {
     return Array.from(cel.querySelectorAll('.project-item'));
@@ -302,6 +350,11 @@ function runGridInit() {
   allItems = Array.from(container.querySelectorAll('.project-item'));
 
   saveOriginalPositions();
+  lastMobileLayout = isMobileHomeGrid();
+  if (!isFilterActive() && isMobileHomeGrid()) {
+    layoutMobileAllMode();
+  }
+
   applyVisibilityClasses();
   if (allItems.length === 0) return;
 
@@ -326,7 +379,25 @@ function relayoutKeepingState() {
 
 function handleResize() {
   clearTimeout(resizeTimeout);
-  resizeTimeout = setTimeout(function () { relayoutKeepingState(); }, 200);
+  resizeTimeout = setTimeout(function () {
+    var nowMobile = isMobileHomeGrid();
+    if (gridEl && lastMobileLayout !== null && lastMobileLayout !== nowMobile) {
+      rebuildDomLayoutFromState();
+    }
+    lastMobileLayout = nowMobile;
+    relayoutKeepingState();
+  }, 200);
+}
+
+function rebuildDomLayoutFromState() {
+  restoreOriginalPositions();
+  if (isFilterActive()) {
+    redistributeItems();
+  } else if (isMobileHomeGrid()) {
+    layoutMobileAllMode();
+  }
+  applyVisibilityClasses();
+  sizeVisibleItems();
 }
 
 function rebuildForFilter() {
@@ -340,6 +411,8 @@ function rebuildForFilter() {
 
   if (isFilterActive()) {
     redistributeItems();
+  } else if (isMobileHomeGrid()) {
+    layoutMobileAllMode();
   }
 
   applyVisibilityClasses();
@@ -353,6 +426,7 @@ function initMasonry() {
   allItems = [];
   originalColumnItems = [];
   homeEntranceAnimationDone = false;
+  lastMobileLayout = null;
   clearStabilizeTimers();
   var container = document.getElementById('masonry-container');
   if (!container) return;

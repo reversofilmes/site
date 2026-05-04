@@ -15,12 +15,15 @@ layout: none
   {% include opengraph.html %}
 
   <link rel="stylesheet" href="{{ '/assets/css/main.css' | relative_url }}">
-  <link rel="stylesheet" href="{{ '/assets/css/bottom-nav.css' | relative_url }}">
+  <link rel="stylesheet" href="{{ '/assets/css/site-nav.css' | relative_url }}">
+  <link rel="stylesheet" href="{{ '/assets/css/site-footer.css' | relative_url }}">
 
   <!-- Alpine.js -->
   <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.15.8/dist/cdn.min.js" crossorigin="anonymous"></script>
 </head>
 <body>
+  {% include home-nav.html %}
+
   <div class="projects-page" x-data="projectsPage('{{ '/projects.json' | relative_url }}')" x-init="init()">
     <!-- Header with navigation -->
     <header class="projects-header">
@@ -40,37 +43,53 @@ layout: none
     <!-- Filters Section -->
     <div class="filters-section" x-show="showFilters" x-transition:enter="filter-enter" x-transition:enter-start="filter-enter-start" x-transition:enter-end="filter-enter-end" x-transition:leave="filter-leave" x-transition:leave-start="filter-leave-start" x-transition:leave-end="filter-leave-end">
       <div class="filters-section-grid">
-        <!-- Search Input -->
-        <div class="filter-group">
+        <!-- Linha horizontal (scroll em mobile); multi-select mantido -->
+        <div class="filter-group filter-group--services">
+          <label class="filter-label">Tipos de Serviço</label>
+          <p x-show="loading" class="filter-empty">Carregando...</p>
+          <div
+            class="projects-filter__track"
+            x-show="!loading && availableServiceTypes.length > 0"
+          >
+            <div
+              class="projects-filter__scroll"
+              id="projects-filter-scroll"
+              role="group"
+              aria-label="Tipos de serviço"
+            >
+              <div class="projects-filter-service-btns">
+                <template x-for="serviceType in availableServiceTypes" :key="serviceType">
+                  <button
+                    type="button"
+                    class="servico-link projects-filter__btn"
+                    :class="{ 'projects-filter__btn--active': selectedServiceTypes.includes(serviceType) }"
+                    @click="toggleServiceType(serviceType)"
+                    x-text="serviceType"
+                  ></button>
+                </template>
+              </div>
+            </div>
+            <span class="projects-filter__scroll-hint projects-filter__scroll-hint--start" aria-hidden="true">
+              <i class="fa-solid fa-chevron-left"></i>
+            </span>
+            <span class="projects-filter__scroll-hint projects-filter__scroll-hint--end" aria-hidden="true">
+              <i class="fa-solid fa-chevron-right"></i>
+            </span>
+          </div>
+          <p x-show="!loading && availableServiceTypes.length === 0" class="filter-empty">Nenhum tipo listado</p>
+        </div>
+
+        <div class="filter-group filter-group--search">
           <label for="search-input" class="filter-label">Buscar</label>
-          <input 
-            type="text" 
+          <input
+            type="text"
             id="search-input"
-            class="filter-input" 
+            class="filter-input"
             placeholder="Buscar por título, cliente ou tipo de serviço..."
             x-model="searchTerm"
             @input="updateFilters()"
           />
         </div>
-
-        <!-- Service types: botões em pílula (multi-select, como na Home) -->
-        <div class="filter-group filter-group--services">
-          <label class="filter-label">Tipos de Serviço</label>
-          <p x-show="loading" class="filter-empty">Carregando...</p>
-          <div class="projects-filter-service-btns" x-show="!loading && availableServiceTypes.length > 0">
-            <template x-for="serviceType in availableServiceTypes" :key="serviceType">
-              <button
-                type="button"
-                class="servico-link projects-filter__btn"
-                :class="{ 'projects-filter__btn--active': selectedServiceTypes.includes(serviceType) }"
-                @click="toggleServiceType(serviceType)"
-                x-text="serviceType"
-              ></button>
-            </template>
-          </div>
-          <p x-show="!loading && availableServiceTypes.length === 0" class="filter-empty">Nenhum tipo listado</p>
-        </div>
-
       </div>
 
       <div class="filters-section-footer">
@@ -124,12 +143,13 @@ layout: none
     </div>
   </div>
 
-  {% include bottom-nav.html %}
-  
-  <!-- GSAP for bottom nav animations -->
+  {% include site-footer.html %}
+
   <script src="https://cdn.jsdelivr.net/npm/gsap@3.14.2/dist/gsap.min.js" crossorigin="anonymous"></script>
+  <script src="{{ '/assets/js/site-footer-marquee.js' | relative_url }}"></script>
   <script src="{{ '/assets/js/page-transitions.js' | relative_url }}"></script>
   <script src="{{ '/assets/js/projects.js' | relative_url }}"></script>
-  <script src="{{ '/assets/js/bottom-nav.js' | relative_url }}"></script>
+  <script src="{{ '/assets/js/projects-filter-scroll.js' | relative_url }}"></script>
+  <script src="{{ '/assets/js/home-nav.js' | relative_url }}"></script>
 </body>
 </html>
