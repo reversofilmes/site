@@ -1,41 +1,43 @@
 /**
- * Filtro de serviços (multi-select) + Carregar mais (Home).
+ * Filtro de serviços na Home — apenas um tipo ativo por vez (+ “TODOS”).
+ * Carregar mais — pagination do masonry.
  */
 (function () {
   'use strict';
 
-  var activeServices = new Set();
+  /** null = todos os serviços */
+  var selectedService = null;
 
   function getButtons() {
-    return document.querySelectorAll('.home-filter__btn[data-service]');
+    return document.querySelectorAll('#home-filter .projects-filter__btn[data-service]');
   }
 
   function syncButtonStyles() {
-    var isAll = activeServices.size === 0;
+    var isAll = selectedService === null;
     getButtons().forEach(function (btn) {
       var svc = btn.getAttribute('data-service');
       if (svc === '__all__') {
-        btn.classList.toggle('home-filter__btn--active', isAll);
+        btn.classList.toggle('projects-filter__btn--active', isAll);
       } else {
-        btn.classList.toggle('home-filter__btn--active', activeServices.has(svc));
+        btn.classList.toggle('projects-filter__btn--active', svc === selectedService);
       }
     });
   }
 
   function onFilterClick(e) {
-    var btn = e.target.closest('.home-filter__btn[data-service]');
+    var btn = e.target.closest('.projects-filter__btn[data-service]');
     if (!btn) return;
     e.preventDefault();
 
     var service = btn.getAttribute('data-service') || '__all__';
 
     if (service === '__all__') {
-      activeServices.clear();
+      selectedService = null;
     } else {
-      if (activeServices.has(service)) {
-        activeServices.delete(service);
+      if (selectedService === service) {
+        selectedService = null;
       } else {
-        activeServices.add(service);
+        selectedService = service;
       }
     }
 
@@ -48,9 +50,8 @@
     }
 
     if (window.HomeMasonry && typeof window.HomeMasonry.setFilter === 'function') {
-      var filterValue = activeServices.size === 0
-        ? '__all__'
-        : Array.from(activeServices);
+      var filterValue =
+        selectedService === null ? '__all__' : [selectedService];
       window.HomeMasonry.setFilter(filterValue);
     }
   }

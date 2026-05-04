@@ -1,5 +1,5 @@
 /**
- * Menu flip + painel lateral direito (apenas Home).
+ * Menu flip + painel lateral direito (site).
  * Atenção no logo: rAF com disparos discretos (não contínuos).
  */
 (function () {
