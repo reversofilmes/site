@@ -15,9 +15,12 @@ layout: none
   {% include opengraph.html %}
 
   <link rel="stylesheet" href="{{ '/assets/css/main.css' | relative_url }}">
-  <link rel="stylesheet" href="{{ '/assets/css/bottom-nav.css' | relative_url }}">
+  <link rel="stylesheet" href="{{ '/assets/css/site-nav.css' | relative_url }}">
+  <link rel="stylesheet" href="{{ '/assets/css/site-footer.css' | relative_url }}">
 </head>
 <body>
+  {% include home-nav.html %}
+
   <div class="project-detail-page">
     <!-- Title -->
     <header class="project-hero">
@@ -106,11 +109,11 @@ layout: none
     </main>
   </div>
 
-  {% include bottom-nav.html %}
-  
-  <!-- GSAP for bottom nav animations -->
+  {% include site-footer.html %}
+
   <script src="https://cdn.jsdelivr.net/npm/gsap@3.14.2/dist/gsap.min.js" crossorigin="anonymous"></script>
+  <script src="{{ '/assets/js/site-footer-marquee.js' | relative_url }}"></script>
   <script src="{{ '/assets/js/page-transitions.js' | relative_url }}"></script>
-  <script src="{{ '/assets/js/bottom-nav.js' | relative_url }}"></script>
+  <script src="{{ '/assets/js/home-nav.js' | relative_url }}"></script>
 </body>
 </html>

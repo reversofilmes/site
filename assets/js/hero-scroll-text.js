@@ -40,14 +40,15 @@
     const p = Math.min(1, window.scrollY / (h * 0.8));
     const n = letters.length;
     letters.forEach((item, j) => {
-      const t = p * n - (n - 1 - j);
+      /* j=0 primeira letra (esquerda) — onda esquerda → direita */
+      const t = p * n - j;
       if (t <= 0) {
-        item.el.style.transform = 'rotateY(0deg)';
+        item.el.style.transform = 'rotateX(0deg)';
       } else if (t >= 1) {
-        item.el.style.transform = 'rotateY(180deg)';
+        item.el.style.transform = 'rotateX(180deg)';
       } else {
         const deg = t * 180;
-        item.el.style.transform = 'rotateY(' + deg + 'deg)';
+        item.el.style.transform = 'rotateX(' + deg + 'deg)';
       }
     });
   }

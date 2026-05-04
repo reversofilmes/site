@@ -11,11 +11,6 @@
   text-align: center;
 }
 
-/* Espaço para a bottom-nav fixa nas páginas que a usam */
-body:has(> .bottom-nav) .site-footer {
-  padding-bottom: calc(5.75rem + env(safe-area-inset-bottom, 0px));
-}
-
 .site-footer__inner {
   max-width: 100%;
   margin: 0 auto;
@@ -51,18 +46,29 @@ body:has(> .bottom-nav) .site-footer {
   outline: none;
 }
 
+.site-footer__meta {
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  gap: 0.85rem;
+  max-width: 100%;
+  margin: 0 auto;
+  box-sizing: border-box;
+}
+
 .site-footer__contact {
   margin: 0;
   font-family: "Poppins", "Montserrat", sans-serif;
   font-size: clamp(0.85rem, 2vw, 0.95rem);
   font-weight: 500;
-  letter-spacing: 0.03em;
+  letter-spacing: 0.06em;
   line-height: 1.5;
   display: flex;
   flex-wrap: wrap;
   align-items: center;
   justify-content: center;
   gap: 0.35rem 0.75rem;
+  text-transform: uppercase;
 }
 
 .site-footer__sep {
@@ -75,6 +81,7 @@ body:has(> .bottom-nav) .site-footer {
   text-decoration: none;
   border-bottom: 1px solid rgba(255, 59, 47, 0.35);
   transition: color 0.2s, border-color 0.2s;
+  text-transform: uppercase;
 }
 
 .site-footer__link:hover,
@@ -89,8 +96,23 @@ body:has(> .bottom-nav) .site-footer {
   font-family: "Poppins", "Montserrat", sans-serif;
   font-size: clamp(0.75rem, 1.6vw, 0.85rem);
   font-weight: 500;
-  letter-spacing: 0.04em;
+  letter-spacing: 0.06em;
   color: rgba(255, 255, 255, 0.7);
+  text-transform: uppercase;
+  width: 100%;
+  box-sizing: border-box;
+  text-align: justify;
+  text-align-last: justify;
+  hyphens: none;
+}
+
+/* “Estica” a linha única de copyright à largura dos contatos (largura definida por JS no .site-footer__meta) */
+.site-footer__legal::after {
+  content: "";
+  display: inline-block;
+  width: 100%;
+  height: 0;
+  vertical-align: top;
 }
 
 /* Ticker — continua a mesma família/estilo do intro, mais compacto */
@@ -104,7 +126,7 @@ body:has(> .bottom-nav) .site-footer {
 .site-footer__marquee-row {
   display: flex;
   width: max-content;
-  animation: site-footer-marquee 38s linear infinite;
+  animation: site-footer-marquee 52s linear infinite;
   animation-play-state: paused;
   /* --marquee-shift (px) preenchido por site-footer-marquee.js; fallback -50% */
   transform: translate3d(0, 0, 0);
@@ -124,6 +146,13 @@ body:has(> .bottom-nav) .site-footer {
     flex-wrap: wrap;
     justify-content: center;
     text-align: center;
+  }
+
+  .site-footer__marquee-letter {
+    transform: rotateX(0deg);
+    color: #fff;
+    -webkit-text-fill-color: #fff;
+    -webkit-text-stroke-width: 0;
   }
 }
 
@@ -161,6 +190,42 @@ body:has(> .bottom-nav) .site-footer {
   text-shadow: 0 0 10px rgba(255, 0, 0, 0.45);
   font-style: normal;
   font-weight: 900;
+}
+
+/* CONTRÁRIO — GSAP no JS; estilo como na intro (contorno durante o flip) */
+.site-footer__marquee-contrario {
+  display: inline-flex;
+  align-items: center;
+  vertical-align: baseline;
+  margin: 0 0.02em;
+  box-sizing: border-box;
+  perspective: 560px;
+  transform-style: preserve-3d;
+}
+
+.site-footer__marquee-letter {
+  display: inline-block;
+  transform-origin: center center;
+  transform-style: preserve-3d;
+  color: #fff;
+  -webkit-text-fill-color: #fff;
+  -webkit-text-stroke-width: 0;
+  -webkit-text-stroke-color: transparent;
+  paint-order: stroke fill;
+}
+
+/* Igual à intro (.intro-line-4b-outline), à escala do ticker — aplicado antes do flip escalonado */
+.site-footer__marquee-contrario-outline .site-footer__marquee-letter {
+  color: transparent !important;
+  -webkit-text-fill-color: transparent !important;
+  -webkit-text-stroke-width: 1.5px;
+  -webkit-text-stroke-color: #ffffff;
+}
+
+@media (max-width: 480px) {
+  .site-footer__marquee-contrario-outline .site-footer__marquee-letter {
+    -webkit-text-stroke-width: 1px;
+  }
 }
 
 .site-footer__marquee-dot {

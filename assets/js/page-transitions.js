@@ -18,7 +18,7 @@
   /* Inclui hero/nav/conteúdo da Home no fade-out; o CSS de FOUC ainda isola
      .home-nav / .home-hero / #home-below em main.css até .page-loaded. */
   var CONTENT_SEL =
-    'body > *:not(.bottom-nav):not(script):not(link):not(style):not(meta)';
+    'body > *:not(script):not(link):not(style):not(meta)';
   var DURATION = 0.5;
   var isTransitioning = false;
   var initialFadeInDone = false;
@@ -59,9 +59,7 @@
   }
 
   function contentElements() {
-    return Array.from(document.querySelectorAll(CONTENT_SEL)).filter(function (el) {
-      return !el.classList.contains('bottom-nav') && !el.closest('.bottom-nav');
-    });
+    return Array.from(document.querySelectorAll(CONTENT_SEL));
   }
 
   function resetInlineStyles(els) {
