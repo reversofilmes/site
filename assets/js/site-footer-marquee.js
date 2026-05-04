@@ -104,7 +104,23 @@
     const contact = document.querySelector('.site-footer__contact');
     if (!meta || !contact) return;
     meta.style.width = '';
-    const w = Math.ceil(contact.getBoundingClientRect().width);
+    /* Medir como uma única linha: rect.width após aplicar meta pode ficar estreito demais e
+       ativar flex-wrap (email / telefone empilhados), visível sobretudo na Curupire-se (body flex). */
+    const prevWrap = contact.style.flexWrap;
+    contact.style.flexWrap = 'nowrap';
+    const singleLine = Math.ceil(contact.scrollWidth);
+    contact.style.flexWrap = prevWrap;
+
+    const inner = meta.closest('.site-footer__inner');
+    let cap = Infinity;
+    if (inner) {
+      const cs = window.getComputedStyle(inner);
+      const padX = parseFloat(cs.paddingLeft) + parseFloat(cs.paddingRight);
+      cap = Math.max(1, Math.floor(inner.clientWidth - padX));
+    }
+
+    const w = singleLine > 0 ? Math.min(singleLine, cap) : 0;
+
     if (w > 0) meta.style.width = w + 'px';
   }
 
