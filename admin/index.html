@@ -147,13 +147,17 @@
               class="admin-projetos-tile"
               :data-slug="p._slug"
               @click.prevent="openEditor(p)"
+              @mouseenter="hoverPlayVideo($el)"
+              @mouseleave="hoverStopVideo($el)"
               role="button"
               :aria-label="p.title"
               tabindex="0"
               @keydown.enter.prevent="openEditor(p)"
             >
               <div class="admin-projetos-tile__thumb">
-                <img x-show="p.thumbnail" :src="p.thumbnail" :alt="p.title" loading="lazy" />
+                <img x-show="p.thumbnail" :src="p.thumbnail" :alt="p.title" loading="lazy" class="admin-hover-thumb" />
+                <video x-show="p.hover_preview" :data-src="p.hover_preview"
+                       class="admin-hover-video" muted loop playsinline preload="none"></video>
                 <div x-show="!p.thumbnail" class="admin-project-item__ph" aria-hidden="true">Sem imagem</div>
               </div>
               <h3 class="admin-projetos-tile__title" x-text="p.title"></h3>
@@ -474,7 +478,9 @@
                     <span x-show="!ytIngestBusy">Gerar capa e prévia</span>
                     <span x-show="ytIngestBusy">Gerando localmente&hellip;</span>
                   </button>
+                  <span x-show="ytIngestBusy" class="spinner-sm" style="margin-left:0.3rem"></span>
                   <button type="button" class="btn btn-secondary btn-sm"
+                          x-show="!ytIngestBusy"
                           @click="retryYoutubePlayer()"
                           title="Recarregar preview do vídeo">Recarregar</button>
                 </div>
@@ -498,7 +504,7 @@
             <button type="button" class="btn btn-secondary" :disabled="pixiesetBusy || !((form.pixieset_url || '').trim())"
                     @click="generatePixiesetFromLink('thumb')">Gerar miniatura (capa)</button>
             <button type="button" class="btn btn-secondary" :disabled="pixiesetBusy || !((form.pixieset_url || '').trim())"
-                    @click="generatePixiesetFromLink('video')">Gerar vídeo preview (5 fotos)</button>
+                    @click="generatePixiesetFromLink('video')">Gerar vídeo preview</button>
             <button type="button" class="btn btn-secondary" :disabled="pixiesetBusy || !((form.pixieset_url || '').trim())"
                     @click="generatePixiesetFromLink('both')">Gerar capa e vídeo</button>
             <span x-show="pixiesetBusy" class="spinner-sm" style="margin-left:0.3rem"></span>
