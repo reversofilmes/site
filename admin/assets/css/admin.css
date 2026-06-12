@@ -948,6 +948,24 @@ input, textarea, select { font: inherit; }
   height: 100%;
   object-fit: cover;
   display: block;
+  transition: opacity 0.35s ease;
+}
+
+/* Hover video preview — tiles aba Projetos + Home */
+.admin-hover-video {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  opacity: 0;
+  transition: opacity 0.35s ease;
+  pointer-events: none;
+  z-index: 1;
+}
+.admin-hover-thumb {
+  transition: opacity 0.35s ease;
 }
 
 .admin-projetos-tile__title {

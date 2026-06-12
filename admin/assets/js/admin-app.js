@@ -237,6 +237,11 @@ function adminApp() {
       if (!silent) this.loading = true;
       let ok = false;
       try {
+        for (const old of this.projects) {
+          if (Array.isArray(old._blobUrls)) {
+            old._blobUrls.forEach((u) => { try { URL.revokeObjectURL(u); } catch {} });
+          }
+        }
         this.projects = await this._api.listProjects();
         this.projects.forEach((p) => {
           p._slug = p.slug;
@@ -341,7 +346,60 @@ function adminApp() {
     },
 
     hasDraftFor(slug) {
-      return !!this.projectDrafts[slug];
+      if (this.projectDrafts[slug]) return true;
+      const p = this.projects.find((x) => x._slug === slug && x._isDraftNew);
+      return !!p && !!this.projectDrafts[DRAFT_NEW];
+    },
+
+    hoverPlayVideo(el) {
+      const vid = el.querySelector('.admin-hover-video');
+      if (!vid) return;
+      if (!vid.src && vid.dataset.src) {
+        vid.src = vid.dataset.src;
+        vid.load();
+      }
+      const thumb = el.querySelector('.admin-hover-thumb');
+      const p = vid.play();
+      if (p) {
+        p.then(() => {
+          vid.style.opacity = '1';
+          if (thumb) thumb.style.opacity = '0';
+        }).catch(() => {});
+      }
+    },
+
+    hoverStopVideo(el) {
+      const vid = el.querySelector('.admin-hover-video');
+      if (!vid) return;
+      vid.pause();
+      vid.currentTime = 0;
+      vid.style.opacity = '0';
+      const thumb = el.querySelector('.admin-hover-thumb');
+      if (thumb) thumb.style.opacity = '1';
+    },
+
+    _revokeDraftNewBlobUrls() {
+      for (const p of this.projects) {
+        if (p._isDraftNew && Array.isArray(p._blobUrls)) {
+          p._blobUrls.forEach((u) => { try { URL.revokeObjectURL(u); } catch {} });
+        }
+      }
+    },
+
+    _undoAutoBumps(draft) {
+      if (!draft || !Array.isArray(draft._autoBumpedSlugs)) return;
+      for (const s of draft._autoBumpedSlugs) {
+        const p = this.projects.find((x) => x._slug === s);
+        if (p) {
+          p.order = Math.max(1, coerceHomeOrderNum(p.order) - 1);
+        }
+        const d = this.projectDrafts[s];
+        if (d && d._autoBumped) {
+          delete this.projectDrafts[s];
+        } else if (d) {
+          d.payload.order = p ? p.order : Math.max(1, (d.payload.order || 1) - 1);
+        }
+      }
     },
 
     async _loadSiteSettings() {
@@ -483,6 +541,10 @@ function adminApp() {
     },
 
     async openEditor(project) {
+      if (project._isDraftNew) {
+        this.newProject();
+        return;
+      }
       this._destroyYoutubePanel(true);
       this.isNew = false;
       this.editSlug = project._slug;
@@ -628,6 +690,11 @@ function adminApp() {
     async discardEditorDraft() {
       const key = this.isNew ? DRAFT_NEW : this.form._slug;
       if (this.projectDrafts[key]) {
+        if (this.isNew) {
+          this._undoAutoBumps(this.projectDrafts[key]);
+          this._revokeDraftNewBlobUrls();
+          this.projects = this.projects.filter((x) => !x._isDraftNew);
+        }
         delete this.projectDrafts[key];
         this._clearUploads();
         if (this.isNew) {
@@ -645,6 +712,8 @@ function adminApp() {
       if (this.isNew) {
         if (this.formDirty && !confirm('Descartar alterações não confirmadas?')) return;
         this._clearYouTubeTimeDraftStorage(DRAFT_NEW);
+        this._revokeDraftNewBlobUrls();
+        this.projects = this.projects.filter((x) => !x._isDraftNew);
         this.closeEditor();
         return;
       }
@@ -748,6 +817,8 @@ function adminApp() {
       const { payload } = this._buildPayloadFromForm(slug);
       const key = this.isNew ? DRAFT_NEW : this.form._slug;
 
+      const prevNewDraft = this.isNew ? this.projectDrafts[DRAFT_NEW] : null;
+
       this.projectDrafts[key] = {
         payload: { ...payload },
         thumbFile: this.thumbFile,
@@ -759,15 +830,94 @@ function adminApp() {
       if (!this.isNew) {
         const p = this.projects.find((x) => x._slug === this.form._slug);
         if (p) {
+          if (Array.isArray(p._blobUrls)) {
+            p._blobUrls.forEach((u) => { try { URL.revokeObjectURL(u); } catch {} });
+          }
           p.title = this.form.title;
           p.home_size = this.form.home_size || '1x1';
           p.client = this.form.client || '';
           p.show_on_home = this.form.show_on_home ? 1 : 0;
           p.order = payload.order != null ? payload.order : 1;
           p.home_col = payload.home_col;
-          if (this.form.thumbnail) p.thumbnail = this.form.thumbnail;
-          if (this.form.hover_preview) p.hover_preview = this.form.hover_preview;
+          const newBlobUrls = [];
+          if (this.thumbFile) {
+            const blobUrl = URL.createObjectURL(this.thumbFile);
+            p.thumbnail = blobUrl;
+            newBlobUrls.push(blobUrl);
+          } else if (this.form.thumbnail) {
+            p.thumbnail = this.form.thumbnail;
+          }
+          if (this.videoFile) {
+            const blobUrl = URL.createObjectURL(this.videoFile);
+            p.hover_preview = blobUrl;
+            newBlobUrls.push(blobUrl);
+          } else if (this.form.hover_preview) {
+            p.hover_preview = this.form.hover_preview;
+          }
+          p._blobUrls = newBlobUrls.length ? newBlobUrls : undefined;
         }
+      } else {
+        if (prevNewDraft) {
+          this._undoAutoBumps(prevNewDraft);
+        }
+        this._revokeDraftNewBlobUrls();
+        this.projects = this.projects.filter((x) => !x._isDraftNew);
+
+        const bumpedSlugs = [];
+        if (truthyShowOnHome({ show_on_home: payload.show_on_home })) {
+          const targetCol = payload.home_col;
+          const newOrder = payload.order;
+          for (const sib of this.projects) {
+            if (!truthyShowOnHome(sib)) continue;
+            if ((Number(sib.home_col) || 1) !== targetCol) continue;
+            if (coerceHomeOrderNum(sib.order) < newOrder) continue;
+
+            sib.order = coerceHomeOrderNum(sib.order) + 1;
+            bumpedSlugs.push(sib._slug);
+
+            const exDraft = this.projectDrafts[sib._slug];
+            if (exDraft && !exDraft._autoBumped) {
+              exDraft.payload.order = sib.order;
+            } else {
+              this.projectDrafts[sib._slug] = {
+                payload: this._projectToPayload(sib),
+                thumbFile: null,
+                videoFile: null,
+                isNew: false,
+                version: sib.version,
+                _autoBumped: true,
+              };
+            }
+          }
+        }
+        this.projectDrafts[DRAFT_NEW]._autoBumpedSlugs = bumpedSlugs;
+
+        const draftThumbUrl = this.thumbFile
+          ? URL.createObjectURL(this.thumbFile)
+          : (this.form.thumbnail || '');
+        const draftVideoUrl = this.videoFile
+          ? URL.createObjectURL(this.videoFile)
+          : (this.form.hover_preview || '');
+
+        this.projects.push({
+          _slug: slug,
+          slug: slug,
+          title: this.form.title || '',
+          client: this.form.client || '',
+          thumbnail: draftThumbUrl,
+          hover_preview: draftVideoUrl,
+          service_types: [...(this.form.service_types || [])],
+          date_mmddyyyy: this.form.date_mmddyyyy || '',
+          year: this.form.year || new Date().getFullYear(),
+          home_size: this.form.home_size || '1x1',
+          show_on_home: this.form.show_on_home ? 1 : 0,
+          home_col: payload.home_col,
+          order: payload.order,
+          youtube_url: this.form.youtube_url || '',
+          pixieset_url: this.form.pixieset_url || '',
+          _isDraftNew: true,
+          _blobUrls: [draftThumbUrl, draftVideoUrl].filter((u) => u.startsWith('blob:')),
+        });
       }
 
       this.formDirty = false;
@@ -1211,8 +1361,8 @@ function adminApp() {
           }
           const buildProxy = (u) => LS.pixiesetProxyUrl(u);
           const vBlob = await S.buildWebmFromImages(slides, buildProxy, {
-            totalSeconds: 5,
-            secondsPerSlide: 1,
+            maxSlides: 10,
+            secondsPerSlide: 0.5,
             width: 1280,
             height: 720,
           });
@@ -1226,7 +1376,7 @@ function adminApp() {
         }
         const msg =
           which === 'both'
-            ? 'Miniatura e vídeo (5 fotos × 1 s) gerados a partir do Pixieset.'
+            ? 'Miniatura e vídeo gerados a partir do Pixieset.'
             : which === 'thumb'
               ? 'Miniatura (capa) gerada a partir do Pixieset.'
               : 'Vídeo de hover gerado a partir de 5 fotos do Pixieset.';
@@ -1310,18 +1460,21 @@ function adminApp() {
       const title = this._escHtml(p.title || '');
       const client = this._escHtml(p.client || '');
       const thumb = p.thumbnail || '';
-      const hasDraft = !!this.projectDrafts[slug];
+      const hoverSrc = p.hover_preview || '';
+      const hasDraft = this.hasDraftFor(slug);
       const sizeLabel = size === '1x1.5' ? '1\u00d71,5' : size.replace('x', '\u00d7');
 
       const thumbHtml = thumb
-        ? '<img src="' + this._escAttr(thumb) + '" alt="' + this._escAttr(p.title || '') + '" loading="lazy" draggable="false"/>'
+        ? '<img class="admin-hover-thumb" src="' + this._escAttr(thumb) + '" alt="' + this._escAttr(p.title || '') + '" loading="lazy" draggable="false"/>'
         : '<div class="admin-project-item__ph" aria-hidden="true">Sem imagem</div>';
+
+      const videoHtml = hoverSrc
+        ? '<video class="admin-hover-video" data-src="' + this._escAttr(hoverSrc) + '" muted loop playsinline preload="none"></video>'
+        : '';
 
       const clientHtml = client
         ? '<p class="admin-project-item__client">' + client + '</p>'
         : '';
-
-      const draftDisplay = hasDraft ? '' : 'display:none';
 
       const dragHandleSvg = '<svg viewBox="0 0 16 16"><circle cx="4" cy="2" r="1.5"/><circle cx="4" cy="8" r="1.5"/><circle cx="4" cy="14" r="1.5"/><circle cx="12" cy="2" r="1.5"/><circle cx="12" cy="8" r="1.5"/><circle cx="12" cy="14" r="1.5"/><circle cx="8" cy="2" r="1.5"/><circle cx="8" cy="8" r="1.5"/><circle cx="8" cy="14" r="1.5"/></svg>';
 
@@ -1345,7 +1498,7 @@ function adminApp() {
         + draftBadge
         + '</div>'
         + '<div class="admin-project-item__drag-handle" title="Arrastar">' + dragHandleSvg + '</div>'
-        + '<div class="admin-project-item__thumb">' + thumbHtml + '</div>'
+        + '<div class="admin-project-item__thumb">' + thumbHtml + videoHtml + '</div>'
         + '<div class="admin-project-item__overlay">'
         + '<h3 class="admin-project-item__title">' + title + '</h3>'
         + clientHtml
@@ -1394,8 +1547,19 @@ function adminApp() {
         if (p) this.openEditor(p);
       };
 
+      this._homeGridHoverIn = (e) => {
+        const item = e.target.closest('.admin-project-item');
+        if (item) this.hoverPlayVideo(item);
+      };
+      this._homeGridHoverOut = (e) => {
+        const item = e.target.closest('.admin-project-item');
+        if (item) this.hoverStopVideo(item);
+      };
+
       root.addEventListener('click', this._homeGridClickHandler);
       root.addEventListener('keydown', this._homeGridKeyHandler);
+      root.addEventListener('mouseenter', this._homeGridHoverIn, true);
+      root.addEventListener('mouseleave', this._homeGridHoverOut, true);
     },
 
     _removeHomeGridClickHandler() {
@@ -1408,6 +1572,14 @@ function adminApp() {
       if (this._homeGridKeyHandler) {
         root.removeEventListener('keydown', this._homeGridKeyHandler);
         this._homeGridKeyHandler = null;
+      }
+      if (this._homeGridHoverIn) {
+        root.removeEventListener('mouseenter', this._homeGridHoverIn, true);
+        this._homeGridHoverIn = null;
+      }
+      if (this._homeGridHoverOut) {
+        root.removeEventListener('mouseleave', this._homeGridHoverOut, true);
+        this._homeGridHoverOut = null;
       }
     },
 

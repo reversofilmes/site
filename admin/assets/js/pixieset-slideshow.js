@@ -50,11 +50,10 @@
       throw new Error('Faltam imagens para o slideshow.');
     }
 
+    const maxSlides = (opt && opt.maxSlides) || 10;
     const src = imageUrls.filter(Boolean);
     if (!src.length) throw new Error('Faltam imagens para o slideshow.');
-    let list = src.slice(0, 5);
-    const pad = list[list.length - 1];
-    while (list.length < 5) list.push(pad);
+    const list = src.slice(0, maxSlides);
 
     const mime = pickRecorderMime();
     if (!mime) {
@@ -97,19 +96,22 @@
       };
     });
 
+    const slideCount = images.length;
+    const actualTotal = slideCount * per;
+
     rec.start(200);
 
     const t0 = performance.now();
-    const lastT = t0 + totalSec * 1000;
+    const lastT = t0 + actualTotal * 1000;
 
     function step(now) {
       const elapsed = (now - t0) / 1000;
-      const idx = Math.min(4, Math.floor(elapsed / per));
+      const idx = Math.min(slideCount - 1, Math.floor(elapsed / per));
       if (images[idx]) drawContain(ctx, images[idx], w, h);
       if (now < lastT) {
         requestAnimationFrame(step);
       } else {
-        if (images[4]) drawContain(ctx, images[4], w, h);
+        if (images[slideCount - 1]) drawContain(ctx, images[slideCount - 1], w, h);
         rec.stop();
       }
     }
