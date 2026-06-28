@@ -61,6 +61,7 @@ defaults:
 exclude:
   - cf-worker
   - scripts
+  - docs
   - testsprite_tests
   - DOCUMENTACAO.md
   - MIGRACAO_CONTAS_CLIENTE.md

@@ -1569,3 +1569,75 @@ body.admin-home-sorting .admin-project-item__drag-handle {
   .admin-main { padding: 0.75rem; }
   .header-right .btn-secondary { font-size: 0.7rem; padding: 0.4rem 0.6rem; }
 }
+
+/* ---- viewport gate (mobile / tablet) ---- */
+
+.viewport-gate {
+  display: none;
+  position: fixed;
+  inset: 0;
+  align-items: center;
+  justify-content: center;
+  background: var(--bg);
+  padding: 1.5rem;
+  z-index: 2000;
+  overflow-y: auto;
+}
+
+.viewport-gate__card {
+  background: var(--bg-2);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 2.75rem 2.25rem;
+  text-align: center;
+  max-width: 420px;
+  width: 100%;
+}
+
+.viewport-gate__card h1 {
+  font-size: 2rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.viewport-gate__subtitle {
+  color: var(--text-2);
+  margin: 0.25rem 0 0;
+  font-size: 0.9rem;
+}
+
+.viewport-gate__title {
+  font-size: 1.05rem;
+  font-weight: 600;
+  margin: 2rem 0 0.85rem;
+  color: var(--text);
+  letter-spacing: 0.02em;
+}
+
+.viewport-gate__message {
+  color: var(--text-2);
+  font-size: 0.88rem;
+  line-height: 1.65;
+  margin: 0;
+  text-align: left;
+}
+
+.viewport-gate__hint {
+  margin: 1.35rem 0 0;
+  padding-top: 1.25rem;
+  border-top: 1px solid var(--border);
+  color: var(--text-3);
+  font-size: 0.82rem;
+  line-height: 1.55;
+}
+
+@media (max-width: 1023px) {
+  .viewport-gate {
+    display: flex;
+  }
+
+  .admin-desktop-shell {
+    display: none !important;
+  }
+}

@@ -501,6 +501,35 @@ a:hover::after {
   body.is-home .projects-grid.projects-grid--cols .projects-col[data-col]:not([data-col="0"]) {
     display: none;
   }
+
+  body.is-home .project-item .project-thumbnail,
+  body.is-home .project-item .project-hover-video {
+    object-position: center center;
+  }
+
+  body.is-home .project-item:hover,
+  body.is-home .project-item:focus {
+    transform: none;
+    z-index: auto;
+    box-shadow: none;
+  }
+
+  body.is-home .project-item:hover .project-overlay,
+  body.is-home .project-item:focus .project-overlay {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+
+  body.is-home .project-item.is-preview-playing {
+    transform: scale(1.02);
+    z-index: 5;
+    box-shadow: 0 0 0 1px rgba(255, 0, 0, 0.3);
+  }
+
+  body.is-home .project-item.is-preview-playing:has(.project-hover-video.playing) .project-overlay {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 
 .project-item {
