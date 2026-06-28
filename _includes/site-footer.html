@@ -1,3 +1,8 @@
+{% capture marquee_segment %}
+<span class="site-footer__marquee-phrase"
+  >O PODER DE VER O <span class="site-footer__marquee-mundo">MUNDO</span> AO <span class="site-footer__marquee-contrario" data-marquee-contrario>CONTRÁRIO</span></span
+><span class="site-footer__marquee-dot" aria-hidden="true">·</span>
+{% endcapture %}
 <footer class="site-footer" id="site-footer">
   <div class="site-footer__inner">
     <div class="site-footer__social" aria-label="Redes e contato">
@@ -29,42 +34,22 @@
         <i class="fa-brands fa-whatsapp" aria-hidden="true"></i>
       </a>
     </div>
-    <p class="site-footer__contact">
-      <a href="mailto:reversofilmes@gmail.com" class="site-footer__link">reversofilmes@gmail.com</a>
-      <span class="site-footer__sep" aria-hidden="true">·</span>
-      <a href="tel:+5531996005678" class="site-footer__link">+55 31 99600-5678</a>
-    </p>
-    <p class="site-footer__legal">© Todos os direitos reservados — Reverso Filmes</p>
+    <div class="site-footer__meta">
+      <p class="site-footer__contact">
+        <a href="mailto:reversofilmes@gmail.com" class="site-footer__link">reversofilmes@gmail.com</a>
+        <span class="site-footer__sep" aria-hidden="true">·</span>
+        <a href="tel:+5531996005678" class="site-footer__link">+55 31 99600-5678</a>
+      </p>
+      <p class="site-footer__legal">© Todos os direitos reservados — Reverso Filmes</p>
+    </div>
   </div>
   <div class="site-footer__marquee" aria-hidden="true">
     <div class="site-footer__marquee-row">
       <div class="site-footer__marquee-group">
-        <span class="site-footer__marquee-phrase"
-          >O PODER DE VER O <span class="site-footer__marquee-mundo">MUNDO</span> AO CONTRÁRIO</span
-        ><span class="site-footer__marquee-dot" aria-hidden="true">·</span>
-        <span class="site-footer__marquee-phrase"
-          >O PODER DE VER O <span class="site-footer__marquee-mundo">MUNDO</span> AO CONTRÁRIO</span
-        ><span class="site-footer__marquee-dot" aria-hidden="true">·</span>
-        <span class="site-footer__marquee-phrase"
-          >O PODER DE VER O <span class="site-footer__marquee-mundo">MUNDO</span> AO CONTRÁRIO</span
-        ><span class="site-footer__marquee-dot" aria-hidden="true">·</span>
-        <span class="site-footer__marquee-phrase"
-          >O PODER DE VER O <span class="site-footer__marquee-mundo">MUNDO</span> AO CONTRÁRIO</span
-        ><span class="site-footer__marquee-dot" aria-hidden="true">·</span>
+        {{ marquee_segment }}{{ marquee_segment }}{{ marquee_segment }}{{ marquee_segment }}
       </div>
       <div class="site-footer__marquee-group" aria-hidden="true">
-        <span class="site-footer__marquee-phrase"
-          >O PODER DE VER O <span class="site-footer__marquee-mundo">MUNDO</span> AO CONTRÁRIO</span
-        ><span class="site-footer__marquee-dot" aria-hidden="true">·</span>
-        <span class="site-footer__marquee-phrase"
-          >O PODER DE VER O <span class="site-footer__marquee-mundo">MUNDO</span> AO CONTRÁRIO</span
-        ><span class="site-footer__marquee-dot" aria-hidden="true">·</span>
-        <span class="site-footer__marquee-phrase"
-          >O PODER DE VER O <span class="site-footer__marquee-mundo">MUNDO</span> AO CONTRÁRIO</span
-        ><span class="site-footer__marquee-dot" aria-hidden="true">·</span>
-        <span class="site-footer__marquee-phrase"
-          >O PODER DE VER O <span class="site-footer__marquee-mundo">MUNDO</span> AO CONTRÁRIO</span
-        ><span class="site-footer__marquee-dot" aria-hidden="true">·</span>
+        {{ marquee_segment }}{{ marquee_segment }}{{ marquee_segment }}{{ marquee_segment }}
       </div>
     </div>
   </div>

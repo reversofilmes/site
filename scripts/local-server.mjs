@@ -9,6 +9,7 @@
  * Se 7847 estiver ocupada, o processo antigo na mesma porta é encerrado automaticamente
  * (desative com REVERSO_RELEASE_PORT=0 se precisar de outro serviço nesta porta).
  */
+console.log('[boot] local-server.mjs carregado de:', import.meta.url, '| MAX_PIXIESET_SLIDES será 10');
 
 import { createServer } from 'http';
 import { createReadStream } from 'fs';
@@ -286,7 +287,10 @@ function pickPathFromPhoto(photo) {
   return null;
 }
 
+const MAX_PIXIESET_SLIDES = 10;
+
 function buildCoverAndSlides(photos) {
+  console.log(`[pixieset] buildCoverAndSlides: ${photos?.length || 0} fotos, limite=${MAX_PIXIESET_SLIDES}`);
   const out = { cover: null, slides: [] };
   const used = new Set();
   if (!Array.isArray(photos) || !photos.length) return out;
@@ -301,9 +305,10 @@ function buildCoverAndSlides(photos) {
     if (u && !used.has(u)) {
       used.add(u);
       if (!out.cover) out.cover = u;
-      if (out.slides.length < 5) out.slides.push(u);
+      if (out.slides.length < MAX_PIXIESET_SLIDES) out.slides.push(u);
     }
   }
+  console.log(`[pixieset] buildCoverAndSlides resultado: ${out.slides.length} slides únicos de ${used.size} URLs únicas`);
   return out;
 }
 
@@ -449,7 +454,7 @@ async function resolvePixieset(galleryUrl) {
         if (s.startsWith('//')) return `https:${s}`;
         return s;
       });
-      return { cover: normalized[0], slides: normalized.slice(0, 5) };
+      return { cover: normalized[0], slides: normalized.slice(0, MAX_PIXIESET_SLIDES) };
     }
 
     const debugDir = join(dirname(fileURLToPath(import.meta.url)), '.cache');
@@ -503,6 +508,7 @@ function corsHeaders() {
     'Access-Control-Allow-Origin': '*',
     'Access-Control-Allow-Methods': 'GET, POST, OPTIONS',
     'Access-Control-Allow-Headers': 'Content-Type',
+    'Access-Control-Allow-Private-Network': 'true',
     'Access-Control-Max-Age': '86400',
   };
 }
@@ -786,11 +792,11 @@ function startListening() {
         console.error('Erro ao subir servidor após libertar a porta:', e2);
         process.exit(1);
       });
-      server.listen(PORT, '127.0.0.1', logServerReadyBanner);
+      server.listen(PORT, logServerReadyBanner);
     }, 300);
   });
 
-  server.listen(PORT, '127.0.0.1', logServerReadyBanner);
+  server.listen(PORT, logServerReadyBanner);
 }
 
 startListening();

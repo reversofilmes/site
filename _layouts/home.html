@@ -35,7 +35,7 @@ layout: none
   {% include opengraph.html %}
 
   <link rel="stylesheet" href="{{ '/assets/css/main.css' | relative_url }}">
-  <link rel="stylesheet" href="{{ '/assets/css/bottom-nav.css' | relative_url }}">
+  <link rel="stylesheet" href="{{ '/assets/css/site-nav.css' | relative_url }}">
   <link rel="stylesheet" href="{{ '/assets/css/home-hero.css' | relative_url }}">
   <link rel="stylesheet" href="{{ '/assets/css/site-footer.css' | relative_url }}">
   <link rel="preload" href="https://cdn.jsdelivr.net/npm/gsap@3.14.2/dist/gsap.min.js" as="script" crossorigin>
@@ -83,21 +83,24 @@ layout: none
 
   <div class="home-below" id="home-below">
     <section class="home-filter" id="home-filter" aria-label="Filtrar por serviço">
-      <div class="home-filter__track">
+      <div class="projects-filter__track">
         <div
-          class="home-filter__scroll"
+          class="projects-filter__scroll"
           id="home-filter-scroll"
           role="group"
           aria-label="Tipos de serviço"
         >
-          <div class="home-filter__inner servicos-list">
-            <button type="button" class="servico-link home-filter__btn home-filter__btn--active" data-service="__all__">TODOS</button>
+          <div class="projects-filter-service-btns">
+            <button type="button" class="servico-link projects-filter__btn projects-filter__btn--active" data-service="__all__">TODOS</button>
             {% for service_type in sorted_services %}
-              <button type="button" class="servico-link home-filter__btn" data-service="{{ service_type | replace: '"', '' }}">{{ service_type }}</button>
+              <button type="button" class="servico-link projects-filter__btn" data-service="{{ service_type | replace: '"', '' }}">{{ service_type }}</button>
             {% endfor %}
           </div>
         </div>
-        <span class="home-filter__scroll-hint" aria-hidden="true">
+        <span class="projects-filter__scroll-hint projects-filter__scroll-hint--start" aria-hidden="true">
+          <i class="fa-solid fa-chevron-left"></i>
+        </span>
+        <span class="projects-filter__scroll-hint projects-filter__scroll-hint--end" aria-hidden="true">
           <i class="fa-solid fa-chevron-right"></i>
         </span>
       </div>
@@ -112,13 +115,14 @@ layout: none
 
   {% include site-footer.html %}
 
-  <script src="{{ '/assets/js/site-footer-marquee.js' | relative_url }}"></script>
   <script src="https://cdn.jsdelivr.net/npm/gsap@3.14.2/dist/gsap.min.js" crossorigin="anonymous"></script>
+  <script src="{{ '/assets/js/site-footer-marquee.js' | relative_url }}"></script>
   <script src="{{ '/assets/js/page-transitions.js' | relative_url }}"></script>
   <script src="{{ '/assets/js/home-nav.js' | relative_url }}"></script>
   <script src="{{ '/assets/js/hero-scroll-text.js' | relative_url }}"></script>
   <script src="{{ '/assets/js/home-intro.js' | relative_url }}"></script>
   <script src="{{ '/assets/js/masonry-init.js' | relative_url }}"></script>
+  <script src="{{ '/assets/js/projects-filter-scroll.js' | relative_url }}"></script>
   <script src="{{ '/assets/js/home-filter.js' | relative_url }}"></script>
 </body>
 </html>

@@ -5,13 +5,13 @@
 [build.environment]
   RUBY_VERSION = "3.3.0"
   # Mesmo host que site.reverso_cms_api + /api/projects/export. Com custom domain cms.*, alinhar meta + CSP abaixo.
-  WORKER_EXPORT_URL = "https://reverso-cms-api.reverso-cms.workers.dev/api/projects/export"
+  WORKER_EXPORT_URL = "https://cms.reversofilmes.com.br/api/projects/export"
 
 # Alpine.js avalia x-data / @click / etc. com Function() — exige 'unsafe-eval' em script-src (só neste path).
 [[headers]]
   for = "/admin/*"
   [headers.values]
-    Content-Security-Policy = "default-src 'self'; script-src 'self' cdn.jsdelivr.net 'unsafe-eval'; style-src 'self' cdn.jsdelivr.net 'unsafe-inline'; connect-src 'self' https://reverso-cms-api.reverso-cms.workers.dev https://cms.reversofilmes.com.br http://localhost:7847; img-src 'self' https://media.reversofilmes.com.br https://reverso-cms-api.reverso-cms.workers.dev https://avatars.githubusercontent.com https://img.youtube.com https://*.ytimg.com https://cdn.pixieset.com https://*.pixieset.com http://localhost:7847 data: blob:; media-src https://media.reversofilmes.com.br https://reverso-cms-api.reverso-cms.workers.dev http://localhost:7847 blob:"
+    Content-Security-Policy = "default-src 'self'; script-src 'self' cdn.jsdelivr.net 'unsafe-eval'; style-src 'self' cdn.jsdelivr.net 'unsafe-inline'; connect-src 'self' https://reverso-cms-api.reversofilmes.workers.dev https://cms.reversofilmes.com.br http://localhost:7847; img-src 'self' https://media.reversofilmes.com.br https://cms.reversofilmes.com.br https://reverso-cms-api.reversofilmes.workers.dev https://avatars.githubusercontent.com https://img.youtube.com https://*.ytimg.com https://cdn.pixieset.com https://*.pixieset.com http://localhost:7847 data: blob:; media-src https://media.reversofilmes.com.br https://cms.reversofilmes.com.br https://reverso-cms-api.reversofilmes.workers.dev http://localhost:7847 blob:"
     X-Frame-Options = "DENY"
     X-Content-Type-Options = "nosniff"
 

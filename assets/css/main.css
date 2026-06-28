@@ -13,18 +13,10 @@ body {
 }
 
 /* Prevent flicker - hide content until transition script runs */
-body:not(.page-loaded) > *:not(.bottom-nav):not(script):not(link):not(style):not(meta):not(.home-nav):not(.home-hero):not(#home-below) {
+body:not(.page-loaded) > *:not(script):not(link):not(style):not(meta):not(.home-nav):not(.home-hero):not(#home-below) {
   opacity: 0 !important;
   visibility: hidden !important;
   transform: translateY(20px) scale(0.98) !important;
-}
-
-/* Ensure bottom nav is always visible */
-.bottom-nav {
-  opacity: 1 !important;
-  visibility: visible !important;
-  z-index: 2000 !important;
-  pointer-events: auto !important;
 }
 
 html {
@@ -460,11 +452,13 @@ a:hover::after {
   max-width: 100%;
   min-height: 100vh;
   position: relative;
-  overflow-x: hidden;
+  /* overflow-x:hidden faz overflow-y efetivo ≠ visible e corta o scale(1.02) ao hover */
+  overflow: visible;
   box-sizing: border-box;
   pointer-events: none;
   /* Margem lateral = GUTTER (14) em masonry-init.js; respiro antes do rodapé */
-  padding: 0 14px clamp(3.5rem, 8vw, 6.5rem);
+  /* Respiro superior: evita “corte” nos cards da 1.ª fila quando crescem no hover */
+  padding: clamp(10px, 1.25vw, 18px) 14px clamp(3.5rem, 8vw, 6.5rem);
 }
 
 .masonry-container.grid-enabled {
@@ -498,6 +492,17 @@ a:hover::after {
   width: 100%;
 }
 
+/* Home — mobile: uma coluna; itens ficam só na primeira coluna (JS ordena por order + home_col) */
+@media (max-width: 767px) {
+  body.is-home .projects-grid.projects-grid--cols {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  body.is-home .projects-grid.projects-grid--cols .projects-col[data-col]:not([data-col="0"]) {
+    display: none;
+  }
+}
+
 .project-item {
   position: relative;
   display: block;
@@ -509,7 +514,7 @@ a:hover::after {
   color: inherit;
   background-color: #000;
   border: 0;
-  border-radius: 10px;
+  border-radius: 4px;
   opacity: 1;
   cursor: pointer;
   transition: transform 0.3s ease;
@@ -628,11 +633,13 @@ a:hover::after {
   display: -webkit-box;
   -webkit-box-orient: vertical;
   -webkit-line-clamp: 4;
+  line-clamp: 4;
   overflow: hidden;
 }
 
 .project-item[data-size="1x1"] .project-title {
   -webkit-line-clamp: 2;
+  line-clamp: 2;
   font-size: clamp(0.7rem, 1.6vw, 0.95rem);
 }
 
@@ -645,6 +652,7 @@ a:hover::after {
   display: -webkit-box;
   -webkit-box-orient: vertical;
   -webkit-line-clamp: 2;
+  line-clamp: 2;
   overflow: hidden;
 }
 
@@ -748,24 +756,41 @@ a:hover::after {
   transform: rotate(180deg);
 }
 
-/* Filters Section */
+/* Filters Section — sem overflow:hidden horizontal: cortava a fila de botões */
 .filters-section {
-  max-width: 1200px;
+  width: 100%;
+  max-width: min(1600px, 100%);
   margin: 0 auto 3rem;
   padding: 2rem;
+  box-sizing: border-box;
   background-color: rgba(255, 0, 0, 0.05);
   border: 1px solid rgba(255, 0, 0, 0.2);
   border-radius: 8px;
   display: flex;
   flex-direction: column;
   gap: 1.25rem;
-  overflow: hidden;
+  overflow-x: visible;
+  overflow-y: visible;
 }
 
 .filters-section-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
   gap: 2rem;
+  width: 100%;
+  min-width: 0;
+}
+
+.filter-group--search {
+  width: 100%;
+  min-width: 0;
+  align-items: center;
+}
+
+.filter-group--search .filter-input {
+  width: min(36rem, 100%);
+  max-width: 100%;
 }
 
 .filters-section-footer {
@@ -879,14 +904,104 @@ a:hover::after {
   color: rgba(255, 0, 0, 0.5);
 }
 
-/* Projetos: tipos de serviço como pílulas (estética alinhada à Home; wrap, sem scroll) */
+/* Projetos: fila horizontal; min-width:0 permite rolagem interna em vez de cortar */
 .filter-group--services {
   min-width: 0;
+  width: 100%;
+}
+
+.projects-filter__track {
+  position: relative;
+  width: 100%;
+  max-width: 100%;
+  min-width: 0;
+}
+
+.projects-filter__scroll {
+  display: flex;
+  flex-wrap: nowrap;
+  justify-content: flex-start;
+  width: 100%;
+  max-width: 100%;
+  min-width: 0;
+  overflow-x: auto;
+  overflow-y: hidden;
+  -webkit-overflow-scrolling: touch;
+  scroll-behavior: smooth;
+  scrollbar-width: thin;
+  scrollbar-color: rgba(255, 0, 0, 0.35) transparent;
+  -ms-overflow-style: auto;
+  box-sizing: border-box;
+  padding: 0.35rem 0.15rem 0.45rem;
+  overscroll-behavior-x: contain;
+}
+
+.projects-filter__scroll::-webkit-scrollbar {
+  height: 6px;
+}
+
+.projects-filter__scroll::-webkit-scrollbar-thumb {
+  background: rgba(255, 0, 0, 0.35);
+  border-radius: 3px;
+}
+
+.projects-filter__scroll::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.projects-filter__scroll .projects-filter-service-btns {
+  display: flex;
+  flex-wrap: nowrap;
+  justify-content: flex-start;
+  align-items: center;
+  gap: 0.65rem;
+  margin: 0;
+  width: max-content;
+  max-width: none;
+  padding: 0.15rem 0.25rem 0.15rem 0;
+  box-sizing: border-box;
+  flex: 0 0 auto;
+}
+
+.projects-filter__scroll-hint {
+  display: none;
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  z-index: 2;
+  pointer-events: none;
+  color: rgba(255, 255, 255, 0.35);
+  font-size: 0.75rem;
+  padding: 0.25rem 0.15rem;
+  line-height: 1;
+}
+
+.projects-filter__scroll-hint--end {
+  right: 0;
+  left: auto;
+}
+
+.projects-filter__scroll-hint--start {
+  left: 0;
+  right: auto;
+}
+
+.projects-filter__track--overflow .projects-filter__scroll-hint {
+  display: block;
+}
+
+.projects-filter__track--overflow .projects-filter__scroll .projects-filter-service-btns {
+  padding-left: 1.5rem;
+  padding-right: 1.5rem;
+}
+
+.projects-filter__scroll-hint i {
+  display: block;
 }
 
 .projects-filter-service-btns {
   display: flex;
-  flex-wrap: wrap;
+  flex-wrap: nowrap;
   gap: 0.65rem;
   align-items: center;
 }
@@ -895,7 +1010,7 @@ a:hover::after {
   flex: 0 0 auto;
   padding: 0.85rem 1.3rem;
   font-size: 0.88rem;
-  border-radius: 28px;
+  border-radius: 4px;
   white-space: nowrap;
   cursor: pointer;
   font-family: 'Poppins', sans-serif;
@@ -905,6 +1020,37 @@ a:hover::after {
 }
 
 .projects-page .projects-filter__btn:focus-visible {
+  outline: 3px solid rgba(255, 0, 0, 0.5);
+  outline-offset: 2px;
+}
+
+/*
+ * Home — fila centrada quando cabe: margin auto no grupo interno.
+ * justify-content: center no strip cortava o início quando havia overflow horizontal.
+ */
+.home-filter .projects-filter__scroll {
+  justify-content: flex-start;
+}
+
+.home-filter .projects-filter__scroll .projects-filter-service-btns {
+  margin-left: auto;
+  margin-right: auto;
+}
+
+.home-filter .projects-filter__btn {
+  flex: 0 0 auto;
+  padding: 0.85rem 1.3rem;
+  font-size: 0.88rem;
+  border-radius: 4px;
+  white-space: nowrap;
+  cursor: pointer;
+  font-family: 'Poppins', sans-serif;
+  line-height: 1.2;
+  -webkit-tap-highlight-color: rgba(255, 0, 0, 0.2);
+  touch-action: manipulation;
+}
+
+.home-filter .projects-filter__btn:focus-visible {
   outline: 3px solid rgba(255, 0, 0, 0.5);
   outline-offset: 2px;
 }
@@ -922,12 +1068,33 @@ a:hover::after {
     font-size: 0.9rem;
     letter-spacing: 0.04em;
   }
+
+  .home-filter .projects-filter__btn {
+    padding: 0.8rem 1.35rem;
+    font-size: 0.9rem;
+    letter-spacing: 0.04em;
+  }
 }
 
-@media (max-width: 768px) {
+@media (max-width: 1024px) {
+  .projects-filter__scroll {
+    overscroll-behavior-x: contain;
+  }
+
   .projects-page .projects-filter__btn {
     padding: 0.8rem 1.15rem;
     font-size: 0.86rem;
+  }
+
+  .home-filter .projects-filter__btn {
+    padding: 0.8rem 1.15rem;
+    font-size: 0.86rem;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .projects-filter__scroll {
+    scroll-behavior: auto;
   }
 }
 
@@ -985,7 +1152,7 @@ a:hover::after {
   flex-direction: column;
   background-color: rgba(0, 0, 0, 0.7);
   border: 1px solid rgba(255, 0, 0, 0.2);
-  border-radius: 8px;
+  border-radius: 4px;
   overflow: hidden;
   text-decoration: none;
   color: inherit;
@@ -1238,11 +1405,6 @@ a:hover::after {
     gap: 1.25rem;
   }
 
-  .filters-section-grid {
-    grid-template-columns: 1fr;
-    gap: 1.5rem;
-  }
-
   /* Projects list now uses masonry */
 
   .project-card-info {
@@ -1280,10 +1442,6 @@ a:hover::after {
 
   .filters-section {
     padding: 1rem;
-    gap: 1rem;
-  }
-
-  .filters-section-grid {
     gap: 1rem;
   }
 
@@ -1842,6 +2000,10 @@ html {
   justify-content: center;
   gap: 1.5rem;
   margin-top: 3rem;
+}
+
+.about-servicos .servico-link {
+  border-radius: 4px;
 }
 
 .servico-link {
