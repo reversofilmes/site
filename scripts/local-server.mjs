@@ -508,6 +508,7 @@ function corsHeaders() {
     'Access-Control-Allow-Origin': '*',
     'Access-Control-Allow-Methods': 'GET, POST, OPTIONS',
     'Access-Control-Allow-Headers': 'Content-Type',
+    'Access-Control-Allow-Private-Network': 'true',
     'Access-Control-Max-Age': '86400',
   };
 }
@@ -791,11 +792,11 @@ function startListening() {
         console.error('Erro ao subir servidor após libertar a porta:', e2);
         process.exit(1);
       });
-      server.listen(PORT, '127.0.0.1', logServerReadyBanner);
+      server.listen(PORT, logServerReadyBanner);
     }, 300);
   });
 
-  server.listen(PORT, '127.0.0.1', logServerReadyBanner);
+  server.listen(PORT, logServerReadyBanner);
 }
 
 startListening();

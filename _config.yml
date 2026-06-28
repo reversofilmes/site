@@ -7,7 +7,7 @@ url: "https://reversofilmes.com.br"
 # Base URL do Worker (sem barra no fim). Admin usa isto na meta reverso-cms-api.
 # Local com wrangler dev: http://127.0.0.1:8787 — ou use _config.local.yml (gitignored).
 # Produção com custom domain: https://cms.reversofilmes.com.br
-reverso_cms_api: "https://reverso-cms-api.reversofilmes.workers.dev"
+reverso_cms_api: "https://cms.reversofilmes.com.br"
 
 twitter_username: reversofilmes
 twitter_creator: "@reversofilmes"

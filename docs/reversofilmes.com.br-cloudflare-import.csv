@@ -1,0 +1,10 @@
+name,ttl,type,value,notes
+"@","3600","A","54.232.119.62","Ex-NETLIFY apex; IP do DNS vivo (Netlify). Proxy: DNS only."
+"www","3600","CNAME","reversofilmessite.netlify.app","Ex-NETLIFY. Proxy: DNS only."
+"temp","3600","CNAME","reversofilmessite.netlify.app","Ex-NETLIFY. Proxy: DNS only."
+"@","3600","MX","10 mx.zoho.com","Proxy: DNS only."
+"@","3600","MX","20 mx2.zoho.com","Proxy: DNS only."
+"@","3600","MX","50 mx3.zoho.com","Proxy: DNS only."
+"@","3600","TXT","zoho-verification=zb39267553.zmverify.zoho.com",""
+"@","3600","TXT","v=spf1 include:zohomail.com ~all","Corrigido: estava em nome duplicado no Netlify."
+"zmail._domainkey","3600","TXT","v=DKIM1; k=rsa; p=MIGfMA0GCSqGSIb3DQEBAQUAA4GNADCBiQKBgQCP000oO2chhkznTpJEE+knmwPjKoE1jXA2sQnSnVCTDMHORckc4EoQgMuiIqCJrnzSTnb/guXGLGzp4yjFsLFZtwfJKUu2tE9Vc1xeYWlKTv3srFv4lv4Zen4euWsQlzuQYCu2Wuj34VrEn9czF6yp2wFk2rY8Y5tUmLdLcs8xCwIDAQAB","Corrigido: estava em nome duplicado no Netlify."
