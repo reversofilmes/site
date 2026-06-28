@@ -24,8 +24,34 @@
   <script src="/admin/assets/js/admin-app.js"></script>
 
   <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.14.9/dist/cdn.min.js"></script>
+  <script>
+    (function () {
+      var mq = window.matchMedia('(min-width: 1024px)');
+      mq.addEventListener('change', function (e) {
+        if (e.matches) location.reload();
+      });
+    })();
+  </script>
 </head>
-<body x-data="adminApp()" x-init="init()">
+<body>
+
+  <div class="viewport-gate" role="status" aria-live="polite">
+    <div class="viewport-gate__card">
+      <h1>Reverso</h1>
+      <p class="viewport-gate__subtitle">Portfolio Manager</p>
+      <p class="viewport-gate__title">Disponível apenas em desktop</p>
+      <p class="viewport-gate__message">
+        O painel de gestão do portfólio foi concebido para ecrãs largos e requer funcionalidades
+        que não estão disponíveis em telemóvel ou tablet — como arrastar projetos na grelha da Home
+        e a automação com YouTube e Pixieset via Reverso Media Launcher.
+      </p>
+      <p class="viewport-gate__hint">
+        Aceda a esta página num computador com janela de, pelo menos, 1024&nbsp;px de largura.
+      </p>
+    </div>
+  </div>
+
+  <div class="admin-desktop-shell" x-data="adminApp()" x-init="init()">
 
   <div x-show="loading" class="loading-screen">
     <div class="spinner"></div>
@@ -548,6 +574,8 @@
       <p class="publish-overlay-title">Publicação em andamento</p>
       <p class="publish-overlay-phase" x-text="publishPhase"></p>
     </div>
+  </div>
+
   </div>
 
 </body>

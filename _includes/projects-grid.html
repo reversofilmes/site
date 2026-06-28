@@ -55,34 +55,25 @@
 document.addEventListener("DOMContentLoaded", () => {
   const items = document.querySelectorAll(".project-item");
   var videoMap = new Map();
+  var observer = null;
+  var hoverHandlers = new WeakMap();
+  var mobileMq = window.matchMedia("(max-width: 767px)");
+  var VISIBLE_RATIO = 0.5;
 
   items.forEach((item) => {
     var videoEl = item.querySelector(".project-hover-video");
-    if (!videoEl) return;
-
     var thumbEl = item.querySelector(".project-thumbnail");
     var state = { loaded: false, loading: false };
     videoMap.set(item, { videoEl: videoEl, thumbEl: thumbEl, state: state });
-
-    item.addEventListener("mouseenter", () => playVideo(videoEl, thumbEl, state));
-    item.addEventListener("mouseleave", () => hideVideo(videoEl, thumbEl));
-    item.addEventListener("focus", () => playVideo(videoEl, thumbEl, state));
-    item.addEventListener("blur", () => hideVideo(videoEl, thumbEl));
-    item.addEventListener("touchstart", () => loadVideo(videoEl, state), { once: true, passive: true });
   });
 
-  var observer = new IntersectionObserver((entries) => {
-    entries.forEach((entry) => {
-      if (!entry.isIntersecting) return;
-      var data = videoMap.get(entry.target);
-      if (data) {
-        loadVideo(data.videoEl, data.state);
-        observer.unobserve(entry.target);
-      }
-    });
-  }, { rootMargin: "200px" });
+  function isMobilePreview() {
+    return mobileMq.matches;
+  }
 
-  videoMap.forEach((_data, item) => observer.observe(item));
+  function setInView(item, active) {
+    item.classList.toggle("is-preview-playing", active);
+  }
 
   function loadVideo(videoEl, state) {
     if (state.loaded || state.loading) return;
@@ -135,5 +126,98 @@ document.addEventListener("DOMContentLoaded", () => {
     videoEl.classList.remove("playing");
     if (thumbEl) thumbEl.style.opacity = "1";
   }
+
+  function resetAllPreviews() {
+    items.forEach((item) => {
+      setInView(item, false);
+      var data = videoMap.get(item);
+      if (data && data.videoEl) hideVideo(data.videoEl, data.thumbEl);
+    });
+  }
+
+  function onMobileIntersection(entries) {
+    entries.forEach((entry) => {
+      var item = entry.target;
+      var data = videoMap.get(item);
+      var visible = entry.isIntersecting && entry.intersectionRatio >= VISIBLE_RATIO;
+
+      if (visible) {
+        setInView(item, true);
+        if (data && data.videoEl) playVideo(data.videoEl, data.thumbEl, data.state);
+      } else if (!entry.isIntersecting || entry.intersectionRatio < VISIBLE_RATIO) {
+        setInView(item, false);
+        if (data && data.videoEl) hideVideo(data.videoEl, data.thumbEl);
+      }
+    });
+  }
+
+  function onPreloadIntersection(entries) {
+    entries.forEach((entry) => {
+      if (!entry.isIntersecting) return;
+      var data = videoMap.get(entry.target);
+      if (data && data.videoEl) {
+        loadVideo(data.videoEl, data.state);
+        observer.unobserve(entry.target);
+      }
+    });
+  }
+
+  function bindDesktopHover() {
+    items.forEach((item) => {
+      var data = videoMap.get(item);
+      if (!data || !data.videoEl || hoverHandlers.has(item)) return;
+
+      var handlers = {
+        enter: () => playVideo(data.videoEl, data.thumbEl, data.state),
+        leave: () => hideVideo(data.videoEl, data.thumbEl),
+        focus: () => playVideo(data.videoEl, data.thumbEl, data.state),
+        blur: () => hideVideo(data.videoEl, data.thumbEl),
+      };
+      hoverHandlers.set(item, handlers);
+      item.addEventListener("mouseenter", handlers.enter);
+      item.addEventListener("mouseleave", handlers.leave);
+      item.addEventListener("focus", handlers.focus);
+      item.addEventListener("blur", handlers.blur);
+    });
+  }
+
+  function unbindDesktopHover() {
+    items.forEach((item) => {
+      var handlers = hoverHandlers.get(item);
+      if (!handlers) return;
+      item.removeEventListener("mouseenter", handlers.enter);
+      item.removeEventListener("mouseleave", handlers.leave);
+      item.removeEventListener("focus", handlers.focus);
+      item.removeEventListener("blur", handlers.blur);
+      hoverHandlers.delete(item);
+    });
+  }
+
+  function setupPreviewMode() {
+    if (observer) {
+      observer.disconnect();
+      observer = null;
+    }
+
+    if (isMobilePreview()) {
+      unbindDesktopHover();
+      observer = new IntersectionObserver(onMobileIntersection, {
+        rootMargin: "0px",
+        threshold: [0, VISIBLE_RATIO],
+      });
+      items.forEach((item) => observer.observe(item));
+    } else {
+      resetAllPreviews();
+      bindDesktopHover();
+      observer = new IntersectionObserver(onPreloadIntersection, { rootMargin: "200px" });
+      items.forEach((item) => {
+        var data = videoMap.get(item);
+        if (data && data.videoEl) observer.observe(item);
+      });
+    }
+  }
+
+  setupPreviewMode();
+  mobileMq.addEventListener("change", setupPreviewMode);
 });
 </script>

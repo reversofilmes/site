@@ -71,7 +71,7 @@ npx wrangler secret put GITHUB_DISPATCH_TOKEN
 
 Verificar (sem revelar valores): `npx wrangler secret list`.
 
-Se preferires a interface web: **Cloudflare dashboard → Workers & Pages → reverso-cms-api → Settings → Variables → Secrets → Add secret** (adiciona as duas com o mesmo nome). Depois, `npx wrangler deploy` para publicar o código que consome essas variáveis.
+Se preferires a interface web: **Cloudflare dashboard → Workers & Pages → reverso-cms-api → Settings → Variables → Secrets → Add secret** (adiciona as duas com o mesmo nome). Em produção, as variáveis públicas (`MEDIA_BASE_URL`, `COOKIE_DOMAIN`, etc.) estão em `cf-worker/wrangler.toml`; o deploy com `npx wrangler deploy` publica o código e os `[vars]`.
 
 > `.dev.vars` é para desenvolvimento local do Worker (`wrangler dev`); se quiseres testar localmente o dispatch também, acrescenta lá:
 >
@@ -90,7 +90,7 @@ Estes são lidos pelo workflow em tempo de execução (o token do passo 1 é lid
 | `R2_ACCESS_KEY_ID` | Cloudflare → R2 → **Manage R2 API Tokens** → *Create API token* → **Object Read & Write** só para o bucket `reverso-media`. Copia o **Access Key ID**. |
 | `R2_SECRET_ACCESS_KEY` | Do mesmo token acima: **Secret Access Key**. Guarda-o imediatamente. |
 | `R2_BUCKET` | *(opcional)* — omite para usar o default `reverso-media`. |
-| `WORKER_API_BASE` | Base do Worker, **sem barra final**. Ex.: `https://reverso-cms-api.reverso-cms.workers.dev`. |
+| `WORKER_API_BASE` | Base do Worker, **sem barra final**. Produção: `https://cms.reversofilmes.com.br`. |
 | `CF_BUILD_TOKEN` | O mesmo `BUILD_TOKEN`/JWT `read:export` que a Netlify usa para chamar `/api/projects/export`. |
 
 > Para o token do R2, podes reutilizar o que já tens (`R2_ACCESS_KEY_ID` / `R2_SECRET_ACCESS_KEY` no `.dev.vars`). **Não** coloques o valor de `.dev.vars` no repositório: adiciona-o directamente no GitHub como secret.
@@ -123,7 +123,7 @@ npx wrangler deploy
 Verifica que a nova rota responde:
 
 ```bash
-curl -i -X OPTIONS https://reverso-cms-api.reverso-cms.workers.dev/api/projects/fake-slug/ingest-youtube
+curl -i -X OPTIONS https://cms.reversofilmes.com.br/api/projects/fake-slug/ingest-youtube
 # 204 No Content com cabeçalhos CORS = rota existe
 ```
 
@@ -190,7 +190,7 @@ O fluxo manual antigo continua disponível:
 export R2_ACCOUNT_ID=…
 export R2_ACCESS_KEY_ID=…
 export R2_SECRET_ACCESS_KEY=…
-export WORKER_API_BASE=https://reverso-cms-api.reverso-cms.workers.dev
+export WORKER_API_BASE=https://cms.reversofilmes.com.br
 export CF_BUILD_TOKEN=…
 
 cd scripts

@@ -9,6 +9,13 @@ function reversoCmsApiBase() {
   return null;
 }
 
+const ADMIN_MIN_WIDTH_PX = 1024;
+
+function isAdminDesktopViewport() {
+  return typeof window.matchMedia === 'function'
+    && window.matchMedia('(min-width: ' + ADMIN_MIN_WIDTH_PX + 'px)').matches;
+}
+
 /** Rascunho de «Novo projeto» antes de publicar */
 const DRAFT_NEW = '__new__';
 
@@ -122,6 +129,11 @@ function adminApp() {
     masonryReady: false,
 
     async init() {
+      if (!isAdminDesktopViewport()) {
+        this.loading = false;
+        return;
+      }
+
       const apiBase = reversoCmsApiBase();
       if (!apiBase) {
         this.loading = false;
