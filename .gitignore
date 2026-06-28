@@ -17,5 +17,4 @@ scripts/.cache/
 cf-worker/.wrangler/
 cf-worker/.dev.vars
 cf-worker/_site/
-cf-worker/migrations/
 DOCUMENTACAO.md

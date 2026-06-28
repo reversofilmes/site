@@ -106,6 +106,7 @@ function parseSizeFromAttr(raw) {
 }
 
 function parseSize(item) {
+  if (isMobileHomeGrid()) return { w: 1, h: 2 };
   return parseSizeFromAttr(item.getAttribute('data-size') || '1x1');
 }
 
