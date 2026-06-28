@@ -1,0 +1,17 @@
+; BIND zone — importar em Cloudflare > DNS > Import and Export
+; Ao importar: DESMARQUE "Proxy imported DNS records" (tudo DNS only / cinza)
+$ORIGIN reversofilmes.com.br.
+$TTL 3600
+
+; Site (Netlify)
+@	3600	IN	A	54.232.119.62
+www	3600	IN	CNAME	reversofilmessite.netlify.app.
+temp	3600	IN	CNAME	reversofilmessite.netlify.app.
+
+; Email (Zoho)
+@	3600	IN	MX	10 mx.zoho.com.
+@	3600	IN	MX	20 mx2.zoho.com.
+@	3600	IN	MX	50 mx3.zoho.com.
+@	3600	IN	TXT	"zoho-verification=zb39267553.zmverify.zoho.com"
+@	3600	IN	TXT	"v=spf1 include:zohomail.com ~all"
+zmail._domainkey	3600	IN	TXT	"v=DKIM1; k=rsa; p=MIGfMA0GCSqGSIb3DQEBAQUAA4GNADCBiQKBgQCP000oO2chhkznTpJEE+knmwPjKoE1jXA2sQnSnVCTDMHORckc4EoQgMuiIqCJrnzSTnb/guXGLGzp4yjFsLFZtwfJKUu2tE9Vc1xeYWlKTv3srFv4lv4Zen4euWsQlzuQYCu2Wuj34VrEn9czF6yp2wFk2rY8Y5tUmLdLcs8xCwIDAQAB"
