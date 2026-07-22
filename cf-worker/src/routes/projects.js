@@ -42,16 +42,16 @@ function parseServiceTypes(value) {
   }
 }
 
-const ALLOWED_HOME_SIZES = new Set(['1x1', '1x1.5', '1x2']);
+const ALLOWED_HOME_SIZES = new Set(['1x0.5', '1x1', '1x1.5']);
 
-/** Largura×altura (células); grelha 5 col: 1x1, 1x1.5, 1x2; 1x3 legado → 1x1.5. */
+/** Largura×altura (células); grelha 5 col: 1x0.5, 1x1, 1x1.5; legados normalizados. */
 function normalizeHomeSize(s) {
   if (s == null || s === '') return '1x1';
   const t = String(s).toLowerCase().replace(/\s/g, '');
   if (t === '1x3') return '1x1.5';
   if (ALLOWED_HOME_SIZES.has(t)) return t;
   if (t === '2x1') return '1x1';
-  if (t === '2x2') return '1x2';
+  if (t === '1x2' || t === '2x2') return '1x0.5';
   return '1x1';
 }
 

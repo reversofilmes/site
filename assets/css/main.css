@@ -492,13 +492,13 @@ a:hover::after {
   width: 100%;
 }
 
-/* Home — mobile: uma coluna; itens ficam só na primeira coluna (JS ordena por order + home_col) */
+/* Home — mobile: 2 colunas; JS distribui itens nas 2 primeiras colunas (greedy shortest-column-first) */
 @media (max-width: 767px) {
   body.is-home .projects-grid.projects-grid--cols {
-    grid-template-columns: minmax(0, 1fr);
+    grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 
-  body.is-home .projects-grid.projects-grid--cols .projects-col[data-col]:not([data-col="0"]) {
+  body.is-home .projects-grid.projects-grid--cols .projects-col[data-col]:not([data-col="0"]):not([data-col="1"]) {
     display: none;
   }
 
@@ -592,8 +592,8 @@ a:hover::after {
 .project-item[data-size="1x1"] .project-thumbnail {
   object-position: center 22%;
 }
+.project-item[data-size="1x0.5"] .project-thumbnail,
 .project-item[data-size="1x1.5"] .project-thumbnail,
-.project-item[data-size="1x2"] .project-thumbnail,
 .project-item[data-size="1x3"] .project-thumbnail {
   object-position: center center;
 }
@@ -616,8 +616,8 @@ a:hover::after {
 .project-item[data-size="1x1"] .project-hover-video {
   object-position: center 22%;
 }
+.project-item[data-size="1x0.5"] .project-hover-video,
 .project-item[data-size="1x1.5"] .project-hover-video,
-.project-item[data-size="1x2"] .project-hover-video,
 .project-item[data-size="1x3"] .project-hover-video {
   object-position: center center;
 }
@@ -670,6 +670,12 @@ a:hover::after {
   -webkit-line-clamp: 2;
   line-clamp: 2;
   font-size: clamp(0.7rem, 1.6vw, 0.95rem);
+}
+
+.project-item[data-size="1x0.5"] .project-title {
+  -webkit-line-clamp: 1;
+  line-clamp: 1;
+  font-size: clamp(0.6rem, 1.4vw, 0.85rem);
 }
 
 .project-client {

@@ -52,7 +52,7 @@
           thumbnail: p.thumbnail, hover_preview: p.hover_preview,
           service_types: p.service_types || [],
           client: p.client, date_yymmdd: p.date_yymmdd, year: p.year,
-          order: p.order || 999, home_size: p.home_size || '1x1',
+          order: p.order || 999, home_size: p.home_size || '1x1', /* normalizado pelo Worker */
           show_on_home: p.show_on_home || false,
           home_col: null, home_row: null,
           youtube_url: p.youtube_url, pixieset_url: p.pixieset_url,
@@ -182,7 +182,7 @@
             <p class="projetos-hint">
               Só entram projetos com «Exibir na Home» (editor). Cada coluna é uma pilha
               (sem buracos). Arraste entre colunas ou dentro da coluna: atualiza
-              <em>coluna</em> (1–5) e <em>order</em> (posição na coluna, a partir de 1). «Publicar» grava. Formatos: 1×1, 1×1,5, 1×2.
+              <em>coluna</em> (1–5) e <em>order</em> (posição na coluna, a partir de 1). «Publicar» grava. Formatos: 1×0,5, 1×1, 1×1,5.
             </p>
           </div>
         </div>
@@ -438,12 +438,12 @@
                 <button
                   type="button"
                   class="format-picker__btn"
-                  :class="{ 'format-picker__btn--active': (form.home_size || '1x1') === '1x2' }"
-                  @click="form.home_size = '1x2'"
-                  title="Célula 1×2"
+                  :class="{ 'format-picker__btn--active': (form.home_size || '1x1') === '1x0.5' }"
+                  @click="form.home_size = '1x0.5'"
+                  title="Célula 1×0,5"
                 >
-                  <span class="format-picker__shape format-picker__shape--1x2" aria-hidden="true"></span>
-                  <span class="format-picker__label">1×2</span>
+                  <span class="format-picker__shape format-picker__shape--1x0-5" aria-hidden="true"></span>
+                  <span class="format-picker__label">1×0,5</span>
                 </button>
               </div>
             </div>
