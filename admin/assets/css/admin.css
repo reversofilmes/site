@@ -1032,10 +1032,7 @@ body.admin-home-sorting .admin-projects-col {
   border-radius: var(--radius);
 }
 
-/* Espelha a Home: colunas empilhadas, sem vãos (Sortable).
-   Não usar transition/transform no card: SortableJS (forceFallback + FLIP)
-   mede getBoundingClientRect / elementFromPoint; scale+transition no hover
-   corrompe o hit-test — sobretudo no 1.º card da coluna (hover ativo ao iniciar o drag). */
+/* Espelha a Home: colunas empilhadas, sem vãos (Sortable) */
 .admin-project-item {
   position: relative;
   flex: 0 0 auto;
@@ -1049,13 +1046,14 @@ body.admin-home-sorting .admin-projects-col {
   border-radius: 10px;
   opacity: 1;
   cursor: pointer;
-  transition: border-color 0.3s ease, box-shadow 0.3s ease;
+  transition: transform 0.3s ease, border-color 0.3s ease;
   box-sizing: border-box;
   -webkit-user-drag: none;
   user-select: none;
 }
 .admin-project-item:hover,
 .admin-project-item:focus {
+  transform: scale(1.02);
   z-index: 5;
   box-shadow: 0 0 0 2px rgba(255, 0, 0, 0.3);
 }
@@ -1073,6 +1071,7 @@ body.admin-home-sorting .admin-projects-col {
     0 8px 28px rgba(0, 0, 0, 0.55);
   z-index: 50;
   cursor: grabbing;
+  transform: none;
 }
 .admin-project-item.sortable-ghost {
   opacity: 0.3;
@@ -1082,9 +1081,12 @@ body.admin-home-sorting .admin-projects-col {
 }
 .admin-project-item.sortable-drag {
   opacity: 0;
+  visibility: hidden;
+  pointer-events: none;
 }
 .sortable-fallback.admin-project-item {
   z-index: 99999 !important;
+  visibility: visible !important;
   opacity: 0.88 !important;
   cursor: grabbing !important;
   border: 2px solid var(--accent) !important;
@@ -1092,17 +1094,20 @@ body.admin-home-sorting .admin-projects-col {
   box-shadow:
     0 0 0 3px rgba(255, 107, 53, 0.3),
     0 16px 48px rgba(0, 0, 0, 0.6) !important;
-  pointer-events: none;
+  pointer-events: none !important;
   transition: none !important;
+}
+.sortable-fallback.admin-project-item * {
+  pointer-events: none !important;
+  visibility: visible !important;
 }
 body.admin-home-sorting .admin-project-item:hover,
 body.admin-home-sorting .admin-project-item:focus {
-  z-index: auto;
+  transform: none;
   box-shadow: none;
 }
 body.admin-home-sorting .admin-project-item.sortable-chosen:hover,
 body.admin-home-sorting .admin-project-item.sortable-chosen:focus {
-  z-index: 50;
   box-shadow:
     0 0 0 1px var(--accent),
     0 8px 28px rgba(0, 0, 0, 0.55);
