@@ -66,7 +66,7 @@ async function importProject(data, body, slug) {
     hover_preview: data.hover_preview || null,
     service_types: Array.isArray(data.service_types) ? data.service_types : [],
     client: data.client || null,
-    date_mmddyyyy: data.date_mmddyyyy ? String(data.date_mmddyyyy) : null,
+    date_yymmdd: data.date_yymmdd ? String(data.date_yymmdd) : null,
     year: data.year || null,
     order: data.order != null && Number(data.order) >= 1 ? Number(data.order) : 1,
     home_size: data.home_size ? String(data.home_size) : '1x1',

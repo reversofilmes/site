@@ -158,15 +158,12 @@ function itemMatchesFilter(item) {
   return false;
 }
 
-/* ─── data (MMDDYYYY) ─── */
+/* ─── data (YYMMDD) ─── */
 
 function getDateValue(item) {
   var raw = item.getAttribute('data-date') || '';
-  if (raw.length !== 8) return 0;
-  var yyyy = raw.substring(4, 8);
-  var mm = raw.substring(0, 2);
-  var dd = raw.substring(2, 4);
-  return parseInt(yyyy + mm + dd, 10) || 0;
+  if (raw.length === 6 && /^\d{6}$/.test(raw)) return parseInt(raw, 10) || 0;
+  return 0;
 }
 
 /* ─── posições originais ─── */

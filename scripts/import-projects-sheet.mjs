@@ -3,7 +3,7 @@
  * TSV: uma linha = um registo, TAB entre colunas (evita vírgulas dentro das células).
  *
  * Colunas da planilha → D1 / API:
- *   LINK DRIVE → prefixo YYMMDD + nome ficheiro → date_mmddyyyy, year, slug
+ *   LINK DRIVE → prefixo YYMMDD + nome ficheiro → date_yymmdd, year, slug
  *   NOME DO PROJETO → title
  *   CLIENTE → client
  *   SERVIÇO → service_types (vírgula / ; / |)
@@ -271,17 +271,17 @@ function parseServiceTypesCell(raw) {
   return out;
 }
 
-/** YYMMDD no início de LINK DRIVE (ex.: 260214_...) → { date_mmddyyyy, year } */
+/** YYMMDD no início de LINK DRIVE (ex.: 260214_...) → { date_yymmdd, year } */
 function parseDrivePrefix(linkDrive) {
   const s = String(linkDrive || '').trim().split('\n')[0];
   const m = s.match(/^(\d{2})(\d{2})(\d{2})[_\s-]/);
-  if (!m) return { date_mmddyyyy: null, year: null };
+  if (!m) return { date_yymmdd: null, year: null };
   const yy = parseInt(m[1], 10);
   const mm = m[2];
   const dd = m[3];
   const year = 2000 + yy;
-  const date_mmddyyyy = `${mm}${dd}${year}`;
-  return { date_mmddyyyy, year };
+  const date_yymmdd = `${m[1]}${mm}${dd}`;
+  return { date_yymmdd, year };
 }
 
 function slugFromDrive(linkDrive) {
@@ -350,7 +350,7 @@ function rowToPayload(row, index1) {
   const slug = slugFromDrive(row.link_drive) || toApiSlug(`${title}-${row.client || 'x'}`);
   if (!slug) throw new Error('slug inválido');
 
-  const { date_mmddyyyy, year } = parseDrivePrefix(row.link_drive);
+  const { date_yymmdd, year } = parseDrivePrefix(row.link_drive);
   const description = (row.description || '').trim();
   const body_md = buildBodyMd(title, description);
 
@@ -368,7 +368,7 @@ function rowToPayload(row, index1) {
     hover_preview,
     service_types: parseServiceTypesCell(row.service_types),
     client: (row.client || '').trim() || null,
-    date_mmddyyyy: date_mmddyyyy || null,
+    date_yymmdd: date_yymmdd || null,
     year: year != null ? year : null,
     order: index1,
     home_size: pickHomeSize(index1 + title.length),
@@ -381,7 +381,7 @@ function rowToPayload(row, index1) {
 async function postProject(payload) {
   if (DRY_RUN) {
     console.log(
-      `  [DRY-RUN] ${payload.order}\t${payload.slug}\t${payload.title}\tdate=${payload.date_mmddyyyy}\tyear=${payload.year}\tservices=${payload.service_types.join('; ')}`,
+      `  [DRY-RUN] ${payload.order}\t${payload.slug}\t${payload.title}\tdate=${payload.date_yymmdd}\tyear=${payload.year}\tservices=${payload.service_types.join('; ')}`,
     );
     return { status: 'dry-run' };
   }
