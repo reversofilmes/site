@@ -23,6 +23,59 @@
   <script src="/admin/assets/js/local-server-client.js"></script>
   <script src="/admin/assets/js/admin-app.js"></script>
 
+  {% if site.admin_dev_mode %}
+  <script>
+  (function () {
+    window.__REVERSO_DEV_MODE = true;
+    var mockUser = { github_id: '0', login: 'dev', name: 'Dev Mode', avatar_url: '' };
+
+    Auth.prototype.checkSession = async function () {
+      this._user = mockUser;
+      return true;
+    };
+    Auth.prototype.checkLoginError = function () { return null; };
+    Auth.prototype.login = function () {};
+    Auth.prototype.logout = async function () { this._user = null; };
+
+    CfAPI.prototype.getMe = async function () { return mockUser; };
+
+    CfAPI.prototype.listProjects = async function () {
+      var res = await fetch('/projects.json');
+      var data = await res.json();
+      var id = 0;
+      return data.map(function (p) {
+        id++;
+        var slug = (p.url || '').replace(/^\/projects\//, '').replace(/\/$/, '') || ('project-' + id);
+        return {
+          id: id, slug: slug, _slug: slug,
+          title: p.title, description: p.description,
+          thumbnail: p.thumbnail, hover_preview: p.hover_preview,
+          service_types: p.service_types || [],
+          client: p.client, date_yymmdd: p.date_yymmdd, year: p.year,
+          order: p.order || 999, home_size: p.home_size || '1x1',
+          show_on_home: p.show_on_home || false,
+          home_col: null, home_row: null,
+          youtube_url: p.youtube_url, pixieset_url: p.pixieset_url,
+          version: 1
+        };
+      });
+    };
+
+    CfAPI.prototype.getSettings = async function () { return { settings: [] }; };
+
+    ['createProject', 'updateProject', 'deleteProject', 'triggerDeploy', 'updateSetting',
+     'uploadMedia', 'uploadSiteMedia'].forEach(function (m) {
+      CfAPI.prototype[m] = async function () {
+        alert('\u26a0 Dev Mode: ' + m + ' desabilitado. Somente visualiza\u00e7\u00e3o e drag-and-drop.');
+        throw new Error('Dev mode \u2014 opera\u00e7\u00e3o desabilitada');
+      };
+    });
+
+    console.info('%c[DEV MODE] Auth bypass ativo \u2014 dados de /projects.json', 'color: orange; font-weight: bold');
+  })();
+  </script>
+  {% endif %}
+
   <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.14.9/dist/cdn.min.js"></script>
   <script>
     (function () {
