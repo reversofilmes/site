@@ -8,6 +8,7 @@ assets/videos/
 vendor/bundle/
 Gemfile.lock
 testsprite_tests/
+.playwright-mcp/
 _data/projects.json
 _config.local.yml
 cf-worker/node_modules/
@@ -17,4 +18,3 @@ scripts/.cache/
 cf-worker/.wrangler/
 cf-worker/.dev.vars
 cf-worker/_site/
-DOCUMENTACAO.md
