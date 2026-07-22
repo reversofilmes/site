@@ -1095,9 +1095,6 @@ body.admin-home-sorting .admin-projects-col {
   pointer-events: none;
   transition: none !important;
 }
-body.admin-home-sorting .admin-project-item {
-  transition: none !important;
-}
 body.admin-home-sorting .admin-project-item:hover,
 body.admin-home-sorting .admin-project-item:focus {
   z-index: auto;
