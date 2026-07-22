@@ -40,7 +40,7 @@ function normalizeSessionJwt(raw) {
 }
 const AUTH_TOKEN = normalizeSessionJwt(process.env.AUTH_TOKEN || '');
 
-const SIZE_OPTIONS = ['1x1', '1x1.5', '1x2'];
+const SIZE_OPTIONS = ['1x0.5', '1x1', '1x1.5'];
 
 function isTsvPath(p) {
   return String(p || '').toLowerCase().endsWith('.tsv');

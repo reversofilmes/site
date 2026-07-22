@@ -568,7 +568,7 @@ function adminApp() {
         year: p.year != null ? p.year : null,
         order: displayHomeOrderBadge(p),
         home_col: Math.max(1, Math.min(5, Number(p.home_col) || 1)),
-        home_size: p.home_size || '1x1',
+        home_size: this._normalizeHomeSizeClient(p.home_size),
         show_on_home: truthyShowOnHome(p) ? 1 : 0,
         youtube_url: p.youtube_url || '',
         pixieset_url: p.pixieset_url || '',
@@ -648,7 +648,7 @@ function adminApp() {
       this.form.client = pl.client || '';
       this.form.date_yymmdd = pl.date_yymmdd || '';
       this.form.year = pl.year != null ? pl.year : this.form.year;
-      this.form.home_size = pl.home_size || '1x1';
+      this.form.home_size = this._normalizeHomeSizeClient(pl.home_size);
       this.form.show_on_home = truthyShowOnHome(pl);
       this.form.order = displayHomeOrderBadge({ order: pl.order });
       this.form.home_col = pl.home_col != null ? pl.home_col : 1;
@@ -1504,8 +1504,25 @@ function adminApp() {
         .replace(/'/g, '&#39;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
     },
 
+    _normalizeHomeSizeClient(s) {
+      if (!s) return '1x1';
+      const t = String(s).toLowerCase().replace(/\s/g, '');
+      if (t === '1x3') return '1x1.5';
+      if (t === '2x1') return '1x1';
+      if (t === '1x2' || t === '2x2') return '1x0.5';
+      const allowed = ['1x0.5', '1x1', '1x1.5'];
+      if (allowed.indexOf(t) !== -1) return t;
+      return '1x1';
+    },
+
+    _homeSizeLabel(size) {
+      if (size === '1x1.5') return '1\u00d71,5';
+      if (size === '1x0.5') return '1\u00d70,5';
+      return size.replace('x', '\u00d7');
+    },
+
     _renderHomeItemHtml(p, colNum) {
-      const size = p.home_size || '1x1';
+      const size = this._normalizeHomeSizeClient(p.home_size);
       const order = displayHomeOrderBadge(p);
       const slug = p._slug || '';
       const title = this._escHtml(p.title || '');
@@ -1513,7 +1530,7 @@ function adminApp() {
       const thumb = p.thumbnail || '';
       const hoverSrc = p.hover_preview || '';
       const hasDraft = this.hasDraftFor(slug);
-      const sizeLabel = size === '1x1.5' ? '1\u00d71,5' : size.replace('x', '\u00d7');
+      const sizeLabel = this._homeSizeLabel(size);
 
       const thumbHtml = thumb
         ? '<img class="admin-hover-thumb" src="' + this._escAttr(thumb) + '" alt="' + this._escAttr(p.title || '') + '" loading="lazy" draggable="false"/>'
@@ -1847,14 +1864,15 @@ function adminApp() {
       if (!Number.isFinite(w) || w <= 0) w = 1;
       if (!Number.isFinite(h) || h <= 0) h = 1;
       if (w === 2 && h === 1) { w = 1; h = 1; }
-      if (w === 2 && h === 2) { w = 1; h = 2; }
+      if (w === 2 && h === 2) { w = 1; h = 0.5; }
       w = 1;
       if (h === 3) h = 1.5;
-      const allowed = [1, 1.5, 2];
+      if (h === 2) h = 0.5;
+      const allowed = [0.5, 1, 1.5];
       if (!allowed.includes(h)) {
-        if (h < 1.25) h = 1;
-        else if (h < 1.75) h = 1.5;
-        else h = 2;
+        if (h < 0.75) h = 0.5;
+        else if (h < 1.25) h = 1;
+        else h = 1.5;
       }
       return { w, h };
     },
@@ -1865,7 +1883,8 @@ function adminApp() {
       if (w > columns) w = columns;
       item.style.width = `${w * columnWidth + (w - 1) * GUTTER}px`;
       item.style.maxWidth = '100%';
-      item.style.height = `${h * rowHeight + (h - 1) * GUTTER}px`;
+      const gutterH = Math.max(0, (h - 1) * GUTTER);
+      item.style.height = `${h * rowHeight + gutterH}px`;
     },
 
     _makeSlug() {

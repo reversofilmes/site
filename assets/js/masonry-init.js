@@ -4,7 +4,7 @@
  * Modo "__all__" (sem filtro): itens nas colunas originais definidas por home_col/order (Liquid).
  * Modo filtrado: greedy shortest-column-first (ordenados por data desc), excepto mobile ≤767px — uma coluna.
  *
- * Mobile ≤767px + "__all__": pilha única; ordem global por data-order ASC, desempate data-home-col ASC.
+ * Mobile ≤767px + "__all__": 2 colunas, greedy shortest-column-first; ordem global por data-order ASC, desempate data-home-col ASC.
  */
 var resizeTimeout = null;
 var homeEntranceAnimationDone = false;
@@ -23,8 +23,10 @@ function isMobileHomeGrid() {
     && window.matchMedia('(max-width: 767px)').matches;
 }
 
+var HOME_MOBILE_COLUMNS = 2;
+
 function getEffectiveColumns() {
-  return isMobileHomeGrid() ? 1 : HOME_GRID_COLUMNS;
+  return isMobileHomeGrid() ? HOME_MOBILE_COLUMNS : HOME_GRID_COLUMNS;
 }
 
 var state = {
@@ -93,20 +95,20 @@ function parseSizeFromAttr(raw) {
   if (!Number.isFinite(w) || w <= 0) w = 1;
   if (!Number.isFinite(h) || h <= 0) h = 1;
   if (w === 2 && h === 1) { w = 1; h = 1; }
-  if (w === 2 && h === 2) { w = 1; h = 2; }
+  if (w === 2 && h === 2) { w = 1; h = 0.5; }
   w = 1;
   if (h === 3) h = 1.5;
-  var allowed = [1, 1.5, 2];
+  if (h === 2) h = 0.5;
+  var allowed = [0.5, 1, 1.5];
   if (allowed.indexOf(h) === -1) {
-    if (h < 1.25) h = 1;
-    else if (h < 1.75) h = 1.5;
-    else h = 2;
+    if (h < 0.75) h = 0.5;
+    else if (h < 1.25) h = 1;
+    else h = 1.5;
   }
   return { w: w, h: h };
 }
 
 function parseSize(item) {
-  if (isMobileHomeGrid()) return { w: 1, h: 2 };
   return parseSizeFromAttr(item.getAttribute('data-size') || '1x1');
 }
 
@@ -128,7 +130,8 @@ function sizeItem(item, columnWidth, rowHeight, columns) {
   var cw = s.w > columns ? columns : s.w;
   item.style.width = (cw * columnWidth + (cw - 1) * GUTTER) + 'px';
   item.style.maxWidth = '100%';
-  item.style.height = (s.h * rowHeight + (s.h - 1) * GUTTER) + 'px';
+  var gutterH = Math.max(0, (s.h - 1) * GUTTER);
+  item.style.height = (s.h * rowHeight + gutterH) + 'px';
 }
 
 /* ─── serviços / filtro ─── */
@@ -203,7 +206,13 @@ function layoutMobileAllMode() {
     if (oa !== ob) return oa - ob;
     return getHomeColValue(a) - getHomeColValue(b);
   });
-  flat.forEach(function (item) { cols[0].appendChild(item); });
+  var colHeights = [0, 0];
+  flat.forEach(function (item) {
+    var minIdx = colHeights[1] < colHeights[0] ? 1 : 0;
+    cols[minIdx].appendChild(item);
+    var s = parseSize(item);
+    colHeights[minIdx] += s.h;
+  });
 }
 
 /* ─── redistribuição (greedy shortest-column-first) ─── */
@@ -223,17 +232,13 @@ function redistributeItems() {
     return getOrderValue(a) - getOrderValue(b);
   });
 
-  if (isMobileHomeGrid()) {
-    matching.forEach(function (item) { cols[0].appendChild(item); });
-    return;
-  }
-
+  var numCols = getEffectiveColumns();
   var colHeights = [];
-  for (var i = 0; i < HOME_GRID_COLUMNS; i++) colHeights.push(0);
+  for (var i = 0; i < numCols; i++) colHeights.push(0);
 
   matching.forEach(function (item) {
     var minIdx = 0;
-    for (var i = 1; i < HOME_GRID_COLUMNS; i++) {
+    for (var i = 1; i < numCols; i++) {
       if (colHeights[i] < colHeights[minIdx]) minIdx = i;
     }
     cols[minIdx].appendChild(item);
@@ -252,7 +257,20 @@ function getRasterOrderItems() {
     return Array.from(cont.querySelectorAll('.project-item'));
   }
   if (isMobileHomeGrid()) {
-    return cols[0] ? Array.from(cols[0].querySelectorAll('.project-item')) : [];
+    var mobileCols = HOME_MOBILE_COLUMNS;
+    var mobileBuckets = [];
+    for (var mi = 0; mi < mobileCols; mi++) {
+      mobileBuckets.push(cols[mi] ? Array.from(cols[mi].querySelectorAll('.project-item')) : []);
+    }
+    var mobileMaxH = 0;
+    mobileBuckets.forEach(function (b) { if (b.length > mobileMaxH) mobileMaxH = b.length; });
+    var mobileOut = [];
+    for (var mr = 0; mr < mobileMaxH; mr++) {
+      for (var mc = 0; mc < mobileCols; mc++) {
+        if (mobileBuckets[mc] && mobileBuckets[mc][mr]) mobileOut.push(mobileBuckets[mc][mr]);
+      }
+    }
+    return mobileOut;
   }
   var buckets = cols.map(function (cel) {
     return Array.from(cel.querySelectorAll('.project-item'));

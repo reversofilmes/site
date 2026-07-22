@@ -498,9 +498,9 @@ input, textarea, select { font: inherit; }
   aspect-ratio: 2 / 3;
   max-height: 3.25rem;
 }
-.format-picker__shape--1x2 {
-  aspect-ratio: 1 / 2;
-  max-height: 4.25rem;
+.format-picker__shape--1x0-5 {
+  aspect-ratio: 2 / 1;
+  max-height: 1.5rem;
 }
 .format-picker__label {
   font-size: 0.65rem;
@@ -952,8 +952,8 @@ body.admin-home-sorting .admin-project-item.sortable-chosen:focus {
 .admin-project-item[data-size="1x1"] .admin-project-item__thumb img {
   object-position: center 22%;
 }
+.admin-project-item[data-size="1x0.5"] .admin-project-item__thumb img,
 .admin-project-item[data-size="1x1.5"] .admin-project-item__thumb img,
-.admin-project-item[data-size="1x2"] .admin-project-item__thumb img,
 .admin-project-item[data-size="1x3"] .admin-project-item__thumb img {
   object-position: center center;
 }
