@@ -1628,7 +1628,6 @@ function adminApp() {
           const s = Sortable.create(cel, {
             group: 'reverso-home-cols',
             handle: '.admin-project-item__drag-handle',
-            direction: 'vertical',
             animation: 250,
             easing: 'cubic-bezier(0.22, 1, 0.36, 1)',
             draggable: '.admin-project-item',
@@ -1638,25 +1637,12 @@ function adminApp() {
             forceFallback: true,
             fallbackClass: 'sortable-fallback',
             fallbackOnBody: true,
-            fallbackTolerance: 3,
-            swapThreshold: 0.65,
-            invertSwap: true,
+            fallbackTolerance: 2,
+            swapThreshold: 0.55,
             emptyInsertThreshold: 200,
             scrollSensitivity: 120,
             scrollSpeed: 14,
             bubbleScroll: true,
-            // onChoose (pointerdown) — antes de onStart — para o hit-test do
-            // forceFallback não ver z-index/hover do card sob o cursor.
-            onChoose: (evt) => {
-              document.body.classList.add('admin-home-sorting');
-              if (evt && evt.item) {
-                evt.item.style.transition = 'none';
-                evt.item.style.transform = '';
-              }
-            },
-            onUnchoose: () => {
-              document.body.classList.remove('admin-home-sorting');
-            },
             onStart: () => {
               document.body.classList.add('admin-home-sorting');
             },
