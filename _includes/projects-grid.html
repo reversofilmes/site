@@ -58,7 +58,6 @@ document.addEventListener("DOMContentLoaded", () => {
   var observer = null;
   var hoverHandlers = new WeakMap();
   var mobileMq = window.matchMedia("(max-width: 767px)");
-  var VISIBLE_RATIO = 0.5;
 
   items.forEach((item) => {
     var videoEl = item.querySelector(".project-hover-video");
@@ -139,12 +138,11 @@ document.addEventListener("DOMContentLoaded", () => {
     entries.forEach((entry) => {
       var item = entry.target;
       var data = videoMap.get(item);
-      var visible = entry.isIntersecting && entry.intersectionRatio >= VISIBLE_RATIO;
 
-      if (visible) {
+      if (entry.isIntersecting) {
         setInView(item, true);
         if (data && data.videoEl) playVideo(data.videoEl, data.thumbEl, data.state);
-      } else if (!entry.isIntersecting || entry.intersectionRatio < VISIBLE_RATIO) {
+      } else {
         setInView(item, false);
         if (data && data.videoEl) hideVideo(data.videoEl, data.thumbEl);
       }
@@ -202,8 +200,8 @@ document.addEventListener("DOMContentLoaded", () => {
     if (isMobilePreview()) {
       unbindDesktopHover();
       observer = new IntersectionObserver(onMobileIntersection, {
-        rootMargin: "0px",
-        threshold: [0, VISIBLE_RATIO],
+        rootMargin: "-45% 0px -45% 0px",
+        threshold: 0,
       });
       items.forEach((item) => observer.observe(item));
     } else {

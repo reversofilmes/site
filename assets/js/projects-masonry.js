@@ -104,20 +104,10 @@ function initProjectsMasonry() {
       items.forEach((item) => {
         const size = item.getAttribute('data-size') || '1x1';
         const [width, height] = size.split('x').map(Number);
-        
-        if (width === 2 && height === 2) {
-          item.style.width = (columnWidth * 2 + gutter) + 'px';
-          item.style.height = (rowHeight * 2) + 'px';
-        } else if (width === 2 && height === 1) {
-          item.style.width = (columnWidth * 2 + gutter) + 'px';
-          item.style.height = rowHeight + 'px';
-        } else if (width === 1 && height === 2) {
-          item.style.width = columnWidth + 'px';
-          item.style.height = (rowHeight * 2) + 'px';
-        } else {
-          item.style.width = columnWidth + 'px';
-          item.style.height = rowHeight + 'px';
-        }
+        const w = Math.min(width, 1);
+        const h = (height === 2) ? 0.5 : (height === 3) ? 1.5 : height;
+        item.style.width = (w * columnWidth) + 'px';
+        item.style.height = (h * rowHeight) + 'px';
       });
 
       // Initialize Packery with calculated columnWidth
@@ -185,20 +175,10 @@ function handleProjectsResize() {
     items.forEach((item) => {
       const size = item.getAttribute('data-size') || '1x1';
       const [width, height] = size.split('x').map(Number);
-      
-      if (width === 2 && height === 2) {
-        item.style.width = (columnWidth * 2 + gutter) + 'px';
-        item.style.height = (rowHeight * 2) + 'px';
-      } else if (width === 2 && height === 1) {
-        item.style.width = (columnWidth * 2 + gutter) + 'px';
-        item.style.height = rowHeight + 'px';
-      } else if (width === 1 && height === 2) {
-        item.style.width = columnWidth + 'px';
-        item.style.height = (rowHeight * 2) + 'px';
-      } else {
-        item.style.width = columnWidth + 'px';
-        item.style.height = rowHeight + 'px';
-      }
+      const w = Math.min(width, 1);
+      const h = (height === 2) ? 0.5 : (height === 3) ? 1.5 : height;
+      item.style.width = (w * columnWidth) + 'px';
+      item.style.height = (h * rowHeight) + 'px';
     });
     
     // Relayout
