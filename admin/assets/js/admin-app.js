@@ -45,13 +45,13 @@ function coerceHomeOrderNum(v) {
   return Number.isFinite(n) && n >= 1 ? n : 999999;
 }
 
-function dateMmddyyyySortKey(p) {
-  const s = p && p.date_mmddyyyy != null ? String(p.date_mmddyyyy) : '';
-  if (s.length === 8 && /^\d{8}$/.test(s)) {
-    return s.slice(4) + s.slice(0, 4);
+function dateYymmddSortKey(p) {
+  const s = p && p.date_yymmdd != null ? String(p.date_yymmdd) : '';
+  if (s.length === 6 && /^\d{6}$/.test(s)) {
+    return s;
   }
   const y = p && p.year != null ? Number(p.year) : 0;
-  return y ? String(10000 + y) : '0';
+  return y ? String(y).slice(-2) + '0000' : '0';
 }
 
 function truthyShowOnHome(p) {
@@ -343,8 +343,8 @@ function adminApp() {
       if (this.view !== 'projetos') return [];
       const arr = this.projects.slice();
       arr.sort((a, b) => {
-        const ka = dateMmddyyyySortKey(a);
-        const kb = dateMmddyyyySortKey(b);
+        const ka = dateYymmddSortKey(a);
+        const kb = dateYymmddSortKey(b);
         const c = kb.localeCompare(ka);
         if (c !== 0) return c;
         return String(a._slug).localeCompare(String(b._slug));
@@ -525,7 +525,7 @@ function adminApp() {
         description: p.description != null ? p.description : null,
         service_types: Array.isArray(p.service_types) ? [...p.service_types] : [],
         client: p.client || '',
-        date_mmddyyyy: p.date_mmddyyyy || '',
+        date_yymmdd: p.date_yymmdd || '',
         year: p.year != null ? p.year : null,
         order: displayHomeOrderBadge(p),
         home_col: Math.max(1, Math.min(5, Number(p.home_col) || 1)),
@@ -607,7 +607,7 @@ function adminApp() {
       this.form.description = pl.description != null ? pl.description : '';
       this.form.service_types = Array.isArray(pl.service_types) ? [...pl.service_types] : [];
       this.form.client = pl.client || '';
-      this.form.date_mmddyyyy = pl.date_mmddyyyy || '';
+      this.form.date_yymmdd = pl.date_yymmdd || '';
       this.form.year = pl.year != null ? pl.year : this.form.year;
       this.form.home_size = pl.home_size || '1x1';
       this.form.show_on_home = truthyShowOnHome(pl);
@@ -648,7 +648,7 @@ function adminApp() {
         hover_preview: '',
         service_types: [],
         client: '',
-        date_mmddyyyy: '',
+        date_yymmdd: '',
         year: new Date().getFullYear(),
         home_size: '1x1',
         show_on_home: false,
@@ -792,7 +792,7 @@ function adminApp() {
         description: (this.form.description || '').trim() || null,
         service_types: this.form.service_types || [],
         client: this.form.client || '',
-        date_mmddyyyy: this.form.date_mmddyyyy || '',
+        date_yymmdd: this.form.date_yymmdd || '',
         year: this.form.year ? Number(this.form.year) : null,
         order: orderVal,
         home_col: homeCol,
@@ -919,7 +919,7 @@ function adminApp() {
           thumbnail: draftThumbUrl,
           hover_preview: draftVideoUrl,
           service_types: [...(this.form.service_types || [])],
-          date_mmddyyyy: this.form.date_mmddyyyy || '',
+          date_yymmdd: this.form.date_yymmdd || '',
           year: this.form.year || new Date().getFullYear(),
           home_size: this.form.home_size || '1x1',
           show_on_home: this.form.show_on_home ? 1 : 0,
@@ -1628,6 +1628,7 @@ function adminApp() {
           const s = Sortable.create(cel, {
             group: 'reverso-home-cols',
             handle: '.admin-project-item__drag-handle',
+            direction: 'vertical',
             animation: 250,
             easing: 'cubic-bezier(0.22, 1, 0.36, 1)',
             draggable: '.admin-project-item',
@@ -1637,12 +1638,25 @@ function adminApp() {
             forceFallback: true,
             fallbackClass: 'sortable-fallback',
             fallbackOnBody: true,
-            fallbackTolerance: 2,
-            swapThreshold: 0.55,
+            fallbackTolerance: 3,
+            swapThreshold: 0.65,
+            invertSwap: true,
             emptyInsertThreshold: 200,
             scrollSensitivity: 120,
             scrollSpeed: 14,
             bubbleScroll: true,
+            // onChoose (pointerdown) — antes de onStart — para o hit-test do
+            // forceFallback não ver z-index/hover do card sob o cursor.
+            onChoose: (evt) => {
+              document.body.classList.add('admin-home-sorting');
+              if (evt && evt.item) {
+                evt.item.style.transition = 'none';
+                evt.item.style.transform = '';
+              }
+            },
+            onUnchoose: () => {
+              document.body.classList.remove('admin-home-sorting');
+            },
             onStart: () => {
               document.body.classList.add('admin-home-sorting');
             },
@@ -1806,14 +1820,14 @@ function adminApp() {
 
     _makeSlug() {
       return this._makeSlugFromPayload({
-        date_mmddyyyy: this.form.date_mmddyyyy,
+        date_yymmdd: this.form.date_yymmdd,
         title: this.form.title,
         client: this.form.client,
       });
     },
 
     _makeSlugFromPayload(p) {
-      const d = p.date_mmddyyyy || '';
+      const d = p.date_yymmdd || '';
       const title = (p.title || 'projeto')
         .normalize('NFD').replace(/[\u0300-\u036f]/g, '')
         .replace(/[^a-zA-Z0-9]+/g, '-').replace(/^-|-$/g, '')

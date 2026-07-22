@@ -1,6 +1,6 @@
 /**
  * Alpine.js data and methods for the Projects page
- * Listagem: sempre por date_mmddyyyy (mais recente primeiro), após filtros Buscar + Tipos de serviço.
+ * Listagem: sempre por date_yymmdd (mais recente primeiro), após filtros Buscar + Tipos de serviço.
  */
 
 /**
@@ -133,17 +133,14 @@ function projectsPage(projectsJsonUrl) {
 
     _dateSortKey(s) {
       const raw = String(s || '').replace(/\D/g, '');
-      if (raw.length !== 8) return '00000000';
-      const mm = raw.slice(0, 2);
-      const dd = raw.slice(2, 4);
-      const yyyy = raw.slice(4, 8);
-      return `${yyyy}${mm}${dd}`;
+      if (raw.length === 6) return raw;
+      return '000000';
     },
 
     _sortByDateDesc(list) {
       list.sort((a, b) => {
-        const ka = this._dateSortKey(a.date_mmddyyyy);
-        const kb = this._dateSortKey(b.date_mmddyyyy);
+        const ka = this._dateSortKey(a.date_yymmdd);
+        const kb = this._dateSortKey(b.date_yymmdd);
         if (ka !== kb) return kb.localeCompare(ka);
         const sa = a.slug || a.url || '';
         const sb = b.slug || b.url || '';

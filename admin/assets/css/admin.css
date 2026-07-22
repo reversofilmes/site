@@ -1032,7 +1032,10 @@ body.admin-home-sorting .admin-projects-col {
   border-radius: var(--radius);
 }
 
-/* Espelha a Home: colunas empilhadas, sem vãos (Sortable) */
+/* Espelha a Home: colunas empilhadas, sem vãos (Sortable).
+   Não usar transition/transform no card: SortableJS (forceFallback + FLIP)
+   mede getBoundingClientRect / elementFromPoint; scale+transition no hover
+   corrompe o hit-test — sobretudo no 1.º card da coluna (hover ativo ao iniciar o drag). */
 .admin-project-item {
   position: relative;
   flex: 0 0 auto;
@@ -1046,14 +1049,13 @@ body.admin-home-sorting .admin-projects-col {
   border-radius: 10px;
   opacity: 1;
   cursor: pointer;
-  transition: transform 0.3s ease, border-color 0.3s ease;
+  transition: border-color 0.3s ease, box-shadow 0.3s ease;
   box-sizing: border-box;
   -webkit-user-drag: none;
   user-select: none;
 }
 .admin-project-item:hover,
 .admin-project-item:focus {
-  transform: scale(1.02);
   z-index: 5;
   box-shadow: 0 0 0 2px rgba(255, 0, 0, 0.3);
 }
@@ -1093,13 +1095,17 @@ body.admin-home-sorting .admin-projects-col {
   pointer-events: none;
   transition: none !important;
 }
+body.admin-home-sorting .admin-project-item {
+  transition: none !important;
+}
 body.admin-home-sorting .admin-project-item:hover,
 body.admin-home-sorting .admin-project-item:focus {
-  transform: none;
+  z-index: auto;
   box-shadow: none;
 }
 body.admin-home-sorting .admin-project-item.sortable-chosen:hover,
 body.admin-home-sorting .admin-project-item.sortable-chosen:focus {
+  z-index: 50;
   box-shadow:
     0 0 0 1px var(--accent),
     0 8px 28px rgba(0, 0, 0, 0.55);
