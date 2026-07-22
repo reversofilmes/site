@@ -279,12 +279,45 @@ function adminApp() {
         return;
       }
       if (this.view === 'home') {
-        this.$nextTick(() => this._initMasonry());
+        this._scheduleMasonryInit();
         return;
       }
       if (this.view === 'projetos') {
         this._destroyMasonry();
       }
+    },
+
+    /**
+     * Agenda init do masonry só quando a aba Home está no layout
+     * (Alpine x-show ainda pode ser display:none no $nextTick).
+     * Debounce + geração cancelam inits duplicados/stale.
+     */
+    _masonryInitGen: 0,
+    _masonryRafId: null,
+    _scheduleMasonryInit(attempt = 0) {
+      if (this.view !== 'home') return;
+      if (this._masonryRafId != null) {
+        cancelAnimationFrame(this._masonryRafId);
+        this._masonryRafId = null;
+      }
+      const gen = this._masonryInitGen;
+      this._masonryRafId = requestAnimationFrame(() => {
+        this._masonryRafId = null;
+        if (gen !== this._masonryInitGen || this.view !== 'home') return;
+
+        const homeArea = document.querySelector('.home-masonry-tab');
+        const cols = document.getElementById('admin-masonry-cols');
+        const visible = homeArea && getComputedStyle(homeArea).display !== 'none';
+        const width = cols
+          ? Math.max(cols.getBoundingClientRect().width || 0, cols.clientWidth || 0)
+          : 0;
+
+        if (!visible || width < 40) {
+          if (attempt < 30) this._scheduleMasonryInit(attempt + 1);
+          return;
+        }
+        this._initMasonry(gen);
+      });
     },
 
     /** 5 colunas: D1 `home_col` 1–5 + order *dentro* da coluna (1 = primeiro; igual Jekyll). Legado `home_col` 0–4 = índice. */
@@ -388,6 +421,12 @@ function adminApp() {
       vid.style.opacity = '0';
       const thumb = el.querySelector('.admin-hover-thumb');
       if (thumb) thumb.style.opacity = '1';
+    },
+
+    _stopAllHomeHoverVideos() {
+      const root = document.getElementById('admin-masonry-cols');
+      if (!root) return;
+      root.querySelectorAll('.admin-project-item').forEach((el) => this.hoverStopVideo(el));
     },
 
     _revokeDraftNewBlobUrls() {
@@ -1494,7 +1533,7 @@ function adminApp() {
         ? '<span class="gc-badge draft">Rascunho</span>'
         : '';
 
-      return '<a href="#" class="admin-project-item"'
+      return '<div class="admin-project-item"'
         + ' data-size="' + this._escAttr(size) + '"'
         + ' data-order="' + order + '"'
         + ' data-home-col="' + colNum + '"'
@@ -1515,7 +1554,7 @@ function adminApp() {
         + '<h3 class="admin-project-item__title">' + title + '</h3>'
         + clientHtml
         + '</div>'
-        + '</a>';
+        + '</div>';
     },
 
     _renderHomeGrid() {
@@ -1560,6 +1599,7 @@ function adminApp() {
       };
 
       this._homeGridHoverIn = (e) => {
+        if (document.body.classList.contains('admin-home-sorting')) return;
         const item = e.target.closest('.admin-project-item');
         if (item) this.hoverPlayVideo(item);
       };
@@ -1595,7 +1635,7 @@ function adminApp() {
       }
     },
 
-    _initMasonry() {
+    _initMasonry(expectedGen) {
       const cols = document.getElementById('admin-masonry-cols');
       if (!cols) {
         this.masonryReady = true;
@@ -1605,15 +1645,31 @@ function adminApp() {
         this.masonryReady = true;
         return;
       }
-      this._destroyMasonry();
+      if (this.view !== 'home') return;
+      if (expectedGen != null && expectedGen !== this._masonryInitGen) return;
+
+      this._destroyMasonry({ preserveGen: true });
+      if (expectedGen != null && expectedGen !== this._masonryInitGen) {
+        this._scheduleMasonryInit();
+        return;
+      }
 
       this.$nextTick(() => {
+        if (expectedGen != null && expectedGen !== this._masonryInitGen) return;
+        if (this.view !== 'home') return;
+
         this._renderHomeGrid();
         this._setupHomeGridClickHandler();
 
         const allEls = Array.from(cols.querySelectorAll('.admin-project-item'));
         if (!allEls.length) {
           this.masonryReady = true;
+          return;
+        }
+
+        const w = Math.max(cols.getBoundingClientRect().width || 0, cols.clientWidth || 0);
+        if (w < 40) {
+          this._scheduleMasonryInit();
           return;
         }
 
@@ -1645,6 +1701,7 @@ function adminApp() {
             bubbleScroll: true,
             onStart: () => {
               document.body.classList.add('admin-home-sorting');
+              this._stopAllHomeHoverVideos();
             },
             onEnd: () => {
               document.body.classList.remove('admin-home-sorting');
@@ -1722,6 +1779,8 @@ function adminApp() {
     _reapplyAdminMasonrySizes() {
       const cols = document.getElementById('admin-masonry-cols');
       if (!cols) return;
+      const w = Math.max(cols.getBoundingClientRect().width || 0, cols.clientWidth || 0);
+      if (w < 40) return;
       const { columnWidth, rowHeight, columns } = this._calcMasonryGrid(cols);
       cols.querySelectorAll('.admin-project-item').forEach((el) => {
         this._sizeMasonryItem(el, columnWidth, rowHeight, columns);
@@ -1731,10 +1790,15 @@ function adminApp() {
     _relayoutMasonry() {
       if (this.view !== 'home') return;
       this._destroyMasonry();
-      this._initMasonry();
+      this._scheduleMasonryInit();
     },
 
-    _destroyMasonry() {
+    _destroyMasonry(opts = {}) {
+      if (!opts.preserveGen) this._masonryInitGen += 1;
+      if (this._masonryRafId != null) {
+        cancelAnimationFrame(this._masonryRafId);
+        this._masonryRafId = null;
+      }
       document.body.classList.remove('admin-home-sorting');
       this._removeHomeGridClickHandler();
       this._homeSortableInstances.forEach((s) => {
