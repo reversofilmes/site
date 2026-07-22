@@ -19,6 +19,8 @@ fi
 echo "  Instalando dependências..."
 npm install --no-audit --no-fund >/dev/null 2>&1 || echo "  [AVISO] npm install retornou erro. Tentando continuar..."
 
+echo "  Verificando yt-dlp e FFmpeg (pode baixar o binário na primeira execução)..."
+
 echo "  Iniciando servidor (porta 7847 — instâncias antigas são encerradas automaticamente)..."
 echo ""
 node local-server.mjs

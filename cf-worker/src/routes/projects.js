@@ -116,12 +116,12 @@ export async function handleExport(env) {
   // Build Jekyll: inclui `show_on_home` para a Home filtrar e ordenar.
   const { results } = await env.DB.prepare(
     `SELECT slug, title, body_md, description, thumbnail, hover_preview, service_types,
-            client, date_mmddyyyy, year, "order", home_size, show_on_home,
+            client, date_yymmdd, year, "order", home_size, show_on_home,
             home_col, home_row,
             youtube_url, pixieset_url,
             youtube_thumb_time_sec, youtube_preview_start_sec
      FROM projects
-     ORDER BY date_mmddyyyy DESC, year DESC, slug ASC`,
+     ORDER BY date_yymmdd DESC, year DESC, slug ASC`,
   ).all();
 
   const base = env.MEDIA_BASE_URL || '';
@@ -139,12 +139,12 @@ export async function handleExport(env) {
 export async function handleList(env) {
   const { results } = await env.DB.prepare(
     `SELECT id, slug, title, thumbnail, hover_preview, service_types,
-            client, date_mmddyyyy, year, "order", home_size, show_on_home,
+            client, date_yymmdd, year, "order", home_size, show_on_home,
             home_col, home_row,
             youtube_url, pixieset_url, youtube_thumb_time_sec, youtube_preview_start_sec,
             version, body_md, description,
             created_at, updated_at
-     FROM projects ORDER BY date_mmddyyyy DESC, year DESC, slug ASC`,
+     FROM projects ORDER BY date_yymmdd DESC, year DESC, slug ASC`,
   ).all();
 
   const base = env.MEDIA_BASE_URL || '';
@@ -215,7 +215,7 @@ export async function handleCreate(request, env, ctx) {
 
   await env.DB.prepare(
     `INSERT INTO projects (slug, title, body_md, description, thumbnail, hover_preview,
-      service_types, client, date_mmddyyyy, year, "order",
+      service_types, client, date_yymmdd, year, "order",
       home_size, show_on_home, home_col, home_row, youtube_url, pixieset_url,
       youtube_thumb_time_sec, youtube_preview_start_sec)
      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
@@ -223,7 +223,7 @@ export async function handleCreate(request, env, ctx) {
     data.slug, data.title, data.body_md || null,
     data.description != null ? String(data.description) : null,
     thumbnailVal, hoverVal,
-    svcJson, data.client || null, data.date_mmddyyyy || null,
+    svcJson, data.client || null, data.date_yymmdd || null,
     data.year || null,
     normalizeHomeOrder(data.order), homeSize, showHome,
     Number.isInteger(data.home_col) && data.home_col >= 1 && data.home_col <= 5
@@ -322,7 +322,7 @@ export async function handleUpdate(slug, request, env, ctx) {
   const values = [];
   const updatable = [
     'title', 'body_md', 'description', 'thumbnail', 'hover_preview', 'client',
-    'date_mmddyyyy', 'year', 'order', 'home_size', 'show_on_home',
+    'date_yymmdd', 'year', 'order', 'home_size', 'show_on_home',
     'home_col', 'home_row',
     'youtube_url', 'pixieset_url', 'youtube_thumb_time_sec', 'youtube_preview_start_sec',
   ];
@@ -479,7 +479,7 @@ export async function handleYoutubeManifest(env) {
     `SELECT slug, youtube_url, youtube_thumb_time_sec, youtube_preview_start_sec
      FROM projects
      WHERE TRIM(COALESCE(youtube_url, '')) != ''
-     ORDER BY date_mmddyyyy DESC, year DESC, slug ASC`,
+     ORDER BY date_yymmdd DESC, year DESC, slug ASC`,
   ).all();
 
   return json({ projects: results });

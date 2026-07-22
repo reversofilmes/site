@@ -42,21 +42,124 @@ function ffmpegPath() {
 const YT_DLP_BIN_DIR = join(__dirname, '.bin');
 const YT_DLP_BIN = join(YT_DLP_BIN_DIR, process.platform === 'win32' ? 'yt-dlp.exe' : 'yt-dlp');
 
-async function ensureYtDlp() {
-  try {
-    await access(YT_DLP_BIN);
-    return YT_DLP_BIN;
-  } catch { /* not found, download */ }
+function ytDlpReleaseAssetName() {
+  if (process.platform === 'win32') {
+    return process.arch === 'arm64' ? 'yt-dlp_arm64.exe' : 'yt-dlp.exe';
+  }
+  if (process.platform === 'darwin') return 'yt-dlp_macos';
+  if (process.arch === 'arm64') return 'yt-dlp_linux_aarch64';
+  return 'yt-dlp_linux';
+}
 
-  console.log('[setup] Baixando yt-dlp...');
-  const { mkdir } = await import('fs/promises');
+async function downloadYtDlpBinary(destPath) {
+  const assetName = ytDlpReleaseAssetName();
+  const res = await fetch('https://api.github.com/repos/yt-dlp/yt-dlp/releases/latest', {
+    headers: { 'User-Agent': 'reverso-local-server' },
+  });
+  if (!res.ok) throw new Error(`GitHub API retornou HTTP ${res.status}`);
+  const release = await res.json();
+  const version = release.tag_name;
+  const url = `https://github.com/yt-dlp/yt-dlp/releases/download/${version}/${assetName}`;
+
+  console.log(`[setup] Baixando ${assetName} (${version})...`);
+  const binRes = await fetch(url, { redirect: 'follow' });
+  if (!binRes.ok) throw new Error(`Download falhou: HTTP ${binRes.status} (${url})`);
+
+  const buf = Buffer.from(await binRes.arrayBuffer());
+  await writeFile(destPath, buf);
+  if (process.platform !== 'win32') {
+    const { chmod } = await import('fs/promises');
+    await chmod(destPath, 0o755);
+  }
+  console.log('[setup] yt-dlp instalado em', destPath);
+}
+
+async function verifyYtDlpBinary(binPath) {
+  try {
+    const { stdout, stderr } = await execFileAsync(binPath, ['--version'], {
+      timeout: 15000,
+      maxBuffer: 1024 * 1024,
+    });
+    const out = `${stdout}${stderr}`;
+    if (/unsupported version of Python/i.test(out)) return false;
+    return /^\d{4}\.\d{2}\.\d{2}/m.test(out) || /yt-dlp/i.test(out);
+  } catch (e) {
+    const msg = (e && (e.stderr || e.message)) || String(e);
+    if (/unsupported version of Python/i.test(msg)) return false;
+    return false;
+  }
+}
+
+async function verifyFfmpegBinary(binPath) {
+  try {
+    const { stdout } = await execFileAsync(binPath, ['-version'], {
+      timeout: 15000,
+      maxBuffer: 1024 * 1024,
+    });
+    return /ffmpeg version/i.test(stdout);
+  } catch {
+    return false;
+  }
+}
+
+async function ensureYtDlp({ forceRedownload = false } = {}) {
+  const { mkdir, unlink } = await import('fs/promises');
   await mkdir(YT_DLP_BIN_DIR, { recursive: true });
 
-  const mod = await import('yt-dlp-wrap');
-  const YTDlpWrap = mod.default?.downloadFromGithub ? mod.default : mod.default?.default || mod;
-  await YTDlpWrap.downloadFromGithub(YT_DLP_BIN);
-  console.log('[setup] yt-dlp instalado em', YT_DLP_BIN);
+  let needsDownload = forceRedownload;
+  if (!needsDownload) {
+    try {
+      await access(YT_DLP_BIN);
+      needsDownload = !(await verifyYtDlpBinary(YT_DLP_BIN));
+      if (needsDownload) {
+        console.warn('[setup] yt-dlp em cache inválido ou desatualizado — baixando novamente...');
+        await unlink(YT_DLP_BIN).catch(() => {});
+      }
+    } catch {
+      needsDownload = true;
+    }
+  } else {
+    await unlink(YT_DLP_BIN).catch(() => {});
+  }
+
+  if (needsDownload) {
+    await downloadYtDlpBinary(YT_DLP_BIN);
+    if (!(await verifyYtDlpBinary(YT_DLP_BIN))) {
+      throw new Error(
+        'yt-dlp não respondeu após o download. '
+        + 'No Mac, use o binário standalone (não o script Python).',
+      );
+    }
+  }
+
   return YT_DLP_BIN;
+}
+
+async function validateDependencies() {
+  console.log('[setup] Verificando dependências...');
+
+  const ffmpeg = ffmpegPath();
+  if (!(await verifyFfmpegBinary(ffmpeg))) {
+    console.error('\n  [ERRO] FFmpeg não encontrado ou inválido.');
+    console.error('  Execute "npm install" na pasta scripts/ e tente novamente.\n');
+    process.exit(1);
+  }
+  console.log('[setup] FFmpeg OK');
+
+  try {
+    await ensureYtDlp();
+    console.log('[setup] yt-dlp OK');
+  } catch (e) {
+    console.error('\n  [ERRO] yt-dlp não pôde ser instalado ou validado.');
+    console.error(`  ${e.message || e}`);
+    if (process.platform === 'darwin') {
+      console.error('  No Mac, o servidor usa o binário yt-dlp_macos (não precisa de Python instalado).');
+    } else if (process.platform !== 'win32') {
+      console.error('  No Linux, o servidor usa o binário yt-dlp_linux (não precisa de Python instalado).');
+    }
+    console.error('  Verifique sua conexão com a internet e tente novamente.\n');
+    process.exit(1);
+  }
 }
 
 // ---------------------------------------------------------------------------
@@ -799,6 +902,7 @@ function startListening() {
   server.listen(PORT, logServerReadyBanner);
 }
 
+await validateDependencies();
 startListening();
 
 // ---------------------------------------------------------------------------

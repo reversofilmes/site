@@ -16,7 +16,7 @@ permalink: /projects.json
     "hover_preview": {% if project.hover_preview %}{{ project.hover_preview | jsonify }}{% else %}null{% endif %},
     "service_types": {{ project.service_types | jsonify }},
     "client": {{ project.client | jsonify }},
-    "date_mmddyyyy": {{ project.date_mmddyyyy | jsonify }},
+    "date_yymmdd": {{ project.date_yymmdd | jsonify }},
     "year": {{ project.year }},
     "show_on_home": {{ project.show_on_home | default: false }},
     "order": {% if project.order %}{{ project.order }}{% else %}999{% endif %},
