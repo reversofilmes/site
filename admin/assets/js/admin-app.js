@@ -126,6 +126,8 @@ function adminApp() {
     siteSaving: false,
     /** @type {{ file: File, previewUrl: string, fileName: string, fileSizeLabel: string } | null} */
     siteDraft: null,
+    /** @type {{ file: File, previewUrl: string, fileName: string, fileSizeLabel: string } | null} */
+    siteDraftMobile: null,
     masonryReady: false,
 
     async init() {
@@ -232,6 +234,7 @@ function adminApp() {
       this.editorOpen = false;
       this._clearSiteDraftPreview();
       this.siteDraft = null;
+      this.siteDraftMobile = null;
       this._destroyMasonry();
     },
 
@@ -390,6 +393,11 @@ function adminApp() {
       return this.siteSettings.hero_video || null;
     },
 
+    get heroPreviewSrcMobile() {
+      if (this.siteDraftMobile && this.siteDraftMobile.previewUrl) return this.siteDraftMobile.previewUrl;
+      return this.siteSettings.hero_video_mobile || null;
+    },
+
     hasDraftFor(slug) {
       if (this.projectDrafts[slug]) return true;
       const p = this.projects.find((x) => x._slug === slug && x._isDraftNew);
@@ -458,9 +466,9 @@ function adminApp() {
       this.siteLoading = true;
       try {
         const data = await this._api.getSettings();
-        const next = { hero_video: null };
+        const next = { hero_video: null, hero_video_mobile: null };
         for (const row of data.settings || []) {
-          if (row.key === 'hero_video') {
+          if (row.key === 'hero_video' || row.key === 'hero_video_mobile') {
             next[row.key] = row.value || null;
           }
         }
@@ -471,9 +479,8 @@ function adminApp() {
       this.siteLoading = false;
     },
 
-    onSiteHeroVideo(e) {
+    onSiteHeroVideo(e, variant) {
       const file = e.target?.files?.[0];
-      // Limpa o input para permitir re-escolher o mesmo arquivo depois.
       if (e.target) e.target.value = '';
       if (!file) return;
       try {
@@ -482,7 +489,11 @@ function adminApp() {
         this._toast(err.message || String(err), 'error');
         return;
       }
-      this._setSiteDraft(file);
+      if (variant === 'mobile') {
+        this._setSiteDraftMobile(file);
+      } else {
+        this._setSiteDraft(file);
+      }
       this._toast(
         'Vídeo em rascunho. Clique em «Publicar» para enviar ao servidor.',
         'success',
@@ -490,7 +501,7 @@ function adminApp() {
     },
 
     _setSiteDraft(file) {
-      this._clearSiteDraftPreview();
+      this._clearSiteDraftPreview('desktop');
       this.siteDraft = {
         file,
         previewUrl: MediaUpload.preview(file),
@@ -499,17 +510,41 @@ function adminApp() {
       };
     },
 
-    _clearSiteDraftPreview() {
-      if (this.siteDraft && this.siteDraft.previewUrl) {
-        MediaUpload.revokePreview(this.siteDraft.previewUrl);
+    _setSiteDraftMobile(file) {
+      this._clearSiteDraftPreview('mobile');
+      this.siteDraftMobile = {
+        file,
+        previewUrl: MediaUpload.preview(file),
+        fileName: file.name,
+        fileSizeLabel: `${(file.size / 1048576).toFixed(1)} MB`,
+      };
+    },
+
+    _clearSiteDraftPreview(variant) {
+      if (variant === 'mobile' || !variant) {
+        if (this.siteDraftMobile && this.siteDraftMobile.previewUrl) {
+          MediaUpload.revokePreview(this.siteDraftMobile.previewUrl);
+        }
+      }
+      if (variant === 'desktop' || !variant) {
+        if (this.siteDraft && this.siteDraft.previewUrl) {
+          MediaUpload.revokePreview(this.siteDraft.previewUrl);
+        }
       }
     },
 
-    discardSiteDraft() {
-      if (!this.siteDraft) return;
-      this._clearSiteDraftPreview();
-      this.siteDraft = null;
-      this._toast('Rascunho do vídeo da Hero descartado.', 'warning');
+    discardSiteDraft(variant) {
+      if (variant === 'mobile') {
+        if (!this.siteDraftMobile) return;
+        this._clearSiteDraftPreview('mobile');
+        this.siteDraftMobile = null;
+        this._toast('Rascunho do vídeo mobile descartado.', 'warning');
+      } else {
+        if (!this.siteDraft) return;
+        this._clearSiteDraftPreview('desktop');
+        this.siteDraft = null;
+        this._toast('Rascunho do vídeo desktop descartado.', 'warning');
+      }
     },
 
     get hasStagedProjects() {
@@ -517,7 +552,7 @@ function adminApp() {
     },
 
     get hasStagedSite() {
-      return !!this.siteDraft;
+      return !!this.siteDraft || !!this.siteDraftMobile;
     },
 
     get hasUnpublishedChanges() {
@@ -1008,6 +1043,7 @@ function adminApp() {
         const createDraft = this.projectDrafts[DRAFT_NEW];
         const updateKeys = Object.keys(this.projectDrafts).filter((k) => k !== DRAFT_NEW);
         const siteDraft = this.siteDraft;
+        const siteDraftMobile = this.siteDraftMobile;
 
         if (createDraft) {
           this.publishPhase = 'Criando novo projeto…';
@@ -1028,13 +1064,23 @@ function adminApp() {
         }
 
         if (siteDraft && siteDraft.file) {
-          this.publishPhase = 'Enviando vídeo da Hero…';
+          this.publishPhase = 'Enviando vídeo desktop da Hero…';
           MediaUpload.validate(siteDraft.file, MediaUpload.VID_TYPES);
           const { key } = await this._api.uploadSiteMedia('hero_video', siteDraft.file);
-          this.publishPhase = 'Salvando configuração da Hero…';
+          this.publishPhase = 'Salvando configuração da Hero (desktop)…';
           await this._api.updateSetting('hero_video', key);
-          this._clearSiteDraftPreview();
+          this._clearSiteDraftPreview('desktop');
           this.siteDraft = null;
+        }
+
+        if (siteDraftMobile && siteDraftMobile.file) {
+          this.publishPhase = 'Enviando vídeo mobile da Hero…';
+          MediaUpload.validate(siteDraftMobile.file, MediaUpload.VID_TYPES);
+          const { key } = await this._api.uploadSiteMedia('hero_video_mobile', siteDraftMobile.file);
+          this.publishPhase = 'Salvando configuração da Hero (mobile)…';
+          await this._api.updateSetting('hero_video_mobile', key);
+          this._clearSiteDraftPreview('mobile');
+          this.siteDraftMobile = null;
         }
 
         this.publishPhase = 'Disparando deploy no Netlify…';
@@ -1056,7 +1102,7 @@ function adminApp() {
         }
 
         await this._loadProjects({ silent: true });
-        if (siteDraft) await this._loadSiteSettings();
+        if (siteDraft || siteDraftMobile) await this._loadSiteSettings();
         this.closeEditor();
         if (this.view === 'home') {
           this.$nextTick(() => this._relayoutMasonry());
@@ -1507,18 +1553,20 @@ function adminApp() {
     _normalizeHomeSizeClient(s) {
       if (!s) return '1x1';
       const t = String(s).toLowerCase().replace(/\s/g, '');
-      if (t === '1x3') return '1x1.5';
-      if (t === '2x1') return '1x1';
-      if (t === '1x2' || t === '2x2') return '1x0.5';
-      const allowed = ['1x0.5', '1x1', '1x1.5'];
+      const allowed = ['9x16', '4x5', '1x1', '16x9'];
       if (allowed.indexOf(t) !== -1) return t;
+      // Legacy mappings
+      if (t === '1x0.5' || t === '2x2' || t === '1x2') return '16x9';
+      if (t === '1x1.5' || t === '1x3') return '9x16';
+      if (t === '2x1') return '1x1';
       return '1x1';
     },
 
     _homeSizeLabel(size) {
-      if (size === '1x1.5') return '1\u00d71,5';
-      if (size === '1x0.5') return '1\u00d70,5';
-      return size.replace('x', '\u00d7');
+      if (size === '9x16') return '9:16';
+      if (size === '4x5') return '4:5';
+      if (size === '16x9') return '16:9';
+      return '1:1';
     },
 
     _renderHomeItemHtml(p, colNum) {

@@ -10,7 +10,7 @@
   /* ── Atenção: constantes ────────────────────────────────────────── */
 
   /** Intervalo entre disparos de atenção (segundos). */
-  var ATTN_INTERVAL = 10;
+  var ATTN_INTERVAL = 5;
   /** Duração do movimento de atenção (segundos) — 2 bumps aqui dentro. */
   var ATTN_DURATION = 1.9;
   /** Nº de bumps de escala por disparo. */
@@ -28,8 +28,9 @@
     var panel = document.getElementById('home-nav-panel');
     var backdrop = document.getElementById('home-nav-backdrop');
     if (!nav || !trigger || !panel || !backdrop) return;
+    var stack = trigger.querySelector('.home-nav__trigger-stack');
     var stage = trigger.querySelector('.home-nav__logo-stage');
-    if (!stage) return;
+    if (!stack || !stage) return;
 
     var reduceMotion = false;
     try {
@@ -91,7 +92,7 @@
     function tick() {
       rafId = 0;
       if (!attnRunning) {
-        stage.style.setProperty('transform', 'none');
+        stack.style.setProperty('transform', 'none');
         return;
       }
       var now = performance.now() / 1000;
@@ -99,7 +100,7 @@
 
       if (elapsed >= ATTN_DURATION) {
         attnRunning = false;
-        stage.style.setProperty('transform', 'none');
+        stack.style.setProperty('transform', 'none');
         scheduleNextAttn();
         return;
       }
@@ -112,7 +113,7 @@
         a += 14 * Math.sin(now * 2.3);
       }
 
-      stage.style.setProperty(
+      stack.style.setProperty(
         'transform',
         'translate3d(0,0,' + z.toFixed(1) + 'px) rotateY(' + a.toFixed(1) + 'deg) scale(' + s.toFixed(3) + ')'
       );
@@ -123,30 +124,15 @@
 
     function waitForIntroThenFire() {
       if (reduceMotion) return;
-      var INTRO_KEY = 'reverso_home_intro_done';
-      var introText = document.getElementById('intro-text');
-      var alreadySeen = false;
-      try { alreadySeen = sessionStorage.getItem(INTRO_KEY) === '1'; } catch (_) {}
-
-      if (alreadySeen || !introText) {
-        setTimeout(fireAttn, 800);
+      function start() {
+        setTimeout(fireAttn, 400);
+      }
+      if (document.body.classList.contains('is-home')) {
+        window.addEventListener('reverso:intro-complete', start, { once: true });
+        setTimeout(start, 4500);
         return;
       }
-
-      var mo = new MutationObserver(function () {
-        var hidden = introText.classList.contains('hidden') ||
-                     introText.style.display === 'none';
-        if (hidden) {
-          mo.disconnect();
-          setTimeout(fireAttn, 600);
-        }
-      });
-      mo.observe(introText, { attributes: true, attributeFilter: ['class', 'style'] });
-
-      setTimeout(function () {
-        mo.disconnect();
-        if (!attnRunning) fireAttn();
-      }, 8000);
+      setTimeout(fireAttn, 800);
     }
 
     waitForIntroThenFire();
@@ -156,7 +142,7 @@
     function playSling() {
       if (reduceMotion) return;
       attnRunning = false;
-      stage.style.removeProperty('transform');
+      stack.style.removeProperty('transform');
       stage.classList.remove('home-nav__logo-stage--sling');
       void stage.offsetWidth;
       stage.classList.add('home-nav__logo-stage--sling');
@@ -180,7 +166,7 @@
       document.body.classList.add('home-nav-open');
       if (attnRunning) {
         attnRunning = false;
-        stage.style.setProperty('transform', 'none');
+        stack.style.setProperty('transform', 'none');
       }
     }
 

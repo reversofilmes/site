@@ -182,7 +182,7 @@
             <p class="projetos-hint">
               Só entram projetos com «Exibir na Home» (editor). Cada coluna é uma pilha
               (sem buracos). Arraste entre colunas ou dentro da coluna: atualiza
-              <em>coluna</em> (1–5) e <em>order</em> (posição na coluna, a partir de 1). «Publicar» grava. Formatos: 1×0,5, 1×1, 1×1,5.
+              <em>coluna</em> (1–5) e <em>order</em> (posição na coluna, a partir de 1). «Publicar» grava. Formatos: 9:16, 4:5, 1:1, 16:9.
             </p>
           </div>
         </div>
@@ -265,16 +265,18 @@
             <h2 class="hero-area__title">Hero da Home</h2>
             <p class="hero-area__hint">
               O vídeo aparece em <em>loop</em>, sem som, como fundo em tela
-              cheia da Home. Escolha um arquivo MP4 ou WebM para
-              pré-visualizar; a mudança só é aplicada ao site depois que
+              cheia da Home. Há dois formatos: <strong>Desktop (16:9)</strong>
+              para telas largas e <strong>Mobile (9:16)</strong> para
+              tablet/celular. A mudança só é aplicada ao site depois que
               você clicar em «Publicar».
             </p>
           </div>
 
+          <!-- Desktop 16:9 -->
           <div class="hero-area__grid">
             <div class="hero-preview" :class="{ 'has-draft': !!siteDraft }">
-              <span class="hero-preview__label">Prévia</span>
-              <div class="hero-preview__stage">
+              <span class="hero-preview__label">Desktop (16:9)</span>
+              <div class="hero-preview__stage hero-preview__stage--landscape">
                 <video
                   class="hero-preview__video"
                   :src="heroPreviewSrc"
@@ -286,20 +288,14 @@
                   webkit-playsinline="true"
                 ></video>
                 <div x-show="!heroPreviewSrc" class="hero-preview__empty">
-                  Nenhum vídeo definido. Escolha um arquivo ao lado para
-                  pré-visualizar.
-                </div>
-
-                <div class="hero-preview__scroll" aria-hidden="true">
-                  <span>Role para ver</span>
-                  <span class="hero-preview__arrow">↓</span>
+                  Nenhum vídeo desktop definido.
                 </div>
               </div>
             </div>
 
             <aside class="hero-upload" :class="{ 'has-draft': !!siteDraft }">
               <div class="hero-upload__header">
-                <h3 class="hero-upload__title">Arquivo do vídeo</h3>
+                <h3 class="hero-upload__title">Arquivo Desktop (16:9)</h3>
                 <span class="hero-upload__status"
                       :class="{ 'is-draft': !!siteDraft, 'is-saved': !siteDraft && !!siteSettings.hero_video, 'is-none': !siteDraft && !siteSettings.hero_video }">
                   <template x-if="siteDraft">
@@ -319,18 +315,11 @@
                 <span class="hero-upload__filesize" x-text="siteDraft?.fileSizeLabel"></span>
               </div>
 
-              <div class="hero-upload__meta" x-show="!siteDraft && !siteSettings.hero_video">
-                <span class="hero-upload__hint">
-                  Sem vídeo definido no CMS. O site usa o arquivo local
-                  como padrão até você publicar um novo vídeo.
-                </span>
-              </div>
-
               <input type="file"
                      id="hero-file-input"
                      accept="video/mp4,video/webm"
                      class="file-input"
-                     @change="onSiteHeroVideo($event)"
+                     @change="onSiteHeroVideo($event, 'desktop')"
                      :disabled="siteSaving || publishing" />
               <label for="hero-file-input" class="upload-btn hero-upload__btn">
                 <span x-show="!siteDraft">Escolher arquivo</span>
@@ -339,21 +328,86 @@
 
               <button type="button"
                       x-show="siteDraft"
-                      @click="discardSiteDraft()"
+                      @click="discardSiteDraft('desktop')"
                       class="btn btn-secondary hero-upload__discard"
                       title="Descartar arquivo em rascunho">
                 Descartar rascunho
               </button>
-
-              <p class="hero-upload__help">
-                Formatos aceitos: <strong>MP4</strong> ou <strong>WebM</strong>,
-                até 25&nbsp;MB. Você pode trocar o arquivo quantas vezes
-                quiser — o rascunho é substituído e a prévia é atualizada
-                automaticamente. O envio ao servidor e o deploy só
-                acontecem quando você clicar em «Publicar».
-              </p>
             </aside>
           </div>
+
+          <!-- Mobile 9:16 -->
+          <div class="hero-area__grid" style="margin-top:1.5rem">
+            <div class="hero-preview" :class="{ 'has-draft': !!siteDraftMobile }">
+              <span class="hero-preview__label">Mobile (9:16)</span>
+              <div class="hero-preview__stage hero-preview__stage--portrait">
+                <video
+                  class="hero-preview__video"
+                  :src="heroPreviewSrcMobile"
+                  x-show="heroPreviewSrcMobile"
+                  autoplay
+                  muted
+                  loop
+                  playsinline
+                  webkit-playsinline="true"
+                ></video>
+                <div x-show="!heroPreviewSrcMobile" class="hero-preview__empty">
+                  Nenhum vídeo mobile definido. O site usará o vídeo desktop
+                  como fallback.
+                </div>
+              </div>
+            </div>
+
+            <aside class="hero-upload" :class="{ 'has-draft': !!siteDraftMobile }">
+              <div class="hero-upload__header">
+                <h3 class="hero-upload__title">Arquivo Mobile (9:16)</h3>
+                <span class="hero-upload__status"
+                      :class="{ 'is-draft': !!siteDraftMobile, 'is-saved': !siteDraftMobile && !!siteSettings.hero_video_mobile, 'is-none': !siteDraftMobile && !siteSettings.hero_video_mobile }">
+                  <template x-if="siteDraftMobile">
+                    <span>Rascunho não publicado</span>
+                  </template>
+                  <template x-if="!siteDraftMobile && siteSettings.hero_video_mobile">
+                    <span>Vídeo atual já publicado</span>
+                  </template>
+                  <template x-if="!siteDraftMobile && !siteSettings.hero_video_mobile">
+                    <span>Sem vídeo no CMS</span>
+                  </template>
+                </span>
+              </div>
+
+              <div class="hero-upload__meta" x-show="siteDraftMobile">
+                <span class="hero-upload__filename" x-text="siteDraftMobile?.fileName"></span>
+                <span class="hero-upload__filesize" x-text="siteDraftMobile?.fileSizeLabel"></span>
+              </div>
+
+              <input type="file"
+                     id="hero-file-input-mobile"
+                     accept="video/mp4,video/webm"
+                     class="file-input"
+                     @change="onSiteHeroVideo($event, 'mobile')"
+                     :disabled="siteSaving || publishing" />
+              <label for="hero-file-input-mobile" class="upload-btn hero-upload__btn">
+                <span x-show="!siteDraftMobile">Escolher arquivo</span>
+                <span x-show="siteDraftMobile">Trocar arquivo</span>
+              </label>
+
+              <button type="button"
+                      x-show="siteDraftMobile"
+                      @click="discardSiteDraft('mobile')"
+                      class="btn btn-secondary hero-upload__discard"
+                      title="Descartar arquivo mobile em rascunho">
+                Descartar rascunho
+              </button>
+            </aside>
+          </div>
+
+          <p class="hero-upload__help" style="margin-top:1rem">
+            Formatos aceitos: <strong>MP4</strong> ou <strong>WebM</strong>,
+            até 25&nbsp;MB. Você pode trocar os arquivos quantas vezes
+            quiser — os rascunhos são substituídos e as prévias são atualizadas
+            automaticamente. O envio ao servidor e o deploy só
+            acontecem quando você clicar em «Publicar».
+          </p>
         </div>
       </div>
     </main>
@@ -418,32 +472,42 @@
                 <button
                   type="button"
                   class="format-picker__btn"
+                  :class="{ 'format-picker__btn--active': (form.home_size || '1x1') === '9x16' }"
+                  @click="form.home_size = '9x16'"
+                  title="Vertical 9:16"
+                >
+                  <span class="format-picker__shape format-picker__shape--9x16" aria-hidden="true"></span>
+                  <span class="format-picker__label">9:16</span>
+                </button>
+                <button
+                  type="button"
+                  class="format-picker__btn"
+                  :class="{ 'format-picker__btn--active': (form.home_size || '1x1') === '4x5' }"
+                  @click="form.home_size = '4x5'"
+                  title="Retrato 4:5"
+                >
+                  <span class="format-picker__shape format-picker__shape--4x5" aria-hidden="true"></span>
+                  <span class="format-picker__label">4:5</span>
+                </button>
+                <button
+                  type="button"
+                  class="format-picker__btn"
                   :class="{ 'format-picker__btn--active': (form.home_size || '1x1') === '1x1' }"
                   @click="form.home_size = '1x1'"
-                  title="Célula 1×1"
+                  title="Quadrado 1:1"
                 >
                   <span class="format-picker__shape format-picker__shape--1x1" aria-hidden="true"></span>
-                  <span class="format-picker__label">1×1</span>
+                  <span class="format-picker__label">1:1</span>
                 </button>
                 <button
                   type="button"
                   class="format-picker__btn"
-                  :class="{ 'format-picker__btn--active': (form.home_size || '1x1') === '1x1.5' }"
-                  @click="form.home_size = '1x1.5'"
-                  title="Célula 1×1,5"
+                  :class="{ 'format-picker__btn--active': (form.home_size || '1x1') === '16x9' }"
+                  @click="form.home_size = '16x9'"
+                  title="Paisagem 16:9"
                 >
-                  <span class="format-picker__shape format-picker__shape--1x1-5" aria-hidden="true"></span>
-                  <span class="format-picker__label">1×1,5</span>
-                </button>
-                <button
-                  type="button"
-                  class="format-picker__btn"
-                  :class="{ 'format-picker__btn--active': (form.home_size || '1x1') === '1x0.5' }"
-                  @click="form.home_size = '1x0.5'"
-                  title="Célula 1×0,5"
-                >
-                  <span class="format-picker__shape format-picker__shape--1x0-5" aria-hidden="true"></span>
-                  <span class="format-picker__label">1×0,5</span>
+                  <span class="format-picker__shape format-picker__shape--16x9" aria-hidden="true"></span>
+                  <span class="format-picker__label">16:9</span>
                 </button>
               </div>
             </div>

@@ -1,8 +1,9 @@
-// Homepage Intro Text Animation (Hero com vídeo + bloco #home-below)
+// Homepage Hero (intro + vídeo + bloco #home-below)
 document.addEventListener("DOMContentLoaded", () => {
   const INTRO_DONE_KEY = "reverso_home_intro_done";
 
   const introContainer = document.getElementById("intro-text");
+  const heroOverlay = document.querySelector(".home-hero__overlay");
   const homeBelow = document.getElementById("home-below");
   const scrollHint = document.getElementById("scroll-hint");
   const heroVideo = document.getElementById("home-hero-video");
@@ -11,22 +12,26 @@ document.addEventListener("DOMContentLoaded", () => {
   const masonryGrid = masonryContainer?.querySelector(".projects-grid");
 
   // ── Hero video resilience ─────────────────────────────────────────
-  // O vídeo da Hero precisa reaparecer em cenários distintos:
-  //   1. Carga "limpa" da página — `autoplay` cobre.
-  //   2. Reload (F5) — o WEBrick do `jekyll serve` pode entregar
-  //      respostas parciais quando o usuário recarrega antes do vídeo
-  //      terminar de baixar; o Chrome guarda esse trecho incompleto no
-  //      cache HTTP e em F5s subsequentes reaproveita a cópia quebrada
-  //      (Ctrl+F5 conserta porque bypassa cache). Não há como o
-  //      cliente-side "limpar" o cache do browser — mas DÁ para mudar
-  //      a chave de cache (query string) e forçar um refetch.
-  //   3. Volta pelo bfcache — `autoplay` não re-dispara, o elemento
-  //      pode voltar pausado/erro.
-  //   4. Resíduo de `opacity: 0` em `.home-hero` deixado pelo fadeOut
-  //      do page-transitions no bfcache.
+  // Responsive hero: desktop (>1024px) and mobile (<=1024px) videos.
+  // Only the visible one is managed; the hidden one stays paused.
+  const heroVideoDesktop = document.getElementById("home-hero-video-desktop");
+  const heroVideoMobile = document.getElementById("home-hero-video-mobile");
+  const heroMql = window.matchMedia("(max-width: 1024px)");
+
+  function getActiveHeroVideo() {
+    if (heroMql.matches) return heroVideoMobile || heroVideoDesktop;
+    return heroVideoDesktop || heroVideoMobile;
+  }
+
+  function getInactiveHeroVideo() {
+    if (heroMql.matches) return heroVideoDesktop;
+    return heroVideoMobile;
+  }
+
+  let heroVideo = getActiveHeroVideo();
   const HERO_LOG_PREFIX = "[hero-video]";
   const HERO_FAILED_FLAG = "reverso_hero_video_failed";
-  const heroSourceEl = heroVideo ? heroVideo.querySelector("source") : null;
+  let heroSourceEl = heroVideo ? heroVideo.querySelector("source") : null;
   let heroOriginalSrc = null;
   let heroCacheBustSeq = 0;
   let heroPlayAttemptSeq = 0;
@@ -102,8 +107,6 @@ document.addEventListener("DOMContentLoaded", () => {
   }
 
   function clearHeroInlineHiders() {
-    // Limpa resíduos de opacity/transform deixados pelo fadeOut das
-    // transições de página — crítico no bfcache e defesa em profundidade.
     if (heroContainer) {
       heroContainer.style.opacity = "";
       heroContainer.style.visibility = "";
@@ -113,6 +116,11 @@ document.addEventListener("DOMContentLoaded", () => {
       heroVideo.style.opacity = "";
       heroVideo.style.visibility = "";
       heroVideo.style.display = "";
+    }
+    const inactive = getInactiveHeroVideo();
+    if (inactive) {
+      inactive.style.opacity = "";
+      inactive.style.visibility = "";
     }
   }
 
@@ -428,6 +436,32 @@ document.addEventListener("DOMContentLoaded", () => {
     heroProgressTimer = setTimeout(() => runProgressCheck(attemptSeq), 3000);
   }
 
+  // Switch active hero video on breakpoint change (desktop <-> mobile)
+  function switchHeroVideo() {
+    const prev = heroVideo;
+    const next = getActiveHeroVideo();
+    const inactive = getInactiveHeroVideo();
+    if (next === prev && prev) return;
+    // Pause the outgoing video
+    if (prev) { try { prev.pause(); } catch (_) {} }
+    if (inactive) { try { inactive.pause(); } catch (_) {} }
+    // Update references
+    heroVideo = next;
+    heroSourceEl = heroVideo ? heroVideo.querySelector("source") : null;
+    heroOriginalSrc = null;
+    heroInitialBootstrapDone = false;
+    heroHasPlayedOnce = false;
+    heroLastCurrentTime = null;
+    heroLastProgressTimestamp = 0;
+    if (heroVideo) ensureHeroVideoPlayback({ forceReload: true });
+  }
+
+  try {
+    heroMql.addEventListener("change", switchHeroVideo);
+  } catch (_) {
+    heroMql.addListener(switchHeroVideo);
+  }
+
   // Devem existir em todos os caminhos (incl. intro já vista no sessionStorage);
   // não podem ficar abaixo de um return antecipado.
   window.addEventListener("pageshow", (ev) => {
@@ -447,12 +481,13 @@ document.addEventListener("DOMContentLoaded", () => {
     if (!document.hidden) ensureHeroVideoPlayback();
   });
 
-  // Expõe utilitário de recuperação manual no console (só em dev é útil).
   try {
     window.__reversoHeroVideo = {
       ensure: ensureHeroVideoPlayback,
       cacheBust: () => reloadHeroVideoWithCacheBust("manual"),
+      switchVideo: switchHeroVideo,
       status: () => ({
+        active: heroVideo && heroVideo.id,
         paused: heroVideo && heroVideo.paused,
         readyState: heroVideo && heroVideo.readyState,
         networkState: heroVideo && heroVideo.networkState,
@@ -467,6 +502,10 @@ document.addEventListener("DOMContentLoaded", () => {
       introContainer.classList.add("hidden");
       introContainer.style.display = "none";
     }
+    if (heroOverlay) {
+      heroOverlay.style.opacity = "1";
+      heroOverlay.style.visibility = "visible";
+    }
     if (homeBelow) {
       homeBelow.classList.add("home-below--visible");
       homeBelow.style.opacity = "1";
@@ -476,7 +515,6 @@ document.addEventListener("DOMContentLoaded", () => {
     }
     if (scrollHint) {
       scrollHint.classList.add("home-hero__scroll--visible");
-      scrollHint.setAttribute("aria-hidden", "false");
     }
     if (masonryContainer) {
       masonryContainer.classList.add("grid-enabled");
@@ -488,12 +526,328 @@ document.addEventListener("DOMContentLoaded", () => {
     if (typeof initMasonry === "function") {
       initMasonry();
     }
+    try {
+      window.dispatchEvent(new CustomEvent("reverso:intro-complete"));
+    } catch (_) {}
   }
 
   function markIntroDone() {
     try {
       sessionStorage.setItem(INTRO_DONE_KEY, "1");
     } catch (_) {}
+  }
+
+  function runIntroAnimation() {
+    if (typeof gsap === "undefined") {
+      console.error("GSAP not loaded, intro animation cannot run");
+      revealHomeContent();
+      return;
+    }
+
+    const introText = introContainer?.querySelector(".intro-text");
+    if (!introContainer || !introText) {
+      console.warn("Intro text elements not found");
+      revealHomeContent();
+      return;
+    }
+
+    const line1 = introText.querySelector(".intro-line-1");
+    const line2 = introText.querySelector(".intro-line-2");
+    const line3 = introText.querySelector(".intro-line-3.intro-mundo");
+    const line4a = introText.querySelector(".intro-line-4a");
+    const line4b = introText.querySelector(".intro-line-4b");
+
+    if (!line1 || !line2 || !line3 || !line4a || !line4b) {
+      console.warn("Intro line elements not found");
+      revealHomeContent();
+      return;
+    }
+
+    const contrarioText = line4b.textContent;
+    line4b.innerHTML = "";
+    const letters = [];
+    for (let i = 0; i < contrarioText.length; i++) {
+      const letterSpan = document.createElement("span");
+      letterSpan.className = "letter";
+      letterSpan.textContent = contrarioText[i];
+      line4b.appendChild(letterSpan);
+      letters.push(letterSpan);
+    }
+
+    gsap.set([line1, line2, line3, line4a, line4b], {
+      opacity: 0,
+      y: -50,
+      scale: 0.9,
+    });
+    gsap.set(introText, { opacity: 1 });
+    gsap.set(letters, { opacity: 1, rotationX: 0 });
+    if (heroOverlay) {
+      gsap.set(heroOverlay, { opacity: 0, visibility: "hidden" });
+    }
+    if (homeBelow) {
+      gsap.set(homeBelow, { opacity: 0 });
+    }
+    if (scrollHint) {
+      gsap.set(scrollHint, { opacity: 0 });
+    }
+
+    const calculateWidths = () => {
+      const origDisplay4a = line4a.style.display;
+      const origDisplay4b = line4b.style.display;
+      const origDisplay3 = line3.style.display;
+
+      line4a.style.display = "inline-block";
+      line4b.style.display = "inline-block";
+      line3.style.display = "block";
+
+      const rect4a = line4a.getBoundingClientRect();
+      const rect4b = line4b.getBoundingClientRect();
+      const contrarioHeight = rect4b.height;
+      const contrarioWidth = rect4b.width;
+
+      if (Math.abs(rect4a.height - contrarioHeight) > 1) {
+        const scaleFactor = contrarioHeight / rect4a.height;
+        const currentFontSize = parseFloat(getComputedStyle(line4a).fontSize);
+        line4a.style.fontSize = currentFontSize * scaleFactor + "px";
+        const rect4aNew = line4a.getBoundingClientRect();
+        gsap.set(line3, { width: rect4aNew.width + contrarioWidth });
+      } else {
+        gsap.set(line3, { width: rect4a.width + contrarioWidth });
+      }
+
+      line4a.style.display = origDisplay4a || "";
+      line4b.style.display = origDisplay4b || "";
+      line3.style.display = origDisplay3 || "";
+    };
+
+    if (document.fonts && document.fonts.ready) {
+      document.fonts.ready.then(calculateWidths);
+    } else {
+      setTimeout(calculateWidths, 300);
+    }
+
+    let resizeTimeout;
+    window.addEventListener("resize", () => {
+      clearTimeout(resizeTimeout);
+      resizeTimeout = setTimeout(calculateWidths, 250);
+    });
+
+    const tl = gsap.timeline({
+      onComplete: () => {
+        introContainer.classList.add("hidden");
+        introContainer.style.display = "none";
+        markIntroDone();
+      },
+    });
+
+    tl.to(line1, {
+      opacity: 1,
+      y: 0,
+      scale: 1,
+      duration: 0.15,
+      ease: "power3.out",
+    })
+      .to(
+        line2,
+        {
+          opacity: 1,
+          y: 0,
+          scale: 1,
+          duration: 0.15,
+          ease: "power3.out",
+        },
+        0.2,
+      )
+      .to(
+        line3,
+        {
+          opacity: 1,
+          y: 0,
+          scale: 1,
+          duration: 0.2,
+          ease: "power3.out",
+        },
+        0.4,
+      )
+      .to(
+        [line4a, line4b],
+        {
+          opacity: 1,
+          y: 0,
+          scale: 1,
+          duration: 0.2,
+          ease: "power3.out",
+        },
+        0.7,
+      )
+      .to(line4b, { opacity: 0, duration: 0.06, ease: "power2.inOut" }, 1.0)
+      .to(line4b, { opacity: 1, duration: 0.06, ease: "power2.inOut" }, 1.12)
+      .to(line4b, { opacity: 0, duration: 0.06, ease: "power2.inOut" }, 1.18)
+      .to(line4b, { opacity: 1, duration: 0.06, ease: "power2.inOut" }, 1.24)
+      .to(
+        line4b,
+        {
+          duration: 0.15,
+          ease: "power2.inOut",
+          onStart: () => {
+            line4b.classList.add("intro-line-4b-outline");
+          },
+        },
+        1.3,
+      )
+      .to(
+        letters,
+        {
+          rotationX: 180,
+          duration: 0.14,
+          ease: "power2.inOut",
+          stagger: 0.1,
+        },
+        1.5,
+      )
+      .to(
+        line4b,
+        {
+          duration: 0.25,
+          ease: "power2.inOut",
+          onStart: () => {
+            line4b.classList.remove("intro-line-4b-outline");
+          },
+        },
+        2.5,
+      )
+      .to(
+        letters,
+        {
+          rotationX: 0,
+          duration: 0.15,
+          ease: "power2.inOut",
+          stagger: 0.015,
+        },
+        2.5,
+      )
+      .call(
+        () => {
+          if (masonryContainer) masonryContainer.classList.add("grid-enabled");
+          if (masonryGrid) masonryGrid.classList.add("visible");
+          ensureHeroVideoPlayback();
+          if (typeof initMasonry === "function") initMasonry();
+        },
+        null,
+        2.7,
+      )
+      .to(
+        [line1, line2, line3, line4a, line4b],
+        {
+          opacity: 0,
+          y: -30,
+          scale: 0.95,
+          duration: 0.8,
+          ease: "power2.in",
+          stagger: 0.03,
+        },
+        2.7,
+      );
+
+    if (heroOverlay) {
+      tl.to(
+        heroOverlay,
+        {
+          opacity: 1,
+          visibility: "visible",
+          duration: 0.8,
+          ease: "power2.out",
+        },
+        2.7,
+      );
+    }
+
+    if (homeBelow) {
+      tl.to(
+        homeBelow,
+        {
+          opacity: 1,
+          duration: 0.8,
+          ease: "power2.out",
+          onStart: () => {
+            homeBelow.classList.add("home-below--visible");
+          },
+        },
+        2.7,
+      );
+    }
+
+    if (scrollHint) {
+      tl.to(
+        scrollHint,
+        {
+          opacity: 1,
+          duration: 0.6,
+          ease: "power2.out",
+          onComplete: () => {
+            scrollHint.classList.add("home-hero__scroll--visible");
+          },
+        },
+        3.0,
+      );
+    }
+
+    tl.call(() => {
+      try {
+        window.dispatchEvent(new CustomEvent("reverso:intro-complete"));
+      } catch (_) {}
+    });
+  }
+
+  function getMaxGridOverlap() {
+    return Math.min(window.innerHeight * 0.055, 64);
+  }
+
+  function updateHomeScrollFx() {
+    if (!homeBelow) return;
+    const vh = window.innerHeight || 1;
+    const y = window.scrollY;
+    const revealAt = vh * 0.08;
+    const overlapEnd = vh * 0.42;
+    const maxOverlap = getMaxGridOverlap();
+    const revealed = y >= revealAt;
+
+    document.body.classList.toggle("home-grid-revealed", revealed);
+
+    const overlapProgress = Math.min(
+      1,
+      Math.max(0, (y - revealAt) / Math.max(overlapEnd - revealAt, 1)),
+    );
+    homeBelow.style.setProperty(
+      "--home-grid-overlap",
+      `${overlapProgress * maxOverlap}px`,
+    );
+
+    if (scrollHint) {
+      scrollHint.classList.toggle("home-hero__scroll--hidden", revealed);
+      scrollHint.classList.toggle("home-hero__scroll--visible", !revealed);
+    }
+  }
+
+  let scrollFxTicking = false;
+  function onHomeScrollFx() {
+    if (scrollFxTicking) return;
+    scrollFxTicking = true;
+    requestAnimationFrame(() => {
+      updateHomeScrollFx();
+      scrollFxTicking = false;
+    });
+  }
+
+  const reduceMotion = window.matchMedia(
+    "(prefers-reduced-motion: reduce)",
+  ).matches;
+
+  if (reduceMotion) {
+    document.body.classList.add("home-grid-revealed");
+  } else {
+    window.addEventListener("scroll", onHomeScrollFx, { passive: true });
+    updateHomeScrollFx();
   }
 
   let introAlreadySeen = false;
@@ -506,261 +860,14 @@ document.addEventListener("DOMContentLoaded", () => {
     introContainer.style.display = "none";
   }
 
-  ensureHeroVideoPlayback();
-
   if (introAlreadySeen) {
     revealHomeContent();
-    return;
-  }
-
-  if (typeof gsap === "undefined") {
-    console.error("GSAP not loaded, intro animation cannot run");
-    revealHomeContent();
-    return;
-  }
-
-  if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
+  } else if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
     revealHomeContent();
     markIntroDone();
-    return;
-  }
-
-  const introText = introContainer?.querySelector(".intro-text");
-
-  if (!introContainer || !introText) {
-    console.warn("Intro text elements not found");
-    revealHomeContent();
-    return;
-  }
-
-  const line1 = introText.querySelector(".intro-line-1");
-  const line2 = introText.querySelector(".intro-line-2");
-  const line3 = introText.querySelector(".intro-line-3.intro-mundo");
-  const line4a = introText.querySelector(".intro-line-4a");
-  const line4b = introText.querySelector(".intro-line-4b");
-
-  if (!line1 || !line2 || !line3 || !line4a || !line4b) {
-    console.warn("Intro line elements not found");
-    revealHomeContent();
-    return;
-  }
-
-  const contrarioText = line4b.textContent;
-  line4b.innerHTML = "";
-  const letters = [];
-  for (let i = 0; i < contrarioText.length; i++) {
-    const letterSpan = document.createElement("span");
-    letterSpan.className = "letter";
-    letterSpan.textContent = contrarioText[i];
-    line4b.appendChild(letterSpan);
-    letters.push(letterSpan);
-  }
-
-  gsap.set([line1, line2, line3, line4a, line4b], {
-    opacity: 0,
-    y: -50,
-    scale: 0.9,
-  });
-  gsap.set(introText, { opacity: 1 });
-  gsap.set(letters, { opacity: 1, rotationX: 0 });
-
-  if (homeBelow) {
-    gsap.set(homeBelow, { opacity: 0 });
-  }
-  if (scrollHint) {
-    gsap.set(scrollHint, { opacity: 0 });
-  }
-
-  /* ── Width alignment: MUNDO ↔ AO + CONTRÁRIO ─────────────────── */
-
-  const calculateWidths = () => {
-    const origDisplay4a = line4a.style.display;
-    const origDisplay4b = line4b.style.display;
-    const origDisplay3 = line3.style.display;
-
-    line4a.style.display = "inline-block";
-    line4b.style.display = "inline-block";
-    line3.style.display = "block";
-
-    const rect4a = line4a.getBoundingClientRect();
-    const rect4b = line4b.getBoundingClientRect();
-
-    const contrarioHeight = rect4b.height;
-    const contrarioWidth = rect4b.width;
-
-    if (Math.abs(rect4a.height - contrarioHeight) > 1) {
-      const scaleFactor = contrarioHeight / rect4a.height;
-      const currentFontSize = parseFloat(getComputedStyle(line4a).fontSize);
-      line4a.style.fontSize = currentFontSize * scaleFactor + "px";
-
-      const rect4aNew = line4a.getBoundingClientRect();
-      gsap.set(line3, { width: rect4aNew.width + contrarioWidth });
-    } else {
-      gsap.set(line3, { width: rect4a.width + contrarioWidth });
-    }
-
-    line4a.style.display = origDisplay4a || "";
-    line4b.style.display = origDisplay4b || "";
-    line3.style.display = origDisplay3 || "";
-  };
-
-  if (document.fonts && document.fonts.ready) {
-    document.fonts.ready.then(calculateWidths);
+  } else if (introContainer) {
+    runIntroAnimation();
   } else {
-    setTimeout(calculateWidths, 300);
-  }
-
-  let resizeTimeout;
-  window.addEventListener("resize", () => {
-    clearTimeout(resizeTimeout);
-    resizeTimeout = setTimeout(calculateWidths, 250);
-  });
-
-  const tl = gsap.timeline({
-    onComplete: () => {
-      introContainer.classList.add("hidden");
-      introContainer.style.display = "none";
-      markIntroDone();
-    },
-  });
-
-  tl.to(line1, {
-    opacity: 1,
-    y: 0,
-    scale: 1,
-    duration: 0.15,
-    ease: "power3.out",
-  })
-    .to(
-      line2,
-      {
-        opacity: 1,
-        y: 0,
-        scale: 1,
-        duration: 0.15,
-        ease: "power3.out",
-      },
-      0.2,
-    )
-    .to(
-      line3,
-      {
-        opacity: 1,
-        y: 0,
-        scale: 1,
-        duration: 0.2,
-        ease: "power3.out",
-      },
-      0.4,
-    )
-    .to(
-      [line4a, line4b],
-      {
-        opacity: 1,
-        y: 0,
-        scale: 1,
-        duration: 0.2,
-        ease: "power3.out",
-      },
-      0.7,
-    )
-    .to(line4b, { opacity: 0, duration: 0.06, ease: "power2.inOut" }, 1.0)
-    .to(line4b, { opacity: 1, duration: 0.06, ease: "power2.inOut" }, 1.12)
-    .to(line4b, { opacity: 0, duration: 0.06, ease: "power2.inOut" }, 1.18)
-    .to(line4b, { opacity: 1, duration: 0.06, ease: "power2.inOut" }, 1.24)
-    .to(
-      line4b,
-      {
-        duration: 0.15,
-        ease: "power2.inOut",
-        onStart: () => {
-          line4b.classList.add("intro-line-4b-outline");
-        },
-      },
-      1.3,
-    )
-    .to(
-      letters,
-      {
-        rotationX: 180,
-        duration: 0.14,
-        ease: "power2.inOut",
-        stagger: 0.1,
-      },
-      1.5,
-    )
-    .to(
-      line4b,
-      {
-        duration: 0.25,
-        ease: "power2.inOut",
-        onStart: () => {
-          line4b.classList.remove("intro-line-4b-outline");
-        },
-      },
-      2.5,
-    )
-    .to(
-      letters,
-      {
-        rotationX: 0,
-        duration: 0.15,
-        ease: "power2.inOut",
-        stagger: 0.015,
-      },
-      2.5,
-    )
-    .call(
-      () => {
-        if (masonryContainer) masonryContainer.classList.add("grid-enabled");
-        if (masonryGrid) masonryGrid.classList.add("visible");
-        ensureHeroVideoPlayback();
-        if (typeof initMasonry === "function") initMasonry();
-      },
-      null,
-      2.7,
-    )
-    .to(
-      [line1, line2, line3, line4a, line4b],
-      {
-        opacity: 0,
-        y: -30,
-        scale: 0.95,
-        duration: 0.8,
-        ease: "power2.in",
-        stagger: 0.03,
-      },
-      2.7,
-    );
-
-  if (homeBelow) {
-    tl.to(
-      homeBelow,
-      {
-        opacity: 1,
-        duration: 0.8,
-        ease: "power2.out",
-        onStart: () => {
-          homeBelow.classList.add("home-below--visible");
-        },
-      },
-      2.7,
-    );
-  }
-
-  if (scrollHint) {
-    tl.to(
-      scrollHint,
-      {
-        opacity: 1,
-        duration: 0.6,
-        ease: "power2.out",
-        onComplete: () => {
-          scrollHint.classList.add("home-hero__scroll--visible");
-          scrollHint.setAttribute("aria-hidden", "false");
-        },
-      },
-      3.0,
-    );
+    revealHomeContent();
   }
 });

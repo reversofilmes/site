@@ -4,16 +4,9 @@
  */
 (function () {
   function splitContrarioLetters() {
+    if (!window.ReversoContrarioFlip) return;
     document.querySelectorAll('[data-marquee-contrario]').forEach(function (root) {
-      if (root.querySelector('.site-footer__marquee-letter')) return;
-      var text = root.textContent.trim();
-      root.textContent = '';
-      for (var i = 0; i < text.length; i++) {
-        var s = document.createElement('span');
-        s.className = 'site-footer__marquee-letter';
-        s.textContent = text[i];
-        root.appendChild(s);
-      }
+      ReversoContrarioFlip.splitLetters(root, ReversoContrarioFlip.FOOTER_LETTER_CLASS);
     });
   }
 
@@ -21,7 +14,7 @@
 
   /** Replica tempos/easing da intro para cada wrapper [data-marquee-contrario]. */
   function initContrarioTickerGsaps() {
-    if (typeof gsap === 'undefined') return;
+    if (typeof gsap === 'undefined' || !window.ReversoContrarioFlip) return;
     if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
 
     var syncProgress = null;
@@ -33,65 +26,8 @@
 
     document.querySelectorAll('[data-marquee-contrario]').forEach(function (wrapper) {
       if (wrapper._rvContrarioTl) return;
-      var letters = wrapper.querySelectorAll('.site-footer__marquee-letter');
-      if (!letters.length) return;
-
-      gsap.set(wrapper, { opacity: 1 });
-      gsap.set(letters, {
-        rotationX: 0,
-        transformOrigin: 'center center',
-        force3D: true,
-      });
-
-      var tl = gsap.timeline({
-        repeat: -1,
-        repeatDelay: 4,
-        onRepeat: function () {
-          wrapper.classList.remove('site-footer__marquee-contrario-outline');
-        },
-      });
-
-      tl.to(wrapper, { opacity: 0, duration: 0.1, ease: 'power2.inOut' })
-        .to(wrapper, { opacity: 1, duration: 0.1, ease: 'power2.inOut' })
-        .to(wrapper, { opacity: 0, duration: 0.1, ease: 'power2.inOut' })
-        .to(wrapper, { opacity: 1, duration: 0.1, ease: 'power2.inOut' })
-        .to(wrapper, {
-          duration: 0.22,
-          ease: 'power2.inOut',
-          onStart: function () {
-            wrapper.classList.add('site-footer__marquee-contrario-outline');
-          },
-        })
-        .to(letters, {
-          rotationX: 180,
-          duration: 0.2,
-          ease: 'power2.inOut',
-          stagger: 0.13,
-        })
-        .to(
-          wrapper,
-          {
-            duration: 0.32,
-            ease: 'power2.inOut',
-            onStart: function () {
-              wrapper.classList.remove('site-footer__marquee-contrario-outline');
-            },
-          },
-          '+=0.1',
-        )
-        .to(
-          letters,
-          {
-            rotationX: 0,
-            duration: 0.22,
-            ease: 'power2.inOut',
-            stagger: 0.022,
-          },
-          '<',
-        );
-
-      wrapper._rvContrarioTl = tl;
-      if (syncProgress !== null) {
+      var tl = ReversoContrarioFlip.play(wrapper, { repeat: -1, repeatDelay: 2 });
+      if (tl && syncProgress !== null) {
         tl.progress(syncProgress);
       }
     });

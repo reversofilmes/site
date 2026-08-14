@@ -1,7 +1,7 @@
 import { json, error } from '../utils/response.js';
 import { logAudit } from '../utils/audit.js';
 
-const ALLOWED_KEYS = new Set(['hero_video']);
+const ALLOWED_KEYS = new Set(['hero_video', 'hero_video_mobile']);
 
 /** URL absoluta ou chave R2 relativa a MEDIA_BASE_URL. */
 function mediaPublicUrl(base, keyOrUrl) {
@@ -22,7 +22,7 @@ function stripMediaBaseToKey(value, base) {
 
 export async function handleSiteSettingsList(env) {
   const { results } = await env.DB.prepare(
-    "SELECT key, value, updated_at FROM site_settings WHERE key IN ('hero_video') ORDER BY key",
+    "SELECT key, value, updated_at FROM site_settings WHERE key IN ('hero_video', 'hero_video_mobile') ORDER BY key",
   ).all();
 
   const base = env.MEDIA_BASE_URL || '';
@@ -37,7 +37,7 @@ export async function handleSiteSettingsList(env) {
 
 export async function handleSiteSettingsExport(env) {
   const { results } = await env.DB.prepare(
-    "SELECT key, value FROM site_settings WHERE key IN ('hero_video')",
+    "SELECT key, value FROM site_settings WHERE key IN ('hero_video', 'hero_video_mobile')",
   ).all();
 
   const base = env.MEDIA_BASE_URL || '';
@@ -57,8 +57,8 @@ function validateKeyValue(key, rawValue) {
   if (v.includes('..')) return { ok: false, err: 'invalid value' };
   if (v.includes('://') && !/^https?:\/\//i.test(v)) return { ok: false, err: 'invalid url' };
   if (!v.includes('://')) {
-    if (key === 'hero_video' && !v.startsWith('site/')) {
-      return { ok: false, err: 'hero_video key must start with site/' };
+    if ((key === 'hero_video' || key === 'hero_video_mobile') && !v.startsWith('site/')) {
+      return { ok: false, err: `${key} key must start with site/` };
     }
   }
   return { ok: true, value: v };

@@ -181,7 +181,7 @@
   /* ── init ─────────────────────────────────────────────────────────── */
 
   function init() {
-    var isHome = !!document.getElementById('intro-text');
+    var isHome = document.body.classList.contains('is-home');
 
     if (isHome) {
       resetInlineStyles(contentElements());

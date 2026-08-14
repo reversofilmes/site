@@ -88,24 +88,28 @@ function calculateColumnWidth(sizingEl) {
 
 function parseSizeFromAttr(raw) {
   var s = String(raw || '1x1').toLowerCase().replace(/\s/g, '');
+  // New aspect-ratio-based format system
+  var heightMap = {
+    '16x9': 9 / 16,
+    '1x1': 1,
+    '4x5': 5 / 4,
+    '9x16': 16 / 9
+  };
+  if (heightMap[s] != null) return { w: 1, h: heightMap[s] };
+  // Legacy formats
+  if (s === '1x0.5' || s === '1x2' || s === '2x2') return { w: 1, h: 9 / 16 };
+  if (s === '1x1.5' || s === '1x3') return { w: 1, h: 16 / 9 };
+  if (s === '2x1') return { w: 1, h: 1 };
+  // Fallback: try parsing numeric format
   var m = s.match(/^(\d+(?:\.\d+)?)x(\d+(?:\.\d+)?)$/);
-  if (!m) return { w: 1, h: 1 };
-  var w = parseFloat(m[1]);
-  var h = parseFloat(m[2]);
-  if (!Number.isFinite(w) || w <= 0) w = 1;
-  if (!Number.isFinite(h) || h <= 0) h = 1;
-  if (w === 2 && h === 1) { w = 1; h = 1; }
-  if (w === 2 && h === 2) { w = 1; h = 0.5; }
-  w = 1;
-  if (h === 3) h = 1.5;
-  if (h === 2) h = 0.5;
-  var allowed = [0.5, 1, 1.5];
-  if (allowed.indexOf(h) === -1) {
-    if (h < 0.75) h = 0.5;
-    else if (h < 1.25) h = 1;
-    else h = 1.5;
+  if (m) {
+    var w = parseFloat(m[1]);
+    var h = parseFloat(m[2]);
+    if (Number.isFinite(w) && Number.isFinite(h) && w > 0 && h > 0) {
+      return { w: 1, h: h / w };
+    }
   }
-  return { w: w, h: h };
+  return { w: 1, h: 1 };
 }
 
 function parseSize(item) {
@@ -130,8 +134,8 @@ function sizeItem(item, columnWidth, rowHeight, columns) {
   var cw = s.w > columns ? columns : s.w;
   item.style.width = (cw * columnWidth + (cw - 1) * GUTTER) + 'px';
   item.style.maxWidth = '100%';
-  var gutterH = Math.max(0, (s.h - 1) * GUTTER);
-  item.style.height = (s.h * rowHeight + gutterH) + 'px';
+  var extraGutters = s.h > 1 ? Math.floor(s.h - 1) * GUTTER : 0;
+  item.style.height = (s.h * rowHeight + extraGutters) + 'px';
 }
 
 /* ─── serviços / filtro ─── */
