@@ -8,16 +8,19 @@
     aria-expanded="false"
     aria-controls="home-nav-panel"
   >
-    <span class="home-nav__logo-stage" aria-hidden="true">
-      <img
-        class="home-nav__logo"
-        src="{{ '/assets/images/logo/SIMBOLO_RVRS_SIMB_NEGATIVA_COR.png' | relative_url }}"
-        width="64"
-        height="80"
-        alt=""
-        loading="eager"
-        decoding="async"
-      />
+    <span class="home-nav__trigger-stack">
+      <span class="home-nav__logo-stage" aria-hidden="true">
+        <img
+          class="home-nav__logo"
+          src="{{ '/assets/images/logo/SIMBOLO_RVRS_SIMB_NEGATIVA_COR.png' | relative_url }}"
+          width="64"
+          height="80"
+          alt=""
+          loading="eager"
+          decoding="async"
+        />
+      </span>
+      <span class="home-nav__menu-label" aria-hidden="true">MENU</span>
     </span>
   </button>
   <div
@@ -46,7 +49,7 @@
       <i class="fa-solid fa-handshake" aria-hidden="true"></i>
       <span>Curupire-se</span>
     </a>
-    <a href="{{ '/about/' | relative_url }}" class="home-nav__link">
+    <a href="{{ '/' | relative_url }}#sobre" class="home-nav__link">
       <i class="fa-solid fa-info-circle" aria-hidden="true"></i>
       <span>Sobre</span>
     </a>

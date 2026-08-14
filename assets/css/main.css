@@ -13,7 +13,7 @@ body {
 }
 
 /* Prevent flicker - hide content until transition script runs */
-body:not(.page-loaded) > *:not(script):not(link):not(style):not(meta):not(.home-nav):not(.home-hero):not(#home-below) {
+body:not(.page-loaded) > *:not(script):not(link):not(style):not(meta):not(.home-nav):not(.home-hero):not(#home-below):not(#sobre) {
   opacity: 0 !important;
   visibility: hidden !important;
   transform: translateY(20px) scale(0.98) !important;
@@ -22,6 +22,16 @@ body:not(.page-loaded) > *:not(script):not(link):not(style):not(meta):not(.home-
 html {
   overflow-x: hidden;
   max-width: 100%;
+}
+
+::selection {
+  background-color: #ff0000;
+  color: #fff;
+}
+
+::-moz-selection {
+  background-color: #ff0000;
+  color: #fff;
 }
 
 /* Intro Text */
@@ -458,7 +468,7 @@ a:hover::after {
   pointer-events: none;
   /* Margem lateral = GUTTER (14) em masonry-init.js; respiro antes do rodapé */
   /* Respiro superior: evita “corte” nos cards da 1.ª fila quando crescem no hover */
-  padding: clamp(10px, 1.25vw, 18px) 14px clamp(3.5rem, 8vw, 6.5rem);
+  padding: clamp(10px, 1.25vw, 18px) 14px clamp(1.25rem, 3vw, 2rem);
 }
 
 .masonry-container.grid-enabled {
@@ -492,6 +502,23 @@ a:hover::after {
   width: 100%;
 }
 
+/* Home — cards em P&B; cor no hover (desktop) ou destaque por scroll (tablet/mobile) */
+body.is-home .project-thumbnail-container {
+  filter: grayscale(1);
+  transition: filter 0.45s ease;
+}
+
+body.is-home .project-item.is-preview-playing .project-thumbnail-container {
+  filter: grayscale(0);
+}
+
+@media (min-width: 1025px) {
+  body.is-home .project-item:hover .project-thumbnail-container,
+  body.is-home .project-item:focus .project-thumbnail-container {
+    filter: grayscale(0);
+  }
+}
+
 /* Home — mobile: 2 colunas; JS distribui itens nas 2 primeiras colunas (greedy shortest-column-first) */
 @media (max-width: 767px) {
   body.is-home .projects-grid.projects-grid--cols {
@@ -506,7 +533,10 @@ a:hover::after {
   body.is-home .project-item .project-hover-video {
     object-position: center center;
   }
+}
 
+/* Home — tablet/mobile: grow + borda vermelha via scroll (.is-preview-playing), não hover */
+@media (max-width: 1024px) {
   body.is-home .project-item:hover,
   body.is-home .project-item:focus {
     transform: none;
@@ -592,6 +622,9 @@ a:hover::after {
 .project-item[data-size="1x1"] .project-thumbnail {
   object-position: center 22%;
 }
+.project-item[data-size="16x9"] .project-thumbnail,
+.project-item[data-size="9x16"] .project-thumbnail,
+.project-item[data-size="4x5"] .project-thumbnail,
 .project-item[data-size="1x0.5"] .project-thumbnail,
 .project-item[data-size="1x1.5"] .project-thumbnail,
 .project-item[data-size="1x3"] .project-thumbnail {
@@ -616,6 +649,9 @@ a:hover::after {
 .project-item[data-size="1x1"] .project-hover-video {
   object-position: center 22%;
 }
+.project-item[data-size="16x9"] .project-hover-video,
+.project-item[data-size="9x16"] .project-hover-video,
+.project-item[data-size="4x5"] .project-hover-video,
 .project-item[data-size="1x0.5"] .project-hover-video,
 .project-item[data-size="1x1.5"] .project-hover-video,
 .project-item[data-size="1x3"] .project-hover-video {
@@ -672,6 +708,7 @@ a:hover::after {
   font-size: clamp(0.7rem, 1.6vw, 0.95rem);
 }
 
+.project-item[data-size="16x9"] .project-title,
 .project-item[data-size="1x0.5"] .project-title {
   -webkit-line-clamp: 1;
   line-clamp: 1;

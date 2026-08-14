@@ -13,9 +13,10 @@ const ALLOWED_TYPES = {
 
 function sanitizeKey(slug, type, ext) {
   const hash = crypto.randomUUID().slice(0, 8);
-  if (type === 'hero_video') {
+  if (type === 'hero_video' || type === 'hero_video_mobile') {
     if (ext !== 'mp4' && ext !== 'webm') throw new Error('Invalid video type for hero');
-    return `site/hero-${hash}.${ext}`;
+    const suffix = type === 'hero_video_mobile' ? 'hero-mobile' : 'hero';
+    return `site/${suffix}-${hash}.${ext}`;
   }
   if (!SLUG_PATH_RE.test(slug)) throw new Error('Invalid slug');
   if (!['thumbnail', 'preview'].includes(type)) throw new Error('Invalid type');
@@ -41,7 +42,7 @@ export async function handleUpload(request, env, ctx) {
   }
 
   if (!type) return error('type field required', 400);
-  if (type !== 'hero_video' && !slug) {
+  if (type !== 'hero_video' && type !== 'hero_video_mobile' && !slug) {
     return error('slug and type fields required', 400);
   }
 
@@ -51,7 +52,7 @@ export async function handleUpload(request, env, ctx) {
   let key;
   try {
     key = sanitizeKey(
-      type === 'hero_video' ? 'site' : slug,
+      (type === 'hero_video' || type === 'hero_video_mobile') ? 'site' : slug,
       type,
       ext,
     );

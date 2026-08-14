@@ -57,7 +57,7 @@ document.addEventListener("DOMContentLoaded", () => {
   var videoMap = new Map();
   var observer = null;
   var hoverHandlers = new WeakMap();
-  var mobileMq = window.matchMedia("(max-width: 767px)");
+  var previewScrollMq = window.matchMedia("(max-width: 1024px)");
 
   items.forEach((item) => {
     var videoEl = item.querySelector(".project-hover-video");
@@ -66,8 +66,8 @@ document.addEventListener("DOMContentLoaded", () => {
     videoMap.set(item, { videoEl: videoEl, thumbEl: thumbEl, state: state });
   });
 
-  function isMobilePreview() {
-    return mobileMq.matches;
+  function isScrollPreview() {
+    return previewScrollMq.matches;
   }
 
   function setInView(item, active) {
@@ -197,7 +197,7 @@ document.addEventListener("DOMContentLoaded", () => {
       observer = null;
     }
 
-    if (isMobilePreview()) {
+    if (isScrollPreview()) {
       unbindDesktopHover();
       observer = new IntersectionObserver(onMobileIntersection, {
         rootMargin: "-45% 0px -45% 0px",
@@ -216,6 +216,6 @@ document.addEventListener("DOMContentLoaded", () => {
   }
 
   setupPreviewMode();
-  mobileMq.addEventListener("change", setupPreviewMode);
+  previewScrollMq.addEventListener("change", setupPreviewMode);
 });
 </script>

@@ -42,16 +42,17 @@ function parseServiceTypes(value) {
   }
 }
 
-const ALLOWED_HOME_SIZES = new Set(['1x0.5', '1x1', '1x1.5']);
+const ALLOWED_HOME_SIZES = new Set(['9x16', '4x5', '1x1', '16x9']);
 
-/** Largura×altura (células); grelha 5 col: 1x0.5, 1x1, 1x1.5; legados normalizados. */
+/** Aspect-ratio based sizes: 9x16, 4x5, 1x1, 16x9; legacy values normalized. */
 function normalizeHomeSize(s) {
   if (s == null || s === '') return '1x1';
   const t = String(s).toLowerCase().replace(/\s/g, '');
-  if (t === '1x3') return '1x1.5';
   if (ALLOWED_HOME_SIZES.has(t)) return t;
+  // Legacy mappings
+  if (t === '1x0.5' || t === '2x2' || t === '1x2') return '16x9';
+  if (t === '1x1.5' || t === '1x3') return '9x16';
   if (t === '2x1') return '1x1';
-  if (t === '1x2' || t === '2x2') return '1x0.5';
   return '1x1';
 }
 

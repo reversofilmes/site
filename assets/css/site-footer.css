@@ -214,6 +214,11 @@
   paint-order: stroke fill;
 }
 
+.site-footer__marquee-letter-space {
+  flex: 0 0 auto;
+  min-width: 0.28em;
+}
+
 /* Igual à intro (.intro-line-4b-outline), à escala do ticker — aplicado antes do flip escalonado */
 .site-footer__marquee-contrario-outline .site-footer__marquee-letter {
   color: transparent !important;
