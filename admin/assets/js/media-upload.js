@@ -19,16 +19,6 @@ const MediaUpload = {
     }
   },
 
-  imgPath(file, slug) {
-    const ext = file.name.split('.').pop().toLowerCase();
-    return `assets/img/projects/${slug}-thumbnail.${ext}`;
-  },
-
-  vidPath(file, slug) {
-    const ext = file.name.split('.').pop().toLowerCase();
-    return `assets/video/projects/${slug}-preview.${ext}`;
-  },
-
   preview(file) { return URL.createObjectURL(file); },
   revokePreview(url) { if (url) URL.revokeObjectURL(url); },
 };
