@@ -16,8 +16,29 @@ O admin e a API partilham o registrável `.reversofilmes.com.br` (cookies first-
 
 ## Documentação
 
-- [docs/DOCUMENTACAO.md](docs/DOCUMENTACAO.md) — arquitetura, desenvolvimento local, deploy, branches
-- [docs/cms-ingest-youtube.md](docs/cms-ingest-youtube.md) — ingestão YouTube → R2 via GitHub Actions
+- [docs/DOCUMENTACAO.md](docs/DOCUMENTACAO.md) — arquitetura, desenvolvimento local, deploy, branches e fluxo Git
+- [docs/cms-ingest-youtube.md](docs/cms-ingest-youtube.md) — ingestão YouTube e Pixieset via Reverso Media (servidor local)
+
+## Antes de uma nova implementação
+
+Sempre que houver mudanças publicadas via admin, a branch `main` fica à frente de `temp` (merge commits de PR). Antes de começar trabalho novo:
+
+```powershell
+git checkout temp
+git fetch origin
+git merge origin/main
+git push origin temp
+```
+
+Depois, alinhe o preview local com produção (dados do D1):
+
+```powershell
+$env:WORKER_EXPORT_URL = "https://cms.reversofilmes.com.br/api/projects/export"
+$env:CF_BUILD_TOKEN = "<BUILD_TOKEN>"
+node scripts/fetch-projects.mjs
+```
+
+Detalhes do fluxo Git (`temp` → PR → `main`), remotes e variáveis: [docs/DOCUMENTACAO.md](docs/DOCUMENTACAO.md).
 
 ## Rodar localmente (site)
 
@@ -59,6 +80,6 @@ npx wrangler deploy
 ## Deploy
 
 1. **Worker:** `cd cf-worker && npx wrangler deploy`
-2. **Site:** push na branch `main` → Netlify build (`fetch-projects.mjs` + Jekyll)
+2. **Site:** commit em `temp` → PR para `main` → merge dispara Netlify (`fetch-projects.mjs` + Jekyll)
 
 O «Publicar» no admin grava no D1 e dispara o build hook Netlify (branch `main`).

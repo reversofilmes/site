@@ -58,8 +58,8 @@ function sleep(ms) {
 }
 
 /**
- * Faz download do vídeo do YouTube. Em runners de datacenter (ex.: GitHub Actions)
- * o YouTube exige "Sign in to confirm you're not a bot". Estratégia:
+ * Faz download do vídeo do YouTube. Em IPs de datacenter o YouTube pode exigir
+ * "Sign in to confirm you're not a bot". Estratégia:
  *   1) Tenta vários clientes e combinações de extractor-args.
  *   2) Se existir um ficheiro de cookies em `YT_DLP_COOKIES_FILE`, tenta com `--cookies`.
  *   3) Se tudo falhar, retorna null (o caller decide o fallback).
@@ -389,8 +389,8 @@ Opcional (só --all): INGEST_DELAY_MS=4000
 }
 
 /**
- * Ingest de um único projecto lendo URL e instantes do manifesto do Worker
- * (D1). É o modo usado pelo GitHub Actions disparado a partir do admin.
+ * Ingest de um único projecto lendo URL e instantes do manifesto do Worker (D1).
+ * Modo CLI; no admin use o Reverso Media local (local-server.mjs).
  */
 async function runSingleFromManifest(slug) {
   const projects = await fetchYoutubeManifest();

@@ -2,7 +2,7 @@
 
 Site estático Jekyll na Netlify, com CMS (painel admin + API Worker na Cloudflare). Conteúdo vivo em **D1** e **R2**; o build Netlify gera `_data/*.json` a partir do export do Worker.
 
-Documentação complementar: [cms-ingest-youtube.md](cms-ingest-youtube.md).
+Documentação complementar: [cms-ingest-youtube.md](cms-ingest-youtube.md) (Reverso Media — servidor local).
 
 ---
 
@@ -100,9 +100,37 @@ npm run dev
 bundle exec jekyll serve
 ```
 
-### 2.4 Servidor local de mídia (opcional)
+### 2.4 Reverso Media — servidor local (YouTube e Pixieset)
 
-`scripts/local-server.mjs` em http://localhost:7847 — preview YouTube/Pixieset no editor. Só relevante em dev; a CSP do admin permite `localhost:7847`.
+Fluxo **actual** para gerar capa e prévia a partir do YouTube (ou resolver Pixieset): o admin chama `http://localhost:7847`, não GitHub Actions.
+
+**Iniciar o servidor**
+
+- Windows: duplo clique em `Iniciar Reverso Media.bat` (na raiz do repo)
+- macOS: duplo clique em `Iniciar Reverso Media.command`
+- Ou manualmente: `cd scripts && node local-server.mjs` (porta **7847**)
+
+Dependências: Node.js, `yt-dlp` e FFmpeg (o script pode baixar binários na primeira execução).
+
+**No admin**
+
+1. Abra um projeto com `youtube_url` preenchido.
+2. Confirme o badge **Reverso Media online** (verde) no editor.
+3. Ajuste instantes na linha do tempo → **Gerar capa e prévia**.
+4. **Salvar** (rascunho) → **Publicar** (envia ficheiros ao R2 via Worker).
+
+O servidor devolve poster + clip em base64; o admin faz upload normal (`POST /api/upload`) ao publicar.
+
+**Script CLI opcional** (batch / terminal, sem admin):
+
+```powershell
+cd scripts
+node ingest-youtube-media.mjs --slug <slug>
+```
+
+Usa `GET /api/projects/youtube-manifest` e `POST /api/projects/media-keys` no Worker. Requer `CF_BUILD_TOKEN` ou equivalente no ambiente — ver cabeçalho do script.
+
+A CSP do admin permite `connect-src` a `localhost:7847` em dev.
 
 ---
 
@@ -134,7 +162,7 @@ O admin lê `site.reverso_cms_api` na meta `reverso-cms-api` em `admin/index.htm
 | `ADMIN_ORIGIN` | `https://www.reversofilmes.com.br/admin` |
 | `NETLIFY_DEPLOY_BRANCH` | `main` |
 
-Segredos (`wrangler secret put`, não no Git): `GITHUB_CLIENT_ID`, `GITHUB_CLIENT_SECRET`, `JWT_SECRET`, `BUILD_TOKEN`, `NETLIFY_DEPLOY_HOOK_URL`, `GITHUB_REPO`, `GITHUB_DISPATCH_TOKEN`, etc.
+Segredos (`wrangler secret put`, não no Git): `GITHUB_CLIENT_ID`, `GITHUB_CLIENT_SECRET`, `JWT_SECRET`, `BUILD_TOKEN`, `NETLIFY_DEPLOY_HOOK_URL`, etc.
 
 Deploy: `npx wrangler deploy` publica código + `[vars]`; segredos já na cloud não mudam com o deploy.
 
@@ -151,7 +179,7 @@ Deploy: `npx wrangler deploy` publica código + `[vars]`; segredos já na cloud 
 3. **Build Netlify** → `fetch-projects.mjs` (Bearer `CF_BUILD_TOKEN`) → `_data/*.json` → `jekyll build`.
 4. Site estático publicado com dados do D1.
 
-O admin **não** faz commit de `_projects/*.md` no GitHub ao publicar. Commits no `main` são código e workflows (ex. ingest YouTube).
+O admin **não** faz commit de `_projects/*.md` no GitHub ao publicar. Commits no `main` são código e workflows (ex. validação de uploads legados).
 
 ---
 
@@ -173,8 +201,8 @@ site/
 │   └── src/
 ├── scripts/
 │   ├── fetch-projects.mjs   # build-time export
-│   ├── local-server.mjs     # dev: mídia local :7847
-│   └── ingest-youtube-media.mjs
+│   ├── local-server.mjs     # Reverso Media :7847 (YouTube/Pixieset no admin)
+│   └── ingest-youtube-media.mjs  # CLI opcional → R2 via Worker
 ├── docs/                    # documentação (não publicada no site)
 ├── netlify.toml
 └── Gemfile
@@ -182,16 +210,95 @@ site/
 
 ---
 
-## 6. Branches
+## 6. Branches e fluxo Git
 
-| Branch | Uso típico |
-|--------|------------|
+| Branch | Uso |
+|--------|-----|
 | `main` | Produção — Netlify deploy, workflows GitHub |
-| `temp` | Staging / desenvolvimento histórico |
+| `temp` | Desenvolvimento — commits e PRs antes de produção |
 
-Após mudanças em `main`, sincronizar `temp` com PR `main` → `temp` ou `git merge origin/main` em `temp`.
+### Remote
 
-Conteúdo do CMS não diverge entre branches — está no D1. O `git pull` + `fetch-projects.mjs` alinha o preview local com produção.
+O clone aponta direto para o repositório do cliente:
+
+```powershell
+git remote -v
+# origin  https://github.com/reversofilmes/site.git (fetch)
+# origin  https://github.com/reversofilmes/site.git (push)
+```
+
+Verificar branch atual e tracking:
+
+```powershell
+git branch --show-current
+git branch -vv
+```
+
+Conta usada no **commit** (local):
+
+```powershell
+git config user.name
+git config user.email
+```
+
+Conta usada no **push** (GitHub): `gh auth status` ou credenciais salvas no Git Credential Manager.
+
+### Por que `main` fica à frente de `temp`
+
+Cada PR mergeado em `main` gera um **merge commit** que fica só em `main`. Publicações pelo admin («Publicar») também disparam deploy em `main` sem alterar `temp`. Por isso `temp` aparece como “N commits behind main” até ser sincronizada.
+
+O conteúdo do CMS **não** diverge entre branches — está no D1. O que diverge é o histórico Git e o código em produção vs. o da branch de trabalho.
+
+### Ritual antes de nova implementação ou correção
+
+Execute **sempre** no início de um ciclo de trabalho:
+
+**1. Sincronizar `temp` com `main`**
+
+```powershell
+git checkout temp
+git fetch origin
+git merge origin/main
+git push origin temp
+```
+
+**2. Sincronizar dados locais com produção (D1)**
+
+```powershell
+$env:WORKER_EXPORT_URL = "https://cms.reversofilmes.com.br/api/projects/export"
+$env:CF_BUILD_TOKEN = "<BUILD_TOKEN>"
+node scripts/fetch-projects.mjs
+```
+
+O `CF_BUILD_TOKEN` é o mesmo `BUILD_TOKEN` do Worker (segredo em `cf-worker/.dev.vars` local ou dashboard Cloudflare; no Netlify está em variáveis de ambiente do build). **Não** é o token de login GitHub do admin.
+
+**3. Subir o preview**
+
+```powershell
+bundle exec jekyll serve
+```
+
+Com `_config.local.yml` e Worker local (`npm run dev` em `cf-worker/`), o admin aponta para `127.0.0.1:8787` — ver §2.3.
+
+### Fluxo de entrega
+
+```
+editar em temp → commit → push origin temp → PR temp → main → merge → Netlify deploy
+```
+
+Após merge em `main`, repetir o ritual de sincronização (§ acima) antes do próximo ciclo.
+
+### Comandos úteis
+
+```powershell
+git status
+git log --oneline -10
+git diff
+git add -A
+git commit -m "mensagem"
+git push origin temp
+git push origin temp --dry-run   # testar push sem enviar
+```
 
 ---
 
@@ -200,7 +307,7 @@ Conteúdo do CMS não diverge entre branches — está no D1. O `git pull` + `fe
 | Ação | Comando / lugar |
 |------|-----------------|
 | Worker | `cd cf-worker && npx wrangler deploy` |
-| Site | `git push origin main` |
+| Site | PR `temp` → `main` + merge (Netlify build automático) |
 | DNS rollback | Hostgator → nameservers anteriores (ver `docs/reversofilmes.com.br-cloudflare-import.txt`) |
 
 ---
