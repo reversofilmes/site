@@ -6,7 +6,6 @@ document.addEventListener("DOMContentLoaded", () => {
   const heroOverlay = document.querySelector(".home-hero__overlay");
   const homeBelow = document.getElementById("home-below");
   const scrollHint = document.getElementById("scroll-hint");
-  const heroVideo = document.getElementById("home-hero-video");
   const heroContainer = document.getElementById("home-hero");
   const masonryContainer = document.getElementById("masonry-container");
   const masonryGrid = masonryContainer?.querySelector(".projects-grid");
