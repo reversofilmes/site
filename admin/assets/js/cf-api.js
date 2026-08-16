@@ -90,7 +90,7 @@ class CfAPI {
 
   /**
    * Upload do vídeo da Hero (R2 `site/…`); sem slug.
-   * @param {'hero_video'|'hero_video_mobile'} type
+   * @param {'hero_video'|'hero_video_mobile'|'home_about_photo_intro'|'home_about_photo_respiro'|'home_about_bg_mundo'|'home_about_card_festivais'|'home_about_card_arte'|'home_about_card_corporativo'} type
    */
   uploadSiteMedia(type, file) {
     const form = new FormData();

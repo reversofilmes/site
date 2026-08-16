@@ -4,6 +4,7 @@
 const MediaUpload = {
   MAX_SIZE: 25 * 1024 * 1024,
   IMG_TYPES: ['image/jpeg', 'image/png', 'image/webp'],
+  GIF_TYPES: ['image/gif', 'image/webp', 'image/png'],
   VID_TYPES: ['video/mp4', 'video/webm'],
 
   validate(file, types) {

@@ -74,14 +74,26 @@ function safeSuccessRedirect(env, returnToRaw) {
   return env.ADMIN_ORIGIN;
 }
 
+/** Origem pública da API para redirect_uri OAuth (wrangler dev --remote usa workers.dev em request.url). */
+function publicApiOrigin(request, env) {
+  const override = (env.OAUTH_REDIRECT_ORIGIN || env.PUBLIC_API_ORIGIN || '').trim();
+  if (override) {
+    try {
+      return new URL(override).origin;
+    } catch { /* fall through */ }
+  }
+  return new URL(request.url).origin;
+}
+
 export async function handleGitHubLogin(request, env) {
   const rateErr = await rateLimitAuth(request, env);
   if (rateErr) return rateErr;
 
   const state = randomHex(32);
+  const apiOrigin = publicApiOrigin(request, env);
   const params = new URLSearchParams({
     client_id: env.GITHUB_CLIENT_ID,
-    redirect_uri: `${new URL(request.url).origin}/api/auth/github/callback`,
+    redirect_uri: `${apiOrigin}/api/auth/github/callback`,
     scope: 'read:user user:email',
     state,
   });
