@@ -2,6 +2,22 @@
  * Rodapé: faixa preta, separação vermelha, ícones, ticker (mesma estética do intro)
  */
 
+.is-home .site-footer__inner {
+  display: none;
+}
+
+.is-home .site-footer {
+  border-top: none;
+}
+
+.is-home .site-footer__marquee {
+  padding: 0.15rem 0 clamp(0.85rem, 2.5vw, 1.5rem);
+}
+
+.is-home .site-footer__marquee-phrase {
+  font-size: clamp(1rem, 1.9vw, 1.45rem);
+}
+
 .site-footer {
   position: relative;
   z-index: 1;
@@ -243,6 +259,10 @@
 }
 
 @media (max-width: 480px) {
+  .is-home .site-footer__marquee-phrase {
+    font-size: clamp(0.9rem, 3.4vw, 1.15rem);
+  }
+
   .site-footer__marquee-phrase {
     font-size: clamp(0.6rem, 2.2vw, 0.8rem);
   }

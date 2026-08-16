@@ -1,3 +1,73 @@
+{% assign _ss = site.data['site-settings'] %}
+{% assign _about_intro = '/assets/images/240920_camaleao_@reversofilmes_@samucafischer_5.jpg' | relative_url %}
+{% if _ss and _ss.home_about_photo_intro and _ss.home_about_photo_intro != '' %}
+  {% assign _about_intro = _ss.home_about_photo_intro %}
+{% endif %}
+{% assign _about_respiro = '/assets/images/251025_DKStudio_Imortal_@reversofilmes_@gabvalmoura_1.jpg' | relative_url %}
+{% if _ss and _ss.home_about_photo_respiro and _ss.home_about_photo_respiro != '' %}
+  {% assign _about_respiro = _ss.home_about_photo_respiro %}
+{% endif %}
+{% assign _about_bg = '/assets/images/BG1.png' | relative_url %}
+{% if _ss and _ss.home_about_bg_mundo and _ss.home_about_bg_mundo != '' %}
+  {% assign _about_bg = _ss.home_about_bg_mundo %}
+{% endif %}
+{% assign _card_festivais = '/assets/images/festivais_eventos.png' | relative_url %}
+{% if _ss and _ss.home_about_card_festivais and _ss.home_about_card_festivais != '' %}
+  {% assign _card_festivais = _ss.home_about_card_festivais %}
+{% endif %}
+{% assign _card_arte = '/assets/images/arte_cultura.png' | relative_url %}
+{% if _ss and _ss.home_about_card_arte and _ss.home_about_card_arte != '' %}
+  {% assign _card_arte = _ss.home_about_card_arte %}
+{% endif %}
+{% assign _card_corporativo = '/assets/images/corporativo.png' | relative_url %}
+{% if _ss and _ss.home_about_card_corporativo and _ss.home_about_card_corporativo != '' %}
+  {% assign _card_corporativo = _ss.home_about_card_corporativo %}
+{% endif %}
+{% assign _about_perspectivas = '/assets/images/260411_BravaEscolaDeCirco_PalcoAberto_@ReversoFilmes_@indioevindio-336.jpg' | relative_url %}
+{% if _ss and _ss.home_about_photo_perspectivas and _ss.home_about_photo_perspectivas != '' %}
+  {% assign _about_perspectivas = _ss.home_about_photo_perspectivas %}
+{% endif %}
+{% assign _about_curupire = '/assets/images/anatemponi_reverso_filmes_02dia_86.jpg' | relative_url %}
+{% if _ss and _ss.home_about_photo_curupire and _ss.home_about_photo_curupire != '' %}
+  {% assign _about_curupire = _ss.home_about_photo_curupire %}
+{% endif %}
+{% assign _servico_aftermovie = '' %}
+{% if _ss and _ss.home_about_servico_aftermovie and _ss.home_about_servico_aftermovie != '' %}
+  {% assign _servico_aftermovie = _ss.home_about_servico_aftermovie %}
+{% endif %}
+{% assign _servico_institucional = '' %}
+{% if _ss and _ss.home_about_servico_institucional and _ss.home_about_servico_institucional != '' %}
+  {% assign _servico_institucional = _ss.home_about_servico_institucional %}
+{% endif %}
+{% assign _servico_publicitario = '' %}
+{% if _ss and _ss.home_about_servico_publicitario and _ss.home_about_servico_publicitario != '' %}
+  {% assign _servico_publicitario = _ss.home_about_servico_publicitario %}
+{% endif %}
+{% assign _servico_motion = '' %}
+{% if _ss and _ss.home_about_servico_motion and _ss.home_about_servico_motion != '' %}
+  {% assign _servico_motion = _ss.home_about_servico_motion %}
+{% endif %}
+{% assign _servico_conteudo_mobile = '' %}
+{% if _ss and _ss.home_about_servico_conteudo_mobile and _ss.home_about_servico_conteudo_mobile != '' %}
+  {% assign _servico_conteudo_mobile = _ss.home_about_servico_conteudo_mobile %}
+{% endif %}
+{% assign _servico_fotografia = '' %}
+{% if _ss and _ss.home_about_servico_fotografia and _ss.home_about_servico_fotografia != '' %}
+  {% assign _servico_fotografia = _ss.home_about_servico_fotografia %}
+{% endif %}
+{% assign _about_logos = nil %}
+{% if _ss and _ss.home_about_logos and _ss.home_about_logos.size > 0 %}
+  {% assign _about_logos = _ss.home_about_logos %}
+{% endif %}
+{% assign _about_equipe = nil %}
+{% if _ss and _ss.home_about_equipe and _ss.home_about_equipe.size > 0 %}
+  {% assign _about_equipe = _ss.home_about_equipe %}
+{% endif %}
+{% assign _footer_bg = '' %}
+{% if _ss and _ss.home_footer_bg and _ss.home_footer_bg != '' %}
+  {% assign _footer_bg = _ss.home_footer_bg %}
+{% endif %}
+
 <section id="sobre" class="home-sobre-section" aria-labelledby="home-sobre-title">
   <h2 id="home-sobre-title" class="visually-hidden">Sobre a Reverso Filmes</h2>
 
@@ -12,11 +82,11 @@
     </div>
   </div>
 
-  <div class="home-sobre">
+  <div class="home-sobre home-sobre-visual">
     <figure class="home-sobre__figure">
       <img
         class="home-sobre__photo"
-        src="{{ '/assets/images/240920_camaleao_@reversofilmes_@samucafischer_5.jpg' | relative_url }}"
+        src="{{ _about_intro }}"
         width="1536"
         height="1920"
         alt=""
@@ -24,6 +94,7 @@
         loading="lazy"
       />
     </figure>
+    <div class="home-sobre-fade" aria-hidden="true"></div>
 
     <div class="home-sobre__copy home-sobre__copy--intro">
       <p class="home-sobre__line">
@@ -58,12 +129,13 @@
       </a>
     </div>
   </div>
+  <div class="home-sobre-junction" aria-hidden="true"></div>
 
-  <section class="home-sobre-respiro" aria-label="O comum nunca foi suficiente">
+  <section class="home-sobre-respiro home-sobre-visual" aria-label="O comum nunca foi suficiente">
     <figure class="home-sobre-respiro__figure">
       <img
         class="home-sobre-respiro__photo"
-        src="{{ '/assets/images/251025_DKStudio_Imortal_@reversofilmes_@gabvalmoura_1.jpg' | relative_url }}"
+        src="{{ _about_respiro }}"
         width="4000"
         height="2422"
         alt=""
@@ -71,11 +143,22 @@
         loading="lazy"
       />
     </figure>
+    <div class="home-sobre-fade" aria-hidden="true"></div>
     <p class="home-sobre-respiro__line home-sobre-respiro__line--top">O COMUM</p>
     <p class="home-sobre-respiro__line home-sobre-respiro__line--bottom">NUNCA FOI SUFICIENTE.</p>
   </section>
+  <div class="home-sobre-junction" aria-hidden="true"></div>
 
-  <section class="home-sobre-mundo" aria-labelledby="home-sobre-mundo-title">
+  <section
+    class="home-sobre-mundo home-sobre-visual"
+    aria-labelledby="home-sobre-mundo-title"
+  >
+    <div
+      class="home-sobre-mundo__bg"
+      style="background-image: url('{{ _about_bg }}')"
+      aria-hidden="true"
+    ></div>
+    <div class="home-sobre-fade" aria-hidden="true"></div>
     <div class="home-sobre-mundo__inner">
       <header class="home-sobre-mundo__head">
         <p class="home-sobre-mundo__kicker">MUNDO AO CONTRÁRIO</p>
@@ -88,7 +171,7 @@
         <li class="home-sobre-mundo__item">
           <div class="home-sobre-mundo__media">
             <img
-              src="{{ '/assets/images/festivais_eventos.png' | relative_url }}"
+              src="{{ _card_festivais }}"
               alt="Festivais & Eventos"
               loading="lazy"
               decoding="async"
@@ -99,7 +182,7 @@
         <li class="home-sobre-mundo__item">
           <div class="home-sobre-mundo__media">
             <img
-              src="{{ '/assets/images/arte_cultura.png' | relative_url }}"
+              src="{{ _card_arte }}"
               alt="Arte & Cultura"
               loading="lazy"
               decoding="async"
@@ -110,7 +193,7 @@
         <li class="home-sobre-mundo__item">
           <div class="home-sobre-mundo__media">
             <img
-              src="{{ '/assets/images/corporativo.png' | relative_url }}"
+              src="{{ _card_corporativo }}"
               alt="Corporativo"
               loading="lazy"
               decoding="async"
@@ -120,5 +203,287 @@
         </li>
       </ul>
     </div>
+  </section>
+  <div class="home-sobre-junction" aria-hidden="true"></div>
+
+  <section class="home-sobre-perspectivas home-sobre-visual" aria-label="Não é sobre produzir vídeos">
+    <figure class="home-sobre-perspectivas__figure">
+      <img
+        class="home-sobre-perspectivas__photo"
+        src="{{ _about_perspectivas }}"
+        width="2667"
+        height="2358"
+        alt=""
+        decoding="async"
+        loading="lazy"
+      />
+    </figure>
+    <div class="home-sobre-fade" aria-hidden="true"></div>
+    <div class="home-sobre-perspectivas__copy">
+      <p class="home-sobre-perspectivas__line home-sobre-perspectivas__line--accent">NÃO É SOBRE</p>
+      <p class="home-sobre-perspectivas__line home-sobre-perspectivas__line--accent">PRODUZIR VÍDEOS.</p>
+      <p class="home-sobre-perspectivas__line home-sobre-perspectivas__line--accent">É SOBRE</p>
+      <p class="home-sobre-perspectivas__line home-sobre-perspectivas__line--final">
+        CRIAR <span class="home-sobre-perspectivas__line--accent">NOVAS PERSPECTIVAS.</span>
+      </p>
+    </div>
+  </section>
+  <div class="home-sobre-junction" aria-hidden="true"></div>
+
+  <section class="home-sobre-servicos" aria-labelledby="home-sobre-servicos-title">
+    <h3 id="home-sobre-servicos-title" class="visually-hidden">Serviços</h3>
+
+    <div class="home-sobre-servicos__inner">
+      <ul class="home-sobre-servicos__list" role="list">
+        <li class="home-sobre-servicos__item">
+          <button type="button" class="home-sobre-servicos__trigger" data-servico-gif="{{ _servico_aftermovie }}">
+            <span class="site-footer__marquee-contrario home-sobre-servicos__label" data-servico-flip>AFTERMOVIE &amp; REELS</span>
+          </button>
+        </li>
+        <li class="home-sobre-servicos__item">
+          <button type="button" class="home-sobre-servicos__trigger" data-servico-gif="{{ _servico_institucional }}">
+            <span class="site-footer__marquee-contrario home-sobre-servicos__label" data-servico-flip>INSTITUCIONAL</span>
+          </button>
+        </li>
+        <li class="home-sobre-servicos__item">
+          <button type="button" class="home-sobre-servicos__trigger" data-servico-gif="{{ _servico_publicitario }}">
+            <span class="site-footer__marquee-contrario home-sobre-servicos__label" data-servico-flip>PUBLICITÁRIO</span>
+          </button>
+        </li>
+        <li class="home-sobre-servicos__item">
+          <button type="button" class="home-sobre-servicos__trigger" data-servico-gif="{{ _servico_motion }}">
+            <span class="site-footer__marquee-contrario home-sobre-servicos__label" data-servico-flip>MOTION E VFX</span>
+          </button>
+        </li>
+        <li class="home-sobre-servicos__item">
+          <button type="button" class="home-sobre-servicos__trigger" data-servico-gif="{{ _servico_conteudo_mobile }}">
+            <span class="site-footer__marquee-contrario home-sobre-servicos__label" data-servico-flip>CONTEÚDO MOBILE</span>
+          </button>
+        </li>
+        <li class="home-sobre-servicos__item">
+          <button type="button" class="home-sobre-servicos__trigger" data-servico-gif="{{ _servico_fotografia }}">
+            <span class="site-footer__marquee-contrario home-sobre-servicos__label" data-servico-flip>FOTOGRAFIA E GIFS</span>
+          </button>
+        </li>
+      </ul>
+
+      <div class="home-sobre-servicos__media" aria-live="polite" aria-hidden="true">
+        <img
+          class="home-sobre-servicos__gif"
+          src=""
+          alt=""
+          decoding="async"
+          hidden
+        />
+      </div>
+    </div>
+
+    <p class="home-sobre-servicos__footer">
+      <a href="{{ '/projetos/' | relative_url }}" class="servico-link home-sobre-servicos__cta">
+        → VER TODOS OS PROJETOS
+      </a>
+    </p>
+  </section>
+  <div class="home-sobre-junction" aria-hidden="true"></div>
+
+  {% comment %} Logos da marquee: array home_about_logos em site-settings {% endcomment %}
+
+  <section class="home-sobre-logos-marquee" aria-label="Marcas e parceiros">
+    <div class="home-sobre-logos-marquee__viewport">
+      <div class="home-sobre-logos-marquee__track"{% unless _about_logos %} hidden{% endunless %}>
+        {% if _about_logos %}
+          {% for _ in (1..2) %}
+            {% for logo in _about_logos %}
+              <span class="home-sobre-logos-marquee__item">
+                <img
+                  src="{% if logo.src contains '://' %}{{ logo.src }}{% else %}{{ logo.src | relative_url }}{% endif %}"
+                  alt="{{ logo.alt | default: '' }}"
+                  loading="lazy"
+                  decoding="async"
+                />
+              </span>
+            {% endfor %}
+          {% endfor %}
+        {% endif %}
+      </div>
+    </div>
+  </section>
+  <div class="home-sobre-junction" aria-hidden="true"></div>
+
+  <section
+    class="home-sobre-equipe{% if _about_equipe and _about_equipe.size > 5 %} home-sobre-equipe--carousel{% endif %}"
+    aria-labelledby="home-sobre-equipe-title"
+  >
+    <header class="home-sobre-equipe__head">
+      <p class="home-sobre-equipe__kicker">NOSSO TIME DE CURUPIRAS</p>
+      <h3 id="home-sobre-equipe-title" class="home-sobre-equipe__title">
+        QUEM FAZ A REVERSO ACONTECER.
+      </h3>
+    </header>
+
+    <div class="home-sobre-equipe__scroller">
+      <button type="button" class="home-sobre-equipe__nav home-sobre-equipe__nav--prev" aria-label="Ver membros anteriores" hidden>
+        <span aria-hidden="true">‹</span>
+      </button>
+
+      <ul class="home-sobre-equipe__grid" role="list">
+        {% if _about_equipe %}
+          {% for member in _about_equipe %}
+            {% assign _ig_raw = member.instagram | default: '' | strip %}
+            {% assign _ig_url = '' %}
+            {% if _ig_raw != '' %}
+              {% if _ig_raw contains 'instagram.com' or _ig_raw contains '://' %}
+                {% assign _ig_url = _ig_raw %}
+              {% else %}
+                {% assign _ig_handle = _ig_raw | remove: '@' %}
+                {% capture _ig_url %}https://www.instagram.com/{{ _ig_handle }}/{% endcapture %}
+              {% endif %}
+            {% endif %}
+            <li class="home-sobre-equipe__item">
+              <article
+                class="home-sobre-equipe__card"
+                tabindex="0"
+                {% if _ig_url != '' %}data-instagram-url="{{ _ig_url }}"{% endif %}
+              >
+                <div class="home-sobre-equipe__media" aria-hidden="true">
+                  {% if member.photo and member.photo != '' %}
+                    <img
+                      src="{% if member.photo contains '://' %}{{ member.photo }}{% else %}{{ member.photo | relative_url }}{% endif %}"
+                      alt=""
+                      loading="lazy"
+                      decoding="async"
+                    />
+                  {% endif %}
+                </div>
+                <div class="home-sobre-equipe__caption">
+                  <p class="home-sobre-equipe__name">{{ member.name }}</p>
+                  {% if member.role and member.role != '' %}
+                    <p class="home-sobre-equipe__role">{{ member.role }}</p>
+                  {% endif %}
+                  {% if member.fact and member.fact != '' %}
+                    <p class="home-sobre-equipe__fact">“{{ member.fact }}”</p>
+                  {% endif %}
+                </div>
+              </article>
+            </li>
+          {% endfor %}
+        {% endif %}
+      </ul>
+
+      <button type="button" class="home-sobre-equipe__nav home-sobre-equipe__nav--next" aria-label="Ver próximos membros" hidden>
+        <span aria-hidden="true">›</span>
+      </button>
+    </div>
+  </section>
+  <div class="home-sobre-junction" aria-hidden="true"></div>
+
+  <section id="curupire-se" class="home-sobre-curupire home-sobre-visual" aria-label="Curupire-se">
+    <figure class="home-sobre-curupire__figure">
+      <img
+        class="home-sobre-curupire__photo"
+        src="{{ _about_curupire }}"
+        width="5576"
+        height="3691"
+        alt=""
+        decoding="async"
+        loading="lazy"
+      />
+    </figure>
+    <div class="home-sobre-fade" aria-hidden="true"></div>
+    <div class="home-sobre-curupire__copy">
+      <a class="home-sobre-curupire__title" href="{{ '/curupire-se/' | relative_url }}">CURUPIRE-SE</a>
+      <p class="home-sobre-curupire__sub">
+        VENHA FAZER PARTE<br />DO NOSSO TIME
+      </p>
+    </div>
+  </section>
+  <div class="home-sobre-junction" aria-hidden="true"></div>
+
+  <section
+    id="contato"
+    class="home-sobre-fechamento{% if _footer_bg != '' %} home-sobre-fechamento--has-bg{% endif %}"
+    aria-labelledby="home-sobre-fechamento-title"
+  >
+    {% if _footer_bg != '' %}
+      <div
+        class="home-sobre-fechamento__bg"
+        style="background-image: url('{{ _footer_bg }}')"
+        aria-hidden="true"
+      ></div>
+      <div class="home-sobre-fechamento__overlay" aria-hidden="true"></div>
+    {% endif %}
+    <header class="home-sobre-fechamento__head">
+      <div class="home-sobre-fechamento__copy-width">
+        <p class="home-sobre-fechamento__kicker">CHEGOU A HORA DE FAZER DIFERENTE.</p>
+        <p class="home-sobre-fechamento__kicker">SUA PRÓXIMA HISTÓRIA COMEÇA AQUI.</p>
+        <h3 id="home-sobre-fechamento-title" class="home-sobre-fechamento__title">
+          <span class="home-sobre-fechamento__title-line">
+            <span class="home-sobre-fechamento__vamos">
+              <span class="home-sobre-fechamento__bar" aria-hidden="true"></span>
+              <span class="home-sobre-fechamento__vamos-word">VAMOS</span>
+            </span>
+            <span class="home-sobre-fechamento__title-rest"> CRIAR ALGO</span>
+          </span>
+          <span class="home-sobre-fechamento__title-line home-sobre-fechamento__title-line--second">INCRÍVEL JUNTOS?</span>
+        </h3>
+      </div>
+    </header>
+
+    <div class="home-sobre-fechamento__brand">
+      <a href="#home-hero" class="home-sobre-fechamento__logo-link" aria-label="Voltar ao início">
+        <img
+          class="home-sobre-fechamento__logo"
+          src="{{ '/assets/images/logo/SIMBOLO_RVRS_SIMB_NEGATIVA_COR.png' | relative_url }}"
+          width="220"
+          height="320"
+          alt="Reverso Filmes"
+          decoding="async"
+          loading="lazy"
+        />
+      </a>
+
+      <div class="home-sobre-fechamento__social" aria-label="Redes e contato">
+        <a
+          href="https://wa.me/5531996005678"
+          class="site-footer__icon-link"
+          target="_blank"
+          rel="noopener noreferrer"
+          aria-label="WhatsApp"
+        >
+          <i class="fa-brands fa-whatsapp" aria-hidden="true"></i>
+        </a>
+        <a
+          href="https://instagram.com/reversofilmes"
+          class="site-footer__icon-link"
+          target="_blank"
+          rel="noopener noreferrer"
+          aria-label="Instagram"
+        >
+          <i class="fa-brands fa-instagram" aria-hidden="true"></i>
+        </a>
+        <a
+          href="https://youtube.com/@reversofilmes"
+          class="site-footer__icon-link"
+          target="_blank"
+          rel="noopener noreferrer"
+          aria-label="YouTube"
+        >
+          <i class="fa-brands fa-youtube" aria-hidden="true"></i>
+        </a>
+      </div>
+    </div>
+
+    <p class="home-sobre-fechamento__contact">
+      <a href="tel:+5531996005678" class="home-sobre-fechamento__link">(31) 99600-5678</a>
+      <span class="home-sobre-fechamento__sep" aria-hidden="true">•</span>
+      <a href="mailto:contato@reversofilmes.com.br" class="home-sobre-fechamento__link">CONTATO@REVERSOFILMES.COM.BR</a>
+    </p>
+
+    <p class="home-sobre-fechamento__legal">
+      TODOS OS DIREITOS
+      <span class="home-sobre-fechamento__reservados">
+        <span class="home-sobre-fechamento__r-flip" aria-hidden="true">R</span>ESERVADOS
+      </span>
+    </p>
   </section>
 </section>

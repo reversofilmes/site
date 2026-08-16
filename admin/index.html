@@ -136,10 +136,10 @@
 
       <div class="header-center">
         <button type="button" @click="setView('hero')" :class="{ active: view === 'hero' }" class="tab-btn">
-          Hero
+          Layout
         </button>
         <button type="button" @click="setView('home')" :class="{ active: view === 'home' }" class="tab-btn">
-          Home
+          Grid
         </button>
         <button type="button" @click="setView('projetos')" :class="{ active: view === 'projetos' }" class="tab-btn">
           Projetos
@@ -178,7 +178,7 @@
       <div class="projetos-area home-masonry-tab" x-show="view === 'home'">
         <div class="projetos-header">
           <div class="projetos-header__text">
-            <h2 class="projetos-title">Grelha da Home</h2>
+            <h2 class="projetos-title">Grid da Home</h2>
             <p class="projetos-hint">
               Só entram projetos com «Exibir na Home» (editor). Cada coluna é uma pilha
               (sem buracos). Arraste entre colunas ou dentro da coluna: atualiza
@@ -254,160 +254,344 @@
         </div>
       </div>
 
-      <!-- ========== Aba Hero ========== -->
-      <div class="hero-area" x-show="view === 'hero'">
+      <!-- ========== Aba Layout (mídia da Home) ========== -->
+      <div class="layout-tab projetos-area" x-show="view === 'hero'">
+        <div class="projetos-header">
+          <div class="projetos-header__text">
+            <h2 class="projetos-title">Layout da Home</h2>
+            <p class="projetos-hint">Réplica das mídias editáveis na ordem real da página. Envie arquivos <strong>já editados</strong> (JPEG, PNG, WebP, GIF, MP4, WebM) até 25&nbsp;MB. Alterações ficam em rascunho até «Publicar».</p>
+          </div>
+        </div>
+
         <div x-show="siteLoading" class="editor-loading" style="min-height:160px">
           <div class="spinner"></div>
         </div>
 
-        <div x-show="!siteLoading" class="hero-area__inner">
-          <div class="hero-area__heading">
-            <h2 class="hero-area__title">Hero da Home</h2>
-            <p class="hero-area__hint">
-              O vídeo aparece em <em>loop</em>, sem som, como fundo em tela
-              cheia da Home. Há dois formatos: <strong>Desktop (16:9)</strong>
-              para telas largas e <strong>Mobile (9:16)</strong> para
-              tablet/celular. A mudança só é aplicada ao site depois que
-              você clicar em «Publicar».
-            </p>
-          </div>
+        <div x-show="!siteLoading" class="layout-page">
 
-          <!-- Desktop 16:9 -->
-          <div class="hero-area__grid">
-            <div class="hero-preview" :class="{ 'has-draft': !!siteDraft }">
-              <span class="hero-preview__label">Desktop (16:9)</span>
-              <div class="hero-preview__stage hero-preview__stage--landscape">
-                <video
-                  class="hero-preview__video"
-                  :src="heroPreviewSrc"
-                  x-show="heroPreviewSrc"
-                  autoplay
-                  muted
-                  loop
-                  playsinline
-                  webkit-playsinline="true"
-                ></video>
-                <div x-show="!heroPreviewSrc" class="hero-preview__empty">
-                  Nenhum vídeo desktop definido.
+          <!-- Hero desktop + mobile -->
+          <div class="layout-page__hero">
+            <div class="layout-card layout-card--hero-desktop" :class="{ 'is-draft': !!siteDraft }">
+              <div class="layout-card__thumb">
+                <video x-show="heroPreviewSrc" :src="heroPreviewSrc" autoplay muted loop playsinline></video>
+                <span x-show="!heroPreviewSrc" class="layout-card__ph">Vídeo Desktop 16:9</span>
+                <div class="layout-card__badges">
+                  <span class="gc-badge" :class="heroStatus('desktop').cls" x-text="heroStatus('desktop').text"></span>
+                </div>
+              </div>
+              <div class="layout-card__body">
+                <h3 class="layout-card__title">Vídeo Hero — Desktop</h3>
+                <div class="layout-card__actions">
+                  <input type="file" :id="'lf-hero-desktop'" accept="video/mp4,video/webm" class="file-input"
+                         @change="onSiteHeroVideo($event, 'desktop')" :disabled="publishing" />
+                  <label :for="'lf-hero-desktop'" class="upload-btn">Alterar</label>
+                  <button type="button" x-show="siteDraft" @click="discardSiteDraft('desktop')"
+                          class="btn btn-sm btn-danger">Descartar</button>
                 </div>
               </div>
             </div>
 
-            <aside class="hero-upload" :class="{ 'has-draft': !!siteDraft }">
-              <div class="hero-upload__header">
-                <h3 class="hero-upload__title">Arquivo Desktop (16:9)</h3>
-                <span class="hero-upload__status"
-                      :class="{ 'is-draft': !!siteDraft, 'is-saved': !siteDraft && !!siteSettings.hero_video, 'is-none': !siteDraft && !siteSettings.hero_video }">
-                  <template x-if="siteDraft">
-                    <span>Rascunho não publicado</span>
-                  </template>
-                  <template x-if="!siteDraft && siteSettings.hero_video">
-                    <span>Vídeo atual já publicado</span>
-                  </template>
-                  <template x-if="!siteDraft && !siteSettings.hero_video">
-                    <span>Sem vídeo no CMS</span>
-                  </template>
-                </span>
+            <div class="layout-card layout-card--hero-mobile" :class="{ 'is-draft': !!siteDraftMobile }">
+              <div class="layout-card__thumb">
+                <video x-show="heroPreviewSrcMobile" :src="heroPreviewSrcMobile" autoplay muted loop playsinline></video>
+                <span x-show="!heroPreviewSrcMobile" class="layout-card__ph">Mobile 9:16</span>
+                <div class="layout-card__badges">
+                  <span class="gc-badge" :class="heroStatus('mobile').cls" x-text="heroStatus('mobile').text"></span>
+                </div>
               </div>
-
-              <div class="hero-upload__meta" x-show="siteDraft">
-                <span class="hero-upload__filename" x-text="siteDraft?.fileName"></span>
-                <span class="hero-upload__filesize" x-text="siteDraft?.fileSizeLabel"></span>
-              </div>
-
-              <input type="file"
-                     id="hero-file-input"
-                     accept="video/mp4,video/webm"
-                     class="file-input"
-                     @change="onSiteHeroVideo($event, 'desktop')"
-                     :disabled="siteSaving || publishing" />
-              <label for="hero-file-input" class="upload-btn hero-upload__btn">
-                <span x-show="!siteDraft">Escolher arquivo</span>
-                <span x-show="siteDraft">Trocar arquivo</span>
-              </label>
-
-              <button type="button"
-                      x-show="siteDraft"
-                      @click="discardSiteDraft('desktop')"
-                      class="btn btn-secondary hero-upload__discard"
-                      title="Descartar arquivo em rascunho">
-                Descartar rascunho
-              </button>
-            </aside>
-          </div>
-
-          <!-- Mobile 9:16 -->
-          <div class="hero-area__grid" style="margin-top:1.5rem">
-            <div class="hero-preview" :class="{ 'has-draft': !!siteDraftMobile }">
-              <span class="hero-preview__label">Mobile (9:16)</span>
-              <div class="hero-preview__stage hero-preview__stage--portrait">
-                <video
-                  class="hero-preview__video"
-                  :src="heroPreviewSrcMobile"
-                  x-show="heroPreviewSrcMobile"
-                  autoplay
-                  muted
-                  loop
-                  playsinline
-                  webkit-playsinline="true"
-                ></video>
-                <div x-show="!heroPreviewSrcMobile" class="hero-preview__empty">
-                  Nenhum vídeo mobile definido. O site usará o vídeo desktop
-                  como fallback.
+              <div class="layout-card__body">
+                <h3 class="layout-card__title">Vídeo Hero — Mobile</h3>
+                <div class="layout-card__actions">
+                  <input type="file" :id="'lf-hero-mobile'" accept="video/mp4,video/webm" class="file-input"
+                         @change="onSiteHeroVideo($event, 'mobile')" :disabled="publishing" />
+                  <label :for="'lf-hero-mobile'" class="upload-btn">Alterar</label>
+                  <button type="button" x-show="siteDraftMobile" @click="discardSiteDraft('mobile')"
+                          class="btn btn-sm btn-danger">Descartar</button>
                 </div>
               </div>
             </div>
-
-            <aside class="hero-upload" :class="{ 'has-draft': !!siteDraftMobile }">
-              <div class="hero-upload__header">
-                <h3 class="hero-upload__title">Arquivo Mobile (9:16)</h3>
-                <span class="hero-upload__status"
-                      :class="{ 'is-draft': !!siteDraftMobile, 'is-saved': !siteDraftMobile && !!siteSettings.hero_video_mobile, 'is-none': !siteDraftMobile && !siteSettings.hero_video_mobile }">
-                  <template x-if="siteDraftMobile">
-                    <span>Rascunho não publicado</span>
-                  </template>
-                  <template x-if="!siteDraftMobile && siteSettings.hero_video_mobile">
-                    <span>Vídeo atual já publicado</span>
-                  </template>
-                  <template x-if="!siteDraftMobile && !siteSettings.hero_video_mobile">
-                    <span>Sem vídeo no CMS</span>
-                  </template>
-                </span>
-              </div>
-
-              <div class="hero-upload__meta" x-show="siteDraftMobile">
-                <span class="hero-upload__filename" x-text="siteDraftMobile?.fileName"></span>
-                <span class="hero-upload__filesize" x-text="siteDraftMobile?.fileSizeLabel"></span>
-              </div>
-
-              <input type="file"
-                     id="hero-file-input-mobile"
-                     accept="video/mp4,video/webm"
-                     class="file-input"
-                     @change="onSiteHeroVideo($event, 'mobile')"
-                     :disabled="siteSaving || publishing" />
-              <label for="hero-file-input-mobile" class="upload-btn hero-upload__btn">
-                <span x-show="!siteDraftMobile">Escolher arquivo</span>
-                <span x-show="siteDraftMobile">Trocar arquivo</span>
-              </label>
-
-              <button type="button"
-                      x-show="siteDraftMobile"
-                      @click="discardSiteDraft('mobile')"
-                      class="btn btn-secondary hero-upload__discard"
-                      title="Descartar arquivo mobile em rascunho">
-                Descartar rascunho
-              </button>
-            </aside>
           </div>
 
-          <p class="hero-upload__help" style="margin-top:1rem">
-            Formatos aceitos: <strong>MP4</strong> ou <strong>WebM</strong>,
-            até 25&nbsp;MB. Você pode trocar os arquivos quantas vezes
-            quiser — os rascunhos são substituídos e as prévias são atualizadas
-            automaticamente. O envio ao servidor e o deploy só
-            acontecem quando você clicar em «Publicar».
-          </p>
+          <!-- Foto Intro -->
+          <template x-for="item in homeAboutMedia.filter(m => m.key === 'home_about_photo_intro')" :key="item.key">
+            <div class="layout-card" :class="{ 'is-draft': !!siteMediaDrafts[item.key] }">
+              <div class="layout-card__thumb" :style="'aspect-ratio:' + item.aspect">
+                <img x-show="siteMediaPreview(item.key)" :src="siteMediaPreview(item.key)" :alt="item.label" loading="lazy"
+                     :style="'object-fit:' + item.fit" />
+                <span x-show="!siteMediaPreview(item.key)" class="layout-card__ph" x-text="item.label"></span>
+                <div class="layout-card__badges">
+                  <span class="gc-badge" :class="siteMediaStatus(item.key).cls" x-text="siteMediaStatus(item.key).text"></span>
+                </div>
+              </div>
+              <div class="layout-card__body">
+                <h3 class="layout-card__title" x-text="item.label"></h3>
+                <div class="layout-card__actions">
+                  <input type="file" class="file-input" :id="'lf-' + item.key" :accept="siteMediaAccept(item.key)"
+                         @change="onSiteAboutImage($event, item.key)" :disabled="publishing" />
+                  <label :for="'lf-' + item.key" class="upload-btn">Alterar</label>
+                  <button type="button" x-show="siteMediaDrafts[item.key]" @click="discardSiteMediaDraft(item.key)"
+                          class="btn btn-sm btn-danger">Descartar</button>
+                </div>
+              </div>
+            </div>
+          </template>
+
+          <!-- Foto Respiro -->
+          <template x-for="item in homeAboutMedia.filter(m => m.key === 'home_about_photo_respiro')" :key="item.key">
+            <div class="layout-card" :class="{ 'is-draft': !!siteMediaDrafts[item.key] }">
+              <div class="layout-card__thumb" :style="'aspect-ratio:' + item.aspect">
+                <img x-show="siteMediaPreview(item.key)" :src="siteMediaPreview(item.key)" :alt="item.label" loading="lazy"
+                     :style="'object-fit:' + item.fit" />
+                <span x-show="!siteMediaPreview(item.key)" class="layout-card__ph" x-text="item.label"></span>
+                <div class="layout-card__badges">
+                  <span class="gc-badge" :class="siteMediaStatus(item.key).cls" x-text="siteMediaStatus(item.key).text"></span>
+                </div>
+              </div>
+              <div class="layout-card__body">
+                <h3 class="layout-card__title" x-text="item.label"></h3>
+                <div class="layout-card__actions">
+                  <input type="file" class="file-input" :id="'lf-' + item.key" :accept="siteMediaAccept(item.key)"
+                         @change="onSiteAboutImage($event, item.key)" :disabled="publishing" />
+                  <label :for="'lf-' + item.key" class="upload-btn">Alterar</label>
+                  <button type="button" x-show="siteMediaDrafts[item.key]" @click="discardSiteMediaDraft(item.key)"
+                          class="btn btn-sm btn-danger">Descartar</button>
+                </div>
+              </div>
+            </div>
+          </template>
+
+          <!-- Mundo ao Contrário -->
+          <div class="layout-page__mundo">
+            <template x-for="item in homeAboutMedia.filter(m => m.key === 'home_about_bg_mundo')" :key="item.key">
+              <div class="layout-card" :class="{ 'is-draft': !!siteMediaDrafts[item.key] }">
+                <div class="layout-card__thumb layout-card__thumb--bg" style="aspect-ratio:16/9">
+                  <div class="layout-card__bg-fill"
+                       :style="siteMediaPreview(item.key) ? 'background-image:url(' + siteMediaPreview(item.key) + ')' : ''"></div>
+                  <span x-show="!siteMediaPreview(item.key)" class="layout-card__ph">Fundo Mundo</span>
+                  <div class="layout-card__badges">
+                    <span class="gc-badge" :class="siteMediaStatus(item.key).cls" x-text="siteMediaStatus(item.key).text"></span>
+                  </div>
+                </div>
+                <div class="layout-card__body">
+                  <h3 class="layout-card__title" x-text="item.label"></h3>
+                  <div class="layout-card__actions">
+                    <input type="file" class="file-input" :id="'lf-' + item.key" :accept="siteMediaAccept(item.key)"
+                           @change="onSiteAboutImage($event, item.key)" :disabled="publishing" />
+                    <label :for="'lf-' + item.key" class="upload-btn">Alterar</label>
+                    <button type="button" x-show="siteMediaDrafts[item.key]" @click="discardSiteMediaDraft(item.key)"
+                            class="btn btn-sm btn-danger">Descartar</button>
+                  </div>
+                </div>
+              </div>
+            </template>
+
+            <div class="layout-mundo-cards">
+              <template x-for="card in homeAboutMedia.filter(m => m.key.startsWith('home_about_card'))" :key="card.key">
+                <div class="layout-card" :class="{ 'is-draft': !!siteMediaDrafts[card.key] }">
+                  <div class="layout-card__thumb" :style="'aspect-ratio:' + card.aspect">
+                    <img x-show="siteMediaPreview(card.key)" :src="siteMediaPreview(card.key)" :alt="card.label" loading="lazy"
+                         :style="'object-fit:' + card.fit" />
+                    <span x-show="!siteMediaPreview(card.key)" class="layout-card__ph" x-text="card.label"></span>
+                    <div class="layout-card__badges">
+                      <span class="gc-badge" :class="siteMediaStatus(card.key).cls" x-text="siteMediaStatus(card.key).text"></span>
+                    </div>
+                  </div>
+                  <div class="layout-card__body">
+                    <h3 class="layout-card__title" x-text="card.label"></h3>
+                    <div class="layout-card__actions">
+                      <input type="file" class="file-input" :id="'lf-' + card.key" :accept="siteMediaAccept(card.key)"
+                             @change="onSiteAboutImage($event, card.key)" :disabled="publishing" />
+                      <label :for="'lf-' + card.key" class="upload-btn">Alterar</label>
+                      <button type="button" x-show="siteMediaDrafts[card.key]" @click="discardSiteMediaDraft(card.key)"
+                              class="btn btn-sm btn-danger">Descartar</button>
+                    </div>
+                  </div>
+                </div>
+              </template>
+            </div>
+          </div>
+
+          <!-- Perspectivas -->
+          <template x-for="item in homeAboutMedia.filter(m => m.key === 'home_about_photo_perspectivas')" :key="item.key">
+            <div class="layout-card" :class="{ 'is-draft': !!siteMediaDrafts[item.key] }">
+              <div class="layout-card__thumb" :style="'aspect-ratio:' + item.aspect">
+                <img x-show="siteMediaPreview(item.key)" :src="siteMediaPreview(item.key)" :alt="item.label" loading="lazy"
+                     :style="'object-fit:' + item.fit" />
+                <span x-show="!siteMediaPreview(item.key)" class="layout-card__ph" x-text="item.label"></span>
+                <div class="layout-card__badges">
+                  <span class="gc-badge" :class="siteMediaStatus(item.key).cls" x-text="siteMediaStatus(item.key).text"></span>
+                </div>
+              </div>
+              <div class="layout-card__body">
+                <h3 class="layout-card__title" x-text="item.label"></h3>
+                <div class="layout-card__actions">
+                  <input type="file" class="file-input" :id="'lf-' + item.key" :accept="siteMediaAccept(item.key)"
+                         @change="onSiteAboutImage($event, item.key)" :disabled="publishing" />
+                  <label :for="'lf-' + item.key" class="upload-btn">Alterar</label>
+                  <button type="button" x-show="siteMediaDrafts[item.key]" @click="discardSiteMediaDraft(item.key)"
+                          class="btn btn-sm btn-danger">Descartar</button>
+                </div>
+              </div>
+            </div>
+          </template>
+
+          <!-- Serviços (GIFs) -->
+          <div class="layout-page__servicos">
+            <h3 class="layout-section-title">Serviços — previews GIF</h3>
+            <div class="layout-servicos-cards">
+              <template x-for="item in homeAboutMedia.filter(m => m.key.startsWith('home_about_servico_'))" :key="item.key">
+                <div class="layout-card" :class="{ 'is-draft': !!siteMediaDrafts[item.key] }">
+                  <div class="layout-card__thumb" :style="'aspect-ratio:' + item.aspect">
+                    <img x-show="siteMediaPreview(item.key)" :src="siteMediaPreview(item.key)" :alt="item.label" loading="lazy"
+                         :style="'object-fit:' + item.fit" />
+                    <span x-show="!siteMediaPreview(item.key)" class="layout-card__ph" x-text="item.label"></span>
+                    <div class="layout-card__badges">
+                      <span class="gc-badge" :class="siteMediaStatus(item.key).cls" x-text="siteMediaStatus(item.key).text"></span>
+                    </div>
+                  </div>
+                  <div class="layout-card__body">
+                    <h3 class="layout-card__title" x-text="item.label"></h3>
+                    <div class="layout-card__actions">
+                      <input type="file" class="file-input" :id="'lf-' + item.key" :accept="siteMediaAccept(item.key)"
+                             @change="onSiteAboutImage($event, item.key)" :disabled="publishing" />
+                      <label :for="'lf-' + item.key" class="upload-btn">Alterar</label>
+                      <button type="button" x-show="siteMediaDrafts[item.key]" @click="discardSiteMediaDraft(item.key)"
+                              class="btn btn-sm btn-danger">Descartar</button>
+                    </div>
+                  </div>
+                </div>
+              </template>
+            </div>
+          </div>
+
+          <!-- Logos (marquee) -->
+          <div class="layout-page__logos">
+            <div class="layout-section-head">
+              <h3 class="layout-section-title">Logos — marquee de clientes</h3>
+              <div class="layout-section-head__actions">
+                <button type="button" class="btn btn-secondary btn-sm" @click="addLogo()" :disabled="publishing">+ Adicionar logo</button>
+                <button type="button" class="btn btn-sm btn-danger" x-show="siteListsDraft.logos !== null" @click="discardLogosDraft()">Descartar alterações</button>
+              </div>
+            </div>
+            <div class="layout-logos-cards">
+              <template x-for="(logo, index) in workingLogos" :key="logo.id">
+                <div class="layout-card layout-card--list" :class="{ 'is-draft': !!logo._photoFile }">
+                  <div class="layout-card__thumb layout-card__thumb--logo">
+                    <img x-show="logoPreview(logo)" :src="logoPreview(logo)" :alt="logo.alt || 'Logo'" loading="lazy" style="object-fit:contain" />
+                    <span x-show="!logoPreview(logo)" class="layout-card__ph">Logo</span>
+                    <div class="layout-card__badges">
+                      <span class="gc-badge" :class="logoListStatus(logo).cls" x-text="logoListStatus(logo).text"></span>
+                    </div>
+                  </div>
+                  <div class="layout-card__body layout-card__body--list">
+                    <label class="field-label">Nome / alt</label>
+                    <input type="text" class="input input-sm" x-model="logo.alt" @input="_ensureLogosDraft()" placeholder="Ex.: Nike" />
+                    <div class="layout-card__actions">
+                      <input type="file" class="file-input" :id="'lf-logo-' + logo.id" accept="image/jpeg,image/png,image/webp"
+                             @change="onLogoImage($event, index)" :disabled="publishing" />
+                      <label :for="'lf-logo-' + logo.id" class="upload-btn">Alterar</label>
+                      <button type="button" class="btn btn-sm btn-danger" @click="removeLogo(index)">Remover</button>
+                    </div>
+                  </div>
+                </div>
+              </template>
+            </div>
+            <p x-show="!workingLogos.length" class="layout-empty-hint">Nenhum logo adicionado. A marquee ficará oculta na Home.</p>
+          </div>
+
+          <!-- Equipe -->
+          <div class="layout-page__equipe">
+            <div class="layout-section-head">
+              <h3 class="layout-section-title">Equipe — membros</h3>
+              <div class="layout-section-head__actions">
+                <button type="button" class="btn btn-secondary btn-sm" @click="addEquipeMember()" :disabled="publishing">+ Adicionar membro</button>
+                <button type="button" class="btn btn-sm btn-danger" x-show="siteListsDraft.equipe !== null" @click="discardEquipeDraft()">Descartar alterações</button>
+              </div>
+            </div>
+            <div class="layout-equipe-cards">
+              <template x-for="(member, index) in workingEquipe" :key="member.id">
+                <div class="layout-card layout-card--list" :class="{ 'is-draft': !!member._photoFile }">
+                  <div class="layout-card__thumb" style="aspect-ratio:3/4">
+                    <img x-show="equipePhotoPreview(member)" :src="equipePhotoPreview(member)" :alt="member.name" loading="lazy" style="object-fit:cover" />
+                    <span x-show="!equipePhotoPreview(member)" class="layout-card__ph" x-text="member.name"></span>
+                    <div class="layout-card__badges">
+                      <span class="gc-badge" :class="equipeMemberStatus(member).cls" x-text="equipeMemberStatus(member).text"></span>
+                    </div>
+                  </div>
+                  <div class="layout-card__body layout-card__body--list">
+                    <label class="field-label">Nome</label>
+                    <input type="text" class="input input-sm" x-model="member.name" @input="_ensureEquipeDraft()" />
+                    <label class="field-label">Função</label>
+                    <input type="text" class="input input-sm" x-model="member.role" @input="_ensureEquipeDraft()" />
+                    <label class="field-label">Frase</label>
+                    <input type="text" class="input input-sm" x-model="member.fact" @input="_ensureEquipeDraft()" />
+                    <label class="field-label">Instagram</label>
+                    <input type="text" class="input input-sm" x-model="member.instagram" @input="_ensureEquipeDraft()"
+                           placeholder="@usuario ou URL" autocomplete="off" spellcheck="false" />
+                    <div class="layout-card__actions">
+                      <input type="file" class="file-input" :id="'lf-equipe-' + member.id" accept="image/jpeg,image/png,image/webp"
+                             @change="onEquipePhoto($event, index)" :disabled="publishing" />
+                      <label :for="'lf-equipe-' + member.id" class="upload-btn">Foto</label>
+                      <button type="button" class="btn btn-sm btn-danger" @click="removeEquipeMember(index)">Remover</button>
+                    </div>
+                  </div>
+                </div>
+              </template>
+            </div>
+          </div>
+
+          <!-- Curupire-se -->
+          <template x-for="item in homeAboutMedia.filter(m => m.key === 'home_about_photo_curupire')" :key="item.key">
+            <div class="layout-card" :class="{ 'is-draft': !!siteMediaDrafts[item.key] }">
+              <div class="layout-card__thumb" :style="'aspect-ratio:' + item.aspect">
+                <img x-show="siteMediaPreview(item.key)" :src="siteMediaPreview(item.key)" :alt="item.label" loading="lazy"
+                     :style="'object-fit:' + item.fit" />
+                <span x-show="!siteMediaPreview(item.key)" class="layout-card__ph" x-text="item.label"></span>
+                <div class="layout-card__badges">
+                  <span class="gc-badge" :class="siteMediaStatus(item.key).cls" x-text="siteMediaStatus(item.key).text"></span>
+                </div>
+              </div>
+              <div class="layout-card__body">
+                <h3 class="layout-card__title" x-text="item.label"></h3>
+                <div class="layout-card__actions">
+                  <input type="file" class="file-input" :id="'lf-' + item.key" :accept="siteMediaAccept(item.key)"
+                         @change="onSiteAboutImage($event, item.key)" :disabled="publishing" />
+                  <label :for="'lf-' + item.key" class="upload-btn">Alterar</label>
+                  <button type="button" x-show="siteMediaDrafts[item.key]" @click="discardSiteMediaDraft(item.key)"
+                          class="btn btn-sm btn-danger">Descartar</button>
+                </div>
+              </div>
+            </div>
+          </template>
+
+          <!-- Rodapé — imagem de fundo -->
+          <div class="layout-page__footer-bg">
+            <h3 class="layout-section-title">Rodapé — imagem de fundo</h3>
+            <template x-for="item in homeAboutMedia.filter(m => m.key === 'home_footer_bg')" :key="item.key">
+              <div class="layout-card" :class="{ 'is-draft': !!siteMediaDrafts[item.key] }">
+                <div class="layout-card__thumb layout-card__thumb--bg" :style="'aspect-ratio:' + item.aspect">
+                  <div class="layout-card__bg-fill"
+                       :style="siteMediaPreview(item.key) ? 'background-image:url(' + siteMediaPreview(item.key) + ')' : ''"></div>
+                  <span x-show="!siteMediaPreview(item.key)" class="layout-card__ph">Fundo do rodapé</span>
+                  <div class="layout-card__badges">
+                    <span class="gc-badge" :class="siteMediaStatus(item.key).cls" x-text="siteMediaStatus(item.key).text"></span>
+                  </div>
+                </div>
+                <div class="layout-card__body">
+                  <h3 class="layout-card__title" x-text="item.label"></h3>
+                  <p class="layout-empty-hint">Seção de fechamento/contato na Home. Sem imagem, fundo preto.</p>
+                  <div class="layout-card__actions">
+                    <input type="file" class="file-input" :id="'lf-' + item.key" :accept="siteMediaAccept(item.key)"
+                           @change="onSiteAboutImage($event, item.key)" :disabled="publishing" />
+                    <label :for="'lf-' + item.key" class="upload-btn">Alterar</label>
+                    <button type="button" x-show="siteMediaDrafts[item.key]" @click="discardSiteMediaDraft(item.key)"
+                            class="btn btn-sm btn-danger">Descartar</button>
+                  </div>
+                </div>
+              </div>
+            </template>
+          </div>
+
         </div>
       </div>
     </main>

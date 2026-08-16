@@ -39,6 +39,186 @@ const ADMIN_CONFIG = {
   ],
 };
 
+const HOME_ABOUT_MEDIA = [
+  {
+    key: 'home_about_photo_intro',
+    uploadType: 'home_about_photo_intro',
+    label: 'Sobre (intro)',
+    fallback: '/assets/images/240920_camaleao_@reversofilmes_@samucafischer_5.jpg',
+    aspect: '4 / 5',
+    fit: 'cover',
+  },
+  {
+    key: 'home_about_photo_respiro',
+    uploadType: 'home_about_photo_respiro',
+    label: 'Respiro',
+    fallback: '/assets/images/251025_DKStudio_Imortal_@reversofilmes_@gabvalmoura_1.jpg',
+    aspect: '5 / 3',
+    fit: 'cover',
+  },
+  {
+    key: 'home_about_bg_mundo',
+    uploadType: 'home_about_bg_mundo',
+    label: 'Fundo Mundo',
+    fallback: '/assets/images/BG1.png',
+    aspect: '16 / 9',
+    fit: 'cover',
+  },
+  {
+    key: 'home_about_card_festivais',
+    uploadType: 'home_about_card_festivais',
+    label: 'Festivais & Eventos',
+    fallback: '/assets/images/festivais_eventos.png',
+    aspect: '3 / 4',
+    fit: 'cover',
+  },
+  {
+    key: 'home_about_card_arte',
+    uploadType: 'home_about_card_arte',
+    label: 'Arte & Cultura',
+    fallback: '/assets/images/arte_cultura.png',
+    aspect: '3 / 4',
+    fit: 'cover',
+  },
+  {
+    key: 'home_about_card_corporativo',
+    uploadType: 'home_about_card_corporativo',
+    label: 'Corporativo',
+    fallback: '/assets/images/corporativo.png',
+    aspect: '3 / 4',
+    fit: 'cover',
+  },
+  {
+    key: 'home_about_photo_perspectivas',
+    uploadType: 'home_about_photo_perspectivas',
+    label: 'Perspectivas',
+    fallback: '/assets/images/260411_BravaEscolaDeCirco_PalcoAberto_@ReversoFilmes_@indioevindio-336.jpg',
+    aspect: '16 / 9',
+    fit: 'cover',
+  },
+  {
+    key: 'home_about_servico_aftermovie',
+    uploadType: 'home_about_servico_aftermovie',
+    label: 'Aftermovie & Reels',
+    fallback: null,
+    aspect: '3 / 4',
+    fit: 'cover',
+    accept: 'image/gif,image/webp,image/png',
+  },
+  {
+    key: 'home_about_servico_institucional',
+    uploadType: 'home_about_servico_institucional',
+    label: 'Institucional',
+    fallback: null,
+    aspect: '3 / 4',
+    fit: 'cover',
+    accept: 'image/gif,image/webp,image/png',
+  },
+  {
+    key: 'home_about_servico_publicitario',
+    uploadType: 'home_about_servico_publicitario',
+    label: 'Publicitário',
+    fallback: null,
+    aspect: '3 / 4',
+    fit: 'cover',
+    accept: 'image/gif,image/webp,image/png',
+  },
+  {
+    key: 'home_about_servico_motion',
+    uploadType: 'home_about_servico_motion',
+    label: 'Motion e VFX',
+    fallback: null,
+    aspect: '3 / 4',
+    fit: 'cover',
+    accept: 'image/gif,image/webp,image/png',
+  },
+  {
+    key: 'home_about_servico_conteudo_mobile',
+    uploadType: 'home_about_servico_conteudo_mobile',
+    label: 'Conteúdo Mobile',
+    fallback: null,
+    aspect: '3 / 4',
+    fit: 'cover',
+    accept: 'image/gif,image/webp,image/png',
+  },
+  {
+    key: 'home_about_servico_fotografia',
+    uploadType: 'home_about_servico_fotografia',
+    label: 'Fotografia e GIFs',
+    fallback: null,
+    aspect: '3 / 4',
+    fit: 'cover',
+    accept: 'image/gif,image/webp,image/png',
+  },
+  {
+    key: 'home_about_photo_curupire',
+    uploadType: 'home_about_photo_curupire',
+    label: 'Curupire-se',
+    fallback: '/assets/images/anatemponi_reverso_filmes_02dia_86.jpg',
+    aspect: '16 / 9',
+    fit: 'cover',
+  },
+  {
+    key: 'home_footer_bg',
+    uploadType: 'home_footer_bg',
+    label: 'Rodapé — imagem de fundo',
+    fallback: null,
+    aspect: '16 / 9',
+    fit: 'cover',
+  },
+];
+
+const DEFAULT_HOME_EQUIPE = [
+  { id: 'indio', name: 'ÍNDIO', role: '(FUNÇÃO AQUI)', fact: 'Frase ou fun fact aqui', photo: null, instagram: '' },
+  { id: 'lele', name: 'LELÊ', role: '(FUNÇÃO AQUI)', fact: 'Frase ou fun fact aqui', photo: null, instagram: '' },
+  { id: 'pedrada', name: 'PEDRADA', role: '(FUNÇÃO AQUI)', fact: 'Frase ou fun fact aqui', photo: null, instagram: '' },
+  { id: 'patrick', name: 'PATRICK', role: '(FUNÇÃO AQUI)', fact: 'Frase ou fun fact aqui', photo: null, instagram: '' },
+  { id: 'calurina', name: 'CALURINA', role: '(FUNÇÃO AQUI)', fact: 'Frase ou fun fact aqui', photo: null, instagram: '' },
+];
+
+function parseJsonSettingValue(val) {
+  if (Array.isArray(val)) return val;
+  if (val == null || val === '') return [];
+  try {
+    const parsed = JSON.parse(String(val));
+    return Array.isArray(parsed) ? parsed : [];
+  } catch {
+    return [];
+  }
+}
+
+function cloneSiteList(arr) {
+  return JSON.parse(JSON.stringify(arr || []));
+}
+
+function newSiteListId(prefix) {
+  return `${prefix}-${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 7)}`;
+}
+
+function emptySiteSettings() {
+  return {
+    hero_video: null,
+    hero_video_mobile: null,
+    home_about_photo_intro: null,
+    home_about_photo_respiro: null,
+    home_about_bg_mundo: null,
+    home_about_card_festivais: null,
+    home_about_card_arte: null,
+    home_about_card_corporativo: null,
+    home_about_photo_perspectivas: null,
+    home_about_photo_curupire: null,
+    home_about_servico_aftermovie: null,
+    home_about_servico_institucional: null,
+    home_about_servico_publicitario: null,
+    home_about_servico_motion: null,
+    home_about_servico_conteudo_mobile: null,
+    home_about_servico_fotografia: null,
+    home_footer_bg: null,
+    home_about_logos: [],
+    home_about_equipe: [],
+  };
+}
+
 /** Posição na coluna Home (1-based). Valores inválidos/atraso → fim da pilha. */
 function coerceHomeOrderNum(v) {
   const n = v != null && v !== '' ? Number(v) : NaN;
@@ -76,7 +256,7 @@ function adminApp() {
     loading: true,
     saving: false,
 
-    /** view: 'hero' | 'home' (5 col + Sortable) | 'projetos' (lista por data) */
+    /** view: 'hero' (Layout) | 'home' (Grid) | 'projetos' (lista por data) */
     view: 'hero',
     _homeSortableInstances: [],
     /** @type {Record<string, { payload: object, thumbFile: File|null, videoFile: File|null, isNew: boolean, version?: number }>} */
@@ -120,14 +300,19 @@ function adminApp() {
 
     toast: null,
 
-    /* Site (Hero) */
-    siteSettings: { hero_video: null },
+    /* Site (Hero + mídia Home) */
+    siteSettings: emptySiteSettings(),
+    homeAboutMedia: HOME_ABOUT_MEDIA,
     siteLoading: false,
     siteSaving: false,
     /** @type {{ file: File, previewUrl: string, fileName: string, fileSizeLabel: string } | null} */
     siteDraft: null,
     /** @type {{ file: File, previewUrl: string, fileName: string, fileSizeLabel: string } | null} */
     siteDraftMobile: null,
+    /** @type {Record<string, { uploadType: string, file: File, previewUrl: string, fileName: string, fileSizeLabel: string }>} */
+    siteMediaDrafts: {},
+    /** @type {{ logos: Array|null, equipe: Array|null }} */
+    siteListsDraft: { logos: null, equipe: null },
     masonryReady: false,
 
     async init() {
@@ -235,6 +420,11 @@ function adminApp() {
       this._clearSiteDraftPreview();
       this.siteDraft = null;
       this.siteDraftMobile = null;
+      for (const key of Object.keys(this.siteMediaDrafts)) {
+        this._clearSiteMediaDraftPreview(key);
+      }
+      this.siteMediaDrafts = {};
+      this._clearSiteListsDrafts();
       this._destroyMasonry();
     },
 
@@ -278,7 +468,7 @@ function adminApp() {
     _onViewChange() {
       if (this.view === 'hero') {
         this._destroyMasonry();
-        this._loadSiteSettings();
+        this._loadSiteSettings({ silent: true });
         return;
       }
       if (this.view === 'home') {
@@ -398,6 +588,18 @@ function adminApp() {
       return this.siteSettings.hero_video_mobile || null;
     },
 
+    heroStatus(variant) {
+      if (variant === 'mobile') {
+        if (this.siteDraftMobile) return { text: 'Rascunho', cls: 'draft' };
+        if (this.siteSettings.hero_video_mobile) return { text: 'Publicado', cls: 'published' };
+        if (this.siteSettings.hero_video) return { text: 'Usa desktop', cls: 'default' };
+        return { text: 'Vazio', cls: 'empty' };
+      }
+      if (this.siteDraft) return { text: 'Rascunho', cls: 'draft' };
+      if (this.siteSettings.hero_video) return { text: 'Publicado', cls: 'published' };
+      return { text: 'Vazio', cls: 'empty' };
+    },
+
     hasDraftFor(slug) {
       if (this.projectDrafts[slug]) return true;
       const p = this.projects.find((x) => x._slug === slug && x._isDraftNew);
@@ -461,22 +663,29 @@ function adminApp() {
       }
     },
 
-    async _loadSiteSettings() {
+    async _loadSiteSettings(opts) {
       if (!this._api) return;
-      this.siteLoading = true;
+      const silent = opts?.silent || false;
+      if (!silent) this.siteLoading = true;
       try {
         const data = await this._api.getSettings();
-        const next = { hero_video: null, hero_video_mobile: null };
+        const next = emptySiteSettings();
         for (const row of data.settings || []) {
-          if (row.key === 'hero_video' || row.key === 'hero_video_mobile') {
+          if (row.key === 'home_about_logos' || row.key === 'home_about_equipe') {
+            next[row.key] = parseJsonSettingValue(row.value);
+          } else if (Object.prototype.hasOwnProperty.call(next, row.key)) {
             next[row.key] = row.value || null;
           }
         }
+        if (!next.home_about_equipe.length) {
+          next.home_about_equipe = cloneSiteList(DEFAULT_HOME_EQUIPE);
+        }
         this.siteSettings = next;
+        this.siteListsDraft = { logos: null, equipe: null };
       } catch (e) {
         this._toast('Erro ao carregar definições do site: ' + e.message, 'error');
       }
-      this.siteLoading = false;
+      if (!silent) this.siteLoading = false;
     },
 
     onSiteHeroVideo(e, variant) {
@@ -547,12 +756,288 @@ function adminApp() {
       }
     },
 
+    siteMediaPreview(key) {
+      const draft = this.siteMediaDrafts[key];
+      if (draft && draft.previewUrl) return draft.previewUrl;
+      if (this.siteSettings[key]) return this.siteSettings[key];
+      const meta = HOME_ABOUT_MEDIA.find((m) => m.key === key);
+      return meta?.fallback || null;
+    },
+
+    siteMediaStatus(key) {
+      if (this.siteMediaDrafts[key]) return { text: 'Rascunho', cls: 'draft' };
+      if (this.siteSettings[key]) return { text: 'Publicado', cls: 'published' };
+      const meta = HOME_ABOUT_MEDIA.find((m) => m.key === key);
+      if (meta?.fallback) return { text: 'Padrão', cls: 'default' };
+      return { text: 'Vazio', cls: 'empty' };
+    },
+
+    siteMediaAccept(key) {
+      const meta = HOME_ABOUT_MEDIA.find((m) => m.key === key);
+      return meta?.accept || 'image/jpeg,image/png,image/webp';
+    },
+
+    onSiteAboutImage(e, key) {
+      const file = e.target?.files?.[0];
+      const item = HOME_ABOUT_MEDIA.find((m) => m.key === key);
+      if (e.target) e.target.value = '';
+      if (!file || !item) return;
+      try {
+        const types = item.accept
+          ? item.accept.split(',').map((t) => t.trim())
+          : MediaUpload.IMG_TYPES;
+        MediaUpload.validate(file, types);
+      } catch (err) {
+        this._toast(err.message || String(err), 'error');
+        return;
+      }
+      this._clearSiteMediaDraftPreview(key);
+      this.siteMediaDrafts = {
+        ...this.siteMediaDrafts,
+        [key]: {
+          uploadType: item.uploadType,
+          file,
+          previewUrl: MediaUpload.preview(file),
+          fileName: file.name,
+          fileSizeLabel: `${(file.size / 1048576).toFixed(1)} MB`,
+        },
+      };
+      this._toast(
+        'Imagem em rascunho. Clique em «Publicar» para enviar ao servidor.',
+        'success',
+      );
+    },
+
+    _clearSiteMediaDraftPreview(key) {
+      const draft = this.siteMediaDrafts[key];
+      if (draft && draft.previewUrl) {
+        MediaUpload.revokePreview(draft.previewUrl);
+      }
+    },
+
+    discardSiteMediaDraft(key) {
+      if (!this.siteMediaDrafts[key]) return;
+      this._clearSiteMediaDraftPreview(key);
+      const next = { ...this.siteMediaDrafts };
+      delete next[key];
+      this.siteMediaDrafts = next;
+      this._toast('Rascunho descartado.', 'warning');
+    },
+
+    _clearSiteListsDrafts() {
+      const revoke = (list) => {
+        (list || []).forEach((item) => {
+          if (item?._photoPreview) MediaUpload.revokePreview(item._photoPreview);
+        });
+      };
+      revoke(this.siteListsDraft.logos);
+      revoke(this.siteListsDraft.equipe);
+      this.siteListsDraft = { logos: null, equipe: null };
+    },
+
+    get workingLogos() {
+      return this.siteListsDraft.logos ?? this.siteSettings.home_about_logos ?? [];
+    },
+
+    get workingEquipe() {
+      return this.siteListsDraft.equipe ?? this.siteSettings.home_about_equipe ?? DEFAULT_HOME_EQUIPE;
+    },
+
+    _ensureLogosDraft() {
+      if (this.siteListsDraft.logos === null) {
+        this.siteListsDraft.logos = cloneSiteList(this.siteSettings.home_about_logos || []);
+      }
+    },
+
+    _ensureEquipeDraft() {
+      if (this.siteListsDraft.equipe === null) {
+        this.siteListsDraft.equipe = cloneSiteList(
+          this.siteSettings.home_about_equipe?.length
+            ? this.siteSettings.home_about_equipe
+            : DEFAULT_HOME_EQUIPE,
+        );
+      }
+    },
+
+    addLogo() {
+      this._ensureLogosDraft();
+      this.siteListsDraft.logos.push({ id: newSiteListId('logo'), src: null, alt: '' });
+    },
+
+    removeLogo(index) {
+      this._ensureLogosDraft();
+      const logo = this.siteListsDraft.logos[index];
+      if (logo?._photoPreview) MediaUpload.revokePreview(logo._photoPreview);
+      this.siteListsDraft.logos.splice(index, 1);
+    },
+
+    onLogoImage(e, index) {
+      const file = e.target?.files?.[0];
+      if (e.target) e.target.value = '';
+      if (!file) return;
+      try {
+        MediaUpload.validate(file, MediaUpload.IMG_TYPES);
+      } catch (err) {
+        this._toast(err.message || String(err), 'error');
+        return;
+      }
+      this._ensureLogosDraft();
+      const logo = this.siteListsDraft.logos[index];
+      if (logo._photoPreview) MediaUpload.revokePreview(logo._photoPreview);
+      logo._photoFile = file;
+      logo._photoPreview = MediaUpload.preview(file);
+      this.siteListsDraft.logos = [...this.siteListsDraft.logos];
+      this._toast('Logo em rascunho. Clique em «Publicar».', 'success');
+    },
+
+    logoPreview(logo) {
+      if (!logo) return null;
+      if (logo._photoPreview) return logo._photoPreview;
+      return logo.src || null;
+    },
+
+    logoListStatus(logo) {
+      if (logo?._photoFile) return { text: 'Rascunho', cls: 'draft' };
+      if (logo?.src) return { text: 'Publicado', cls: 'published' };
+      return { text: 'Vazio', cls: 'empty' };
+    },
+
+    discardLogosDraft() {
+      if (this.siteListsDraft.logos === null) return;
+      const revoke = this.siteListsDraft.logos;
+      this.siteListsDraft.logos = null;
+      revoke.forEach((logo) => {
+        if (logo?._photoPreview) MediaUpload.revokePreview(logo._photoPreview);
+      });
+      this._toast('Alterações de logos descartadas.', 'warning');
+    },
+
+    addEquipeMember() {
+      this._ensureEquipeDraft();
+      this.siteListsDraft.equipe.push({
+        id: newSiteListId('equipe'),
+        name: 'Novo membro',
+        role: '',
+        fact: '',
+        photo: null,
+        instagram: '',
+      });
+    },
+
+    removeEquipeMember(index) {
+      this._ensureEquipeDraft();
+      const member = this.siteListsDraft.equipe[index];
+      if (member?._photoPreview) MediaUpload.revokePreview(member._photoPreview);
+      this.siteListsDraft.equipe.splice(index, 1);
+    },
+
+    onEquipePhoto(e, index) {
+      const file = e.target?.files?.[0];
+      if (e.target) e.target.value = '';
+      if (!file) return;
+      try {
+        MediaUpload.validate(file, MediaUpload.IMG_TYPES);
+      } catch (err) {
+        this._toast(err.message || String(err), 'error');
+        return;
+      }
+      this._ensureEquipeDraft();
+      const member = this.siteListsDraft.equipe[index];
+      if (member._photoPreview) MediaUpload.revokePreview(member._photoPreview);
+      member._photoFile = file;
+      member._photoPreview = MediaUpload.preview(file);
+      this.siteListsDraft.equipe = [...this.siteListsDraft.equipe];
+      this._toast('Foto em rascunho. Clique em «Publicar».', 'success');
+    },
+
+    equipePhotoPreview(member) {
+      if (!member) return null;
+      if (member._photoPreview) return member._photoPreview;
+      return member.photo || null;
+    },
+
+    equipeMemberStatus(member) {
+      if (member?._photoFile) return { text: 'Rascunho', cls: 'draft' };
+      if (member?.photo) return { text: 'Publicado', cls: 'published' };
+      return { text: 'Vazio', cls: 'empty' };
+    },
+
+    discardEquipeDraft() {
+      if (this.siteListsDraft.equipe === null) return;
+      const revoke = this.siteListsDraft.equipe;
+      this.siteListsDraft.equipe = null;
+      revoke.forEach((member) => {
+        if (member?._photoPreview) MediaUpload.revokePreview(member._photoPreview);
+      });
+      this._toast('Alterações da equipe descartadas.', 'warning');
+    },
+
+    async _publishSiteLists() {
+      if (this.siteListsDraft.logos !== null) {
+        const logos = cloneSiteList(this.workingLogos);
+        for (const logo of logos) {
+          if (logo._photoFile) {
+            this.publishPhase = `Enviando logo «${logo.alt || 'sem nome'}»…`;
+            MediaUpload.validate(logo._photoFile, MediaUpload.IMG_TYPES);
+            const { key } = await this._api.uploadSiteMedia('home_about_logo', logo._photoFile);
+            logo.src = key;
+            if (logo._photoPreview) MediaUpload.revokePreview(logo._photoPreview);
+            delete logo._photoFile;
+            delete logo._photoPreview;
+          }
+        }
+        this.publishPhase = 'Salvando logos…';
+        await this._api.updateSetting(
+          'home_about_logos',
+          logos.map(({ id, src, alt }) => ({ id, src: src || null, alt: alt || '' })),
+        );
+        this.siteListsDraft.logos = null;
+      }
+
+      if (this.siteListsDraft.equipe !== null) {
+        const equipe = cloneSiteList(this.workingEquipe);
+        for (const member of equipe) {
+          if (member._photoFile) {
+            this.publishPhase = `Enviando foto de «${member.name || 'membro'}»…`;
+            MediaUpload.validate(member._photoFile, MediaUpload.IMG_TYPES);
+            const { key } = await this._api.uploadSiteMedia('home_about_equipe_photo', member._photoFile);
+            member.photo = key;
+            if (member._photoPreview) MediaUpload.revokePreview(member._photoPreview);
+            delete member._photoFile;
+            delete member._photoPreview;
+          }
+        }
+        this.publishPhase = 'Salvando equipe…';
+        await this._api.updateSetting(
+          'home_about_equipe',
+          equipe.map(({ id, name, role, fact, photo, instagram }) => ({
+            id,
+            name: name || '',
+            role: role || '',
+            fact: fact || '',
+            photo: photo || null,
+            instagram: instagram || '',
+          })),
+        );
+        this.siteListsDraft.equipe = null;
+      }
+    },
+
     get hasStagedProjects() {
       return Object.keys(this.projectDrafts).length > 0;
     },
 
+    get hasStagedSiteLists() {
+      return this.siteListsDraft.logos !== null || this.siteListsDraft.equipe !== null;
+    },
+
     get hasStagedSite() {
-      return !!this.siteDraft || !!this.siteDraftMobile;
+      return (
+        !!this.siteDraft ||
+        !!this.siteDraftMobile ||
+        Object.keys(this.siteMediaDrafts).length > 0 ||
+        this.hasStagedSiteLists
+      );
     },
 
     get hasUnpublishedChanges() {
@@ -578,7 +1063,13 @@ function adminApp() {
         parts.push(n === 1 ? '1 projeto em rascunho' : `${n} projetos em rascunho`);
       }
       if (this.hasStagedSite) {
-        parts.push('vídeo da Hero em rascunho');
+        const siteParts = [];
+        if (this.siteDraft || this.siteDraftMobile) siteParts.push('vídeos Hero');
+        const nImg = Object.keys(this.siteMediaDrafts).length;
+        if (nImg) siteParts.push(nImg === 1 ? '1 imagem Home' : `${nImg} imagens Home`);
+        if (this.siteListsDraft.logos !== null) siteParts.push('logos');
+        if (this.siteListsDraft.equipe !== null) siteParts.push('equipe');
+        parts.push(`${siteParts.join(' + ')} em rascunho`);
       }
       if (this.editorOpen && (this.formDirty || this.thumbFile || this.videoFile)) {
         parts.push('formulário em edição');
@@ -1044,6 +1535,8 @@ function adminApp() {
         const updateKeys = Object.keys(this.projectDrafts).filter((k) => k !== DRAFT_NEW);
         const siteDraft = this.siteDraft;
         const siteDraftMobile = this.siteDraftMobile;
+        const hadMediaDrafts = Object.keys(this.siteMediaDrafts).length > 0;
+        const hadListDrafts = this.hasStagedSiteLists;
 
         if (createDraft) {
           this.publishPhase = 'Criando novo projeto…';
@@ -1083,6 +1576,25 @@ function adminApp() {
           this.siteDraftMobile = null;
         }
 
+        const mediaDraftEntries = Object.entries(this.siteMediaDrafts);
+        for (const [settingKey, draft] of mediaDraftEntries) {
+          if (!draft?.file) continue;
+          const meta = HOME_ABOUT_MEDIA.find((m) => m.key === settingKey);
+          const label = meta?.label || settingKey;
+          this.publishPhase = `Enviando ${label}…`;
+          const types = meta?.accept
+            ? meta.accept.split(',').map((t) => t.trim())
+            : MediaUpload.IMG_TYPES;
+          MediaUpload.validate(draft.file, types);
+          const { key } = await this._api.uploadSiteMedia(draft.uploadType, draft.file);
+          this.publishPhase = `Salvando ${label}…`;
+          await this._api.updateSetting(settingKey, key);
+          this._clearSiteMediaDraftPreview(settingKey);
+        }
+        if (mediaDraftEntries.length) this.siteMediaDrafts = {};
+
+        await this._publishSiteLists();
+
         this.publishPhase = 'Disparando deploy no Netlify…';
         try {
           const deployRes = await this._api.triggerDeploy();
@@ -1102,7 +1614,7 @@ function adminApp() {
         }
 
         await this._loadProjects({ silent: true });
-        if (siteDraft || siteDraftMobile) await this._loadSiteSettings();
+        if (siteDraft || siteDraftMobile || hadMediaDrafts || hadListDrafts) await this._loadSiteSettings();
         this.closeEditor();
         if (this.view === 'home') {
           this.$nextTick(() => this._relayoutMasonry());
@@ -1905,24 +2417,26 @@ function adminApp() {
       const s = String(item.getAttribute('data-size') || '1x1')
         .toLowerCase()
         .replace(/\s/g, '');
+      const heightMap = {
+        '16x9': 9 / 16,
+        '1x1': 1,
+        '4x5': 5 / 4,
+        '9x16': 16 / 9,
+      };
+      if (heightMap[s] != null) return { w: 1, h: heightMap[s] };
+      // Legacy formats
+      if (s === '1x0.5' || s === '1x2' || s === '2x2') return { w: 1, h: 9 / 16 };
+      if (s === '1x1.5' || s === '1x3') return { w: 1, h: 16 / 9 };
+      if (s === '2x1') return { w: 1, h: 1 };
       const m = s.match(/^(\d+(?:\.\d+)?)x(\d+(?:\.\d+)?)$/);
-      if (!m) return { w: 1, h: 1 };
-      let w = parseFloat(m[1]);
-      let h = parseFloat(m[2]);
-      if (!Number.isFinite(w) || w <= 0) w = 1;
-      if (!Number.isFinite(h) || h <= 0) h = 1;
-      if (w === 2 && h === 1) { w = 1; h = 1; }
-      if (w === 2 && h === 2) { w = 1; h = 0.5; }
-      w = 1;
-      if (h === 3) h = 1.5;
-      if (h === 2) h = 0.5;
-      const allowed = [0.5, 1, 1.5];
-      if (!allowed.includes(h)) {
-        if (h < 0.75) h = 0.5;
-        else if (h < 1.25) h = 1;
-        else h = 1.5;
+      if (m) {
+        const w = parseFloat(m[1]);
+        const h = parseFloat(m[2]);
+        if (Number.isFinite(w) && Number.isFinite(h) && w > 0 && h > 0) {
+          return { w: 1, h: h / w };
+        }
       }
-      return { w, h };
+      return { w: 1, h: 1 };
     },
 
     _sizeMasonryItem(item, columnWidth, rowHeight, columns) {
@@ -1931,8 +2445,8 @@ function adminApp() {
       if (w > columns) w = columns;
       item.style.width = `${w * columnWidth + (w - 1) * GUTTER}px`;
       item.style.maxWidth = '100%';
-      const gutterH = Math.max(0, (h - 1) * GUTTER);
-      item.style.height = `${h * rowHeight + gutterH}px`;
+      const extraGutters = h > 1 ? Math.floor(h - 1) * GUTTER : 0;
+      item.style.height = `${h * rowHeight + extraGutters}px`;
     },
 
     _makeSlug() {

@@ -70,35 +70,59 @@ Sem `fetch-projects.mjs`, o build usa `_data/` existente ou falha se vazio.
 
 ### 2.3 Admin + API local
 
-**`_config.local.yml`** (gitignored):
+**Não funciona** aceder a `http://localhost:4000/admin` com `reverso_cms_api` apontando para produção (`cms.reversofilmes.com.br`): o cookie de sessão OAuth fica no domínio `.reversofilmes.com.br` e o browser não o envia ao Jekyll local.
+
+**Setup recomendado**
+
+1. Copie `_config.local.yml.example` → `_config.local.yml`:
 
 ```yaml
 reverso_cms_api: "http://127.0.0.1:8787"
 ```
 
-**`cf-worker/.dev.vars`** (gitignored) — overrides mínimos:
+2. **`cf-worker/.dev.vars`** — credenciais do **OAuth App de desenvolvimento** (não o de produção):
 
 ```ini
 COOKIE_DOMAIN=
+OAUTH_REDIRECT_ORIGIN=http://127.0.0.1:8787
 MEDIA_BASE_URL=http://127.0.0.1:8787/media
-GITHUB_CLIENT_ID=...
-GITHUB_CLIENT_SECRET=...
+GITHUB_CLIENT_ID=<app dev>
+GITHUB_CLIENT_SECRET=<app dev>
 JWT_SECRET=...
 BUILD_TOKEN=...
 ```
 
-Para OAuth local, crie um **segundo** GitHub OAuth App com callback `http://127.0.0.1:8787/api/auth/github/callback` (o app de produção só aceita um callback: `https://cms.reversofilmes.com.br/api/auth/github/callback`).
+`OAUTH_REDIRECT_ORIGIN` é necessário com `wrangler dev --remote`: sem isto o Worker envia ao GitHub um `redirect_uri` em `*.workers.dev`, que não está no OAuth App local.
 
-Terminais:
+3. **GitHub → Developer settings → OAuth Apps** — app separado do de produção:
+
+| Campo | Valor |
+|-------|-------|
+| Homepage URL | `http://localhost:4000` |
+| Authorization callback URL | `http://127.0.0.1:8787/api/auth/github/callback` |
+
+Produção mantém callback `https://cms.reversofilmes.com.br/api/auth/github/callback`.
+
+4. O seu GitHub ID deve estar em `admin_allowlist` no D1.
+
+**Terminais**
 
 ```powershell
-# A — Worker
+# A — Worker (D1 remoto = dados reais)
 cd cf-worker
-npm run dev
+npx wrangler dev --remote
 
-# B — Site
-bundle exec jekyll serve
+# B — Site + admin (carrega _config.local.yml explicitamente)
+bundle exec jekyll serve --config _config.yml,_config.local.yml
 ```
+
+5. Abra `http://127.0.0.1:4000/admin` → **Entrar com GitHub**.
+
+**Verificação:** no HTML do admin, a meta `reverso-cms-api` deve ser `http://127.0.0.1:8787`. Se aparecer `https://cms.reversofilmes.com.br`, o `_config.local.yml` não foi carregado — reinicie o Jekyll com `--config` acima.
+
+**Alternativa rápida (só preview da grelha Home, sem login):** `admin_dev_mode: true` em `_config.local.yml` — lê `/projects.json`; mutations desabilitadas.
+
+**Produção:** `https://reversofilmes.com.br/admin` — validação completa sem setup local.
 
 ### 2.4 Reverso Media — servidor local (YouTube e Pixieset)
 
