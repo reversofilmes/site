@@ -870,7 +870,8 @@
   overflow: hidden;
 }
 
-.home-sobre-servicos__gif {
+.home-sobre-servicos__gif,
+.home-sobre-servicos__video {
   display: block;
   width: 100%;
   height: 100%;
@@ -879,11 +880,13 @@
   transition: opacity 0.35s ease;
 }
 
-.home-sobre-servicos__media.is-active .home-sobre-servicos__gif:not([hidden]) {
+.home-sobre-servicos__media.is-active .home-sobre-servicos__gif:not([hidden]),
+.home-sobre-servicos__media.is-active .home-sobre-servicos__video:not([hidden]) {
   opacity: 1;
 }
 
-.home-sobre-servicos__gif[hidden] {
+.home-sobre-servicos__gif[hidden],
+.home-sobre-servicos__video[hidden] {
   display: none;
 }
 

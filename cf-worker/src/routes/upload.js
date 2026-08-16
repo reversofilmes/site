@@ -37,6 +37,15 @@ const SITE_UPLOAD_PREFIX = {
 
 const SITE_VIDEO_TYPES = new Set(['hero_video', 'hero_video_mobile']);
 
+const SITE_SERVICO_TYPES = new Set([
+  'home_about_servico_aftermovie',
+  'home_about_servico_institucional',
+  'home_about_servico_publicitario',
+  'home_about_servico_motion',
+  'home_about_servico_conteudo_mobile',
+  'home_about_servico_fotografia',
+]);
+
 function sanitizeKey(slug, type, ext) {
   const hash = crypto.randomUUID().slice(0, 8);
   const sitePrefix = SITE_UPLOAD_PREFIX[type];
@@ -44,7 +53,11 @@ function sanitizeKey(slug, type, ext) {
     if (SITE_VIDEO_TYPES.has(type) && ext !== 'mp4' && ext !== 'webm') {
       throw new Error('Invalid video type for hero');
     }
-    if (!SITE_VIDEO_TYPES.has(type) && !['jpg', 'png', 'webp', 'gif'].includes(ext)) {
+    if (SITE_SERVICO_TYPES.has(type)) {
+      if (!['jpg', 'png', 'webp', 'gif', 'mp4', 'webm'].includes(ext)) {
+        throw new Error('Invalid media type for servico preview');
+      }
+    } else if (!SITE_VIDEO_TYPES.has(type) && !['jpg', 'png', 'webp', 'gif'].includes(ext)) {
       throw new Error('Invalid image type for site media');
     }
     return `site/${sitePrefix}-${hash}.${ext}`;

@@ -39,6 +39,9 @@ const ADMIN_CONFIG = {
   ],
 };
 
+const SERVICO_MEDIA_ACCEPT =
+  'image/gif,image/webp,image/png,video/mp4,video/webm';
+
 const HOME_ABOUT_MEDIA = [
   {
     key: 'home_about_photo_intro',
@@ -103,7 +106,7 @@ const HOME_ABOUT_MEDIA = [
     fallback: null,
     aspect: '3 / 4',
     fit: 'cover',
-    accept: 'image/gif,image/webp,image/png',
+    accept: SERVICO_MEDIA_ACCEPT,
   },
   {
     key: 'home_about_servico_institucional',
@@ -112,7 +115,7 @@ const HOME_ABOUT_MEDIA = [
     fallback: null,
     aspect: '3 / 4',
     fit: 'cover',
-    accept: 'image/gif,image/webp,image/png',
+    accept: SERVICO_MEDIA_ACCEPT,
   },
   {
     key: 'home_about_servico_publicitario',
@@ -121,7 +124,7 @@ const HOME_ABOUT_MEDIA = [
     fallback: null,
     aspect: '3 / 4',
     fit: 'cover',
-    accept: 'image/gif,image/webp,image/png',
+    accept: SERVICO_MEDIA_ACCEPT,
   },
   {
     key: 'home_about_servico_motion',
@@ -130,7 +133,7 @@ const HOME_ABOUT_MEDIA = [
     fallback: null,
     aspect: '3 / 4',
     fit: 'cover',
-    accept: 'image/gif,image/webp,image/png',
+    accept: SERVICO_MEDIA_ACCEPT,
   },
   {
     key: 'home_about_servico_conteudo_mobile',
@@ -139,7 +142,7 @@ const HOME_ABOUT_MEDIA = [
     fallback: null,
     aspect: '3 / 4',
     fit: 'cover',
-    accept: 'image/gif,image/webp,image/png',
+    accept: SERVICO_MEDIA_ACCEPT,
   },
   {
     key: 'home_about_servico_fotografia',
@@ -148,7 +151,7 @@ const HOME_ABOUT_MEDIA = [
     fallback: null,
     aspect: '3 / 4',
     fit: 'cover',
-    accept: 'image/gif,image/webp,image/png',
+    accept: SERVICO_MEDIA_ACCEPT,
   },
   {
     key: 'home_about_photo_curupire',
@@ -189,6 +192,11 @@ function parseJsonSettingValue(val) {
 
 function cloneSiteList(arr) {
   return JSON.parse(JSON.stringify(arr || []));
+}
+
+/** Cópia rasa que preserva File/Blob em rascunhos (JSON.stringify destrói uploads). */
+function cloneSiteListDraft(arr) {
+  return (arr || []).map((item) => ({ ...item }));
 }
 
 function newSiteListId(prefix) {
@@ -777,6 +785,17 @@ function adminApp() {
       return meta?.accept || 'image/jpeg,image/png,image/webp';
     },
 
+    siteMediaIsVideo(key) {
+      const draft = this.siteMediaDrafts[key];
+      if (draft?.file) {
+        return MediaUpload.resolveMime(draft.file).startsWith('video/');
+      }
+      const url = this.siteMediaDrafts[key]?.previewUrl
+        || this.siteSettings[key]
+        || '';
+      return /\.(mp4|webm)(\?|$)/i.test(String(url));
+    },
+
     onSiteAboutImage(e, key) {
       const file = e.target?.files?.[0];
       const item = HOME_ABOUT_MEDIA.find((m) => m.key === key);
@@ -974,7 +993,7 @@ function adminApp() {
 
     async _publishSiteLists() {
       if (this.siteListsDraft.logos !== null) {
-        const logos = cloneSiteList(this.workingLogos);
+        const logos = cloneSiteListDraft(this.workingLogos);
         for (const logo of logos) {
           if (logo._photoFile) {
             this.publishPhase = `Enviando logo «${logo.alt || 'sem nome'}»…`;
@@ -995,7 +1014,7 @@ function adminApp() {
       }
 
       if (this.siteListsDraft.equipe !== null) {
-        const equipe = cloneSiteList(this.workingEquipe);
+        const equipe = cloneSiteListDraft(this.workingEquipe);
         for (const member of equipe) {
           if (member._photoFile) {
             this.publishPhase = `Enviando foto de «${member.name || 'membro'}»…`;

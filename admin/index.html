@@ -442,8 +442,10 @@
               <template x-for="item in homeAboutMedia.filter(m => m.key.startsWith('home_about_servico_'))" :key="item.key">
                 <div class="layout-card" :class="{ 'is-draft': !!siteMediaDrafts[item.key] }">
                   <div class="layout-card__thumb" :style="'aspect-ratio:' + item.aspect">
-                    <img x-show="siteMediaPreview(item.key)" :src="siteMediaPreview(item.key)" :alt="item.label" loading="lazy"
+                    <img x-show="siteMediaPreview(item.key) && !siteMediaIsVideo(item.key)" :src="siteMediaPreview(item.key)" :alt="item.label" loading="lazy"
                          :style="'object-fit:' + item.fit" />
+                    <video x-show="siteMediaPreview(item.key) && siteMediaIsVideo(item.key)" :src="siteMediaPreview(item.key)" autoplay muted loop playsinline
+                           :style="'object-fit:' + item.fit + ';width:100%;height:100%'"></video>
                     <span x-show="!siteMediaPreview(item.key)" class="layout-card__ph" x-text="item.label"></span>
                     <div class="layout-card__badges">
                       <span class="gc-badge" :class="siteMediaStatus(item.key).cls" x-text="siteMediaStatus(item.key).text"></span>
@@ -566,7 +568,6 @@
 
           <!-- Rodapé — imagem de fundo -->
           <div class="layout-page__footer-bg">
-            <h3 class="layout-section-title">Rodapé — imagem de fundo</h3>
             <template x-for="item in homeAboutMedia.filter(m => m.key === 'home_footer_bg')" :key="item.key">
               <div class="layout-card" :class="{ 'is-draft': !!siteMediaDrafts[item.key] }">
                 <div class="layout-card__thumb layout-card__thumb--bg" :style="'aspect-ratio:' + item.aspect">
@@ -578,8 +579,6 @@
                   </div>
                 </div>
                 <div class="layout-card__body">
-                  <h3 class="layout-card__title" x-text="item.label"></h3>
-                  <p class="layout-empty-hint">Seção de fechamento/contato na Home. Sem imagem, fundo preto.</p>
                   <div class="layout-card__actions">
                     <input type="file" class="file-input" :id="'lf-' + item.key" :accept="siteMediaAccept(item.key)"
                            @change="onSiteAboutImage($event, item.key)" :disabled="publishing" />
