@@ -7,10 +7,29 @@ const MediaUpload = {
   GIF_TYPES: ['image/gif', 'image/webp', 'image/png'],
   VID_TYPES: ['video/mp4', 'video/webm'],
 
+  resolveMime(file) {
+    if (file?.type) return file.type;
+    const ext = String(file?.name || '').split('.').pop()?.toLowerCase();
+    const map = {
+      jpg: 'image/jpeg',
+      jpeg: 'image/jpeg',
+      png: 'image/png',
+      webp: 'image/webp',
+      gif: 'image/gif',
+      mp4: 'video/mp4',
+      webm: 'video/webm',
+    };
+    return map[ext] || '';
+  },
+
   validate(file, types) {
-    if (!types.includes(file.type)) {
+    if (!file || typeof file.size !== 'number') {
+      throw new Error('Arquivo inválido para upload.');
+    }
+    const mime = this.resolveMime(file);
+    if (!types.includes(mime)) {
       throw new Error(
-        `Tipo ${file.type} não permitido. Aceitos: ${types.join(', ')}`,
+        `Tipo ${mime || file.type || 'desconhecido'} não permitido. Aceitos: ${types.join(', ')}`,
       );
     }
     if (file.size > this.MAX_SIZE) {
