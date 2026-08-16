@@ -74,13 +74,7 @@ Sem `fetch-projects.mjs`, o build usa `_data/` existente ou falha se vazio.
 
 **Setup recomendado**
 
-1. Copie `_config.local.yml.example` → `_config.local.yml`:
-
-```yaml
-reverso_cms_api: "http://127.0.0.1:8787"
-```
-
-2. **`cf-worker/.dev.vars`** — credenciais do **OAuth App de desenvolvimento** (não o de produção):
+1. **`cf-worker/.dev.vars`** — credenciais do **OAuth App de desenvolvimento** (não o de produção):
 
 ```ini
 COOKIE_DOMAIN=
@@ -94,7 +88,7 @@ BUILD_TOKEN=...
 
 `OAUTH_REDIRECT_ORIGIN` é necessário com `wrangler dev --remote`: sem isto o Worker envia ao GitHub um `redirect_uri` em `*.workers.dev`, que não está no OAuth App local.
 
-3. **GitHub → Developer settings → OAuth Apps** — app separado do de produção:
+2. **GitHub → Developer settings → OAuth Apps** — app separado do de produção:
 
 | Campo | Valor |
 |-------|-------|
@@ -103,7 +97,7 @@ BUILD_TOKEN=...
 
 Produção mantém callback `https://cms.reversofilmes.com.br/api/auth/github/callback`.
 
-4. O seu GitHub ID deve estar em `admin_allowlist` no D1.
+3. O seu GitHub ID deve estar em `admin_allowlist` no D1.
 
 **Terminais**
 
@@ -116,7 +110,7 @@ npx wrangler dev --remote
 bundle exec jekyll serve --config _config.yml,_config.local.yml
 ```
 
-5. Abra `http://127.0.0.1:4000/admin` → **Entrar com GitHub**.
+4. Abra `http://127.0.0.1:4000/admin` → **Entrar com GitHub**.
 
 **Verificação:** no HTML do admin, a meta `reverso-cms-api` deve ser `http://127.0.0.1:8787`. Se aparecer `https://cms.reversofilmes.com.br`, o `_config.local.yml` não foi carregado — reinicie o Jekyll com `--config` acima.
 

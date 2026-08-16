@@ -954,11 +954,11 @@
   }
 }
 
-/* ── Logos — marquee infinita (mesmo princípio do manifesto) ── */
+/* ── Logos — marquee infinita (mesmo ritmo/visual do manifesto) ── */
 .home-sobre-logos-marquee {
   background: #000;
   overflow: hidden;
-  padding: clamp(2rem, 4.5vw, 3.25rem) 0;
+  padding: clamp(2.5rem, 5vw, 3.75rem) 0;
 }
 
 .home-sobre-logos-marquee__viewport {
@@ -969,7 +969,30 @@
   display: flex;
   align-items: center;
   width: max-content;
-  animation: home-sobre-logos-scroll 45s linear infinite;
+  animation: home-sobre-logos-scroll var(--marquee-duration, 30s) linear infinite;
+  animation-play-state: paused;
+  transform: translate3d(0, 0, 0);
+}
+
+.home-sobre-logos-marquee__track.is-marquee-synced {
+  animation-play-state: running;
+}
+
+.home-sobre-logos-marquee__group {
+  display: flex;
+  align-items: center;
+  flex: 0 0 auto;
+  flex-shrink: 0;
+}
+
+.home-sobre-logos-marquee__track.is-static {
+  width: 100%;
+  animation: none;
+  justify-content: center;
+}
+
+.home-sobre-logos-marquee__group.is-clone {
+  pointer-events: none;
 }
 
 .home-sobre-logos-marquee__track[hidden] {
@@ -981,23 +1004,23 @@
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  padding: 0 clamp(1.5rem, 4vw, 3rem);
+  padding: 0 clamp(1.5rem, 4vw, 2.5rem);
 }
 
 .home-sobre-logos-marquee__item img {
   display: block;
-  height: clamp(2rem, 4.5vw, 3.25rem);
+  height: clamp(1.875rem, 6.6vw, 5rem);
   width: auto;
-  max-width: clamp(5.5rem, 12vw, 9.5rem);
+  max-width: none;
   object-fit: contain;
 }
 
 @keyframes home-sobre-logos-scroll {
   from {
-    transform: translateX(0);
+    transform: translate3d(0, 0, 0);
   }
   to {
-    transform: translateX(-50%);
+    transform: translate3d(var(--marquee-shift, -50%), 0, 0);
   }
 }
 
