@@ -300,7 +300,7 @@
     <div class="home-sobre-logos-marquee__viewport">
       <div class="home-sobre-logos-marquee__track"{% unless _about_logos %} hidden{% endunless %}>
         {% if _about_logos %}
-          {% for _ in (1..2) %}
+          <div class="home-sobre-logos-marquee__group">
             {% for logo in _about_logos %}
               <span class="home-sobre-logos-marquee__item">
                 <img
@@ -311,7 +311,7 @@
                 />
               </span>
             {% endfor %}
-          {% endfor %}
+          </div>
         {% endif %}
       </div>
     </div>

@@ -52,12 +52,19 @@ Sincronizar dados do export do Worker e subir o servidor de preview:
 
 ```powershell
 $env:WORKER_EXPORT_URL = "https://cms.reversofilmes.com.br/api/projects/export"
-$env:CF_BUILD_TOKEN = "<BUILD_TOKEN — mesmo valor do Worker e do Netlify>"
+$env:CF_BUILD_TOKEN = "<BUILD_TOKEN>"
 node scripts/fetch-projects.mjs
 bundle exec jekyll serve --config _config.yml,_config.local.yml
 ```
 
-Abre http://127.0.0.1:4000/admin. Copie `_config.local.yml.example` → `_config.local.yml` (gitignored) para apontar o admin a `http://127.0.0.1:8787` com o Worker local — **o Jekyll não carrega `_config.local.yml` sozinho**; use sempre `--config _config.yml,_config.local.yml` em dev. Ver documentação completa.
+Em paralelo:
+
+```
+cd cf-worker
+npx wrangler dev --remote
+```
+
+Abre http://127.0.0.1:4000/admin. Verifique se `_config.local.yml` (gitignored) aponta o admin a `http://127.0.0.1:8787` com o Worker local — **o Jekyll não carrega `_config.local.yml` sozinho**; use sempre `--config _config.yml,_config.local.yml` em dev. Ver documentação completa.
 
 `CF_BUILD_TOKEN` não é o token de login do GitHub no admin; é o JWT de build (`BUILD_TOKEN` no Worker, gerado com `cf-worker/scripts/generate-build-token.mjs`).
 
