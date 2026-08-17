@@ -319,7 +319,7 @@
   <div class="home-sobre-junction" aria-hidden="true"></div>
 
   <section
-    class="home-sobre-equipe{% if _about_equipe and _about_equipe.size > 5 %} home-sobre-equipe--carousel{% endif %}"
+    class="home-sobre-equipe"
     aria-labelledby="home-sobre-equipe-title"
   >
     <header class="home-sobre-equipe__head">
@@ -330,8 +330,10 @@
     </header>
 
     <div class="home-sobre-equipe__scroller">
-      <button type="button" class="home-sobre-equipe__nav home-sobre-equipe__nav--prev" aria-label="Ver membros anteriores" hidden>
-        <span aria-hidden="true">‹</span>
+      <button type="button" class="home-sobre-equipe__nav home-sobre-equipe__nav--prev home-sobre-equipe__nav--inactive" aria-label="Ver membros anteriores">
+        <svg class="home-sobre-equipe__nav-icon" width="16" height="16" viewBox="0 0 16 16" aria-hidden="true" focusable="false">
+          <path d="M10 3L5 8l5 5" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
       </button>
 
       <ul class="home-sobre-equipe__grid" role="list">
@@ -378,8 +380,10 @@
         {% endif %}
       </ul>
 
-      <button type="button" class="home-sobre-equipe__nav home-sobre-equipe__nav--next" aria-label="Ver próximos membros" hidden>
-        <span aria-hidden="true">›</span>
+      <button type="button" class="home-sobre-equipe__nav home-sobre-equipe__nav--next home-sobre-equipe__nav--inactive" aria-label="Ver próximos membros">
+        <svg class="home-sobre-equipe__nav-icon" width="16" height="16" viewBox="0 0 16 16" aria-hidden="true" focusable="false">
+          <path d="M6 3l5 5-5 5" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
       </button>
     </div>
   </section>
@@ -481,17 +485,19 @@
       </div>
     </div>
 
-    <p class="home-sobre-fechamento__contact">
-      <a href="tel:+5531996005678" class="home-sobre-fechamento__link">(31) 99600-5678</a>
-      <span class="home-sobre-fechamento__sep" aria-hidden="true">•</span>
-      <a href="mailto:contato@reversofilmes.com.br" class="home-sobre-fechamento__link">CONTATO@REVERSOFILMES.COM.BR</a>
-    </p>
+    <div class="home-sobre-fechamento__meta">
+      <p class="home-sobre-fechamento__contact">
+        <a href="tel:+5531996005678" class="home-sobre-fechamento__link">(31) 99600-5678</a>
+        <span class="home-sobre-fechamento__sep" aria-hidden="true">•</span>
+        <a href="mailto:contato@reversofilmes.com.br" class="home-sobre-fechamento__link">CONTATO@REVERSOFILMES.COM.BR</a>
+      </p>
 
-    <p class="home-sobre-fechamento__legal">
-      TODOS OS DIREITOS
-      <span class="home-sobre-fechamento__reservados">
-        <span class="home-sobre-fechamento__r-flip" aria-hidden="true">R</span>ESERVADOS
-      </span>
-    </p>
+      <p class="home-sobre-fechamento__legal">
+        TODOS OS DIREITOS
+        <span class="home-sobre-fechamento__reservados">
+          <span class="home-sobre-fechamento__r-flip" aria-hidden="true">R</span>ESERVADOS
+        </span>
+      </p>
+    </div>
   </section>
 </section>

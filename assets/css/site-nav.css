@@ -159,7 +159,7 @@
   min-width: 0;
   max-width: min(17rem, calc(100vw - 0.5rem));
   max-height: 100vh;
-  max-height: 100dvh;
+  max-height: 100svh;
   background: rgba(10, 10, 10, 0.96);
   border-left: 1px solid rgba(255, 0, 0, 0.2);
   box-shadow: -8px 0 32px rgba(0, 0, 0, 0.5);

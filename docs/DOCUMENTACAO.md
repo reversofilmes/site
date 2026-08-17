@@ -339,7 +339,149 @@ git push origin temp --dry-run   # testar push sem enviar
 
 ---
 
-## 9. Referências DNS
+## 9. Home — marquee de logos de clientes
+
+Faixa de parceiros/marcas na seção **Sobre** da Home. Conteúdo vem de `home_about_logos` em `site-settings.json` (D1 → export → build). Gestão no admin: **Logos — marquee de clientes**.
+
+### 9.1 Ficheiros envolvidos
+
+| Ficheiro | Função |
+|----------|--------|
+| `_includes/home-about-section.html` | Markup: viewport, track, um grupo com a lista de logos |
+| `assets/js/home-logos-marquee.js` | Lógica adaptativa (estático vs marquee), velocidade, clones |
+| `assets/css/home-about.css` | Estilos da faixa (tamanhos fluidos, animação, modos) |
+| `_layouts/home.html` | Carrega CSS e JS da Home |
+| `cf-worker/src/routes/upload.js` | Upload R2: `site/home-about-logo-{hash}.{ext}` |
+| `cf-worker/src/routes/site-settings.js` | Valida e persiste `home_about_logos` no D1 |
+
+Sem logos no array, a faixa fica oculta (`track[hidden]`).
+
+### 9.2 Preparação dos ficheiros (antes do upload)
+
+Os logos **não recebem tratamento no código** — devem ser enviados prontos:
+
+- **Formato:** PNG ou WebP com transparência (evitar JPEG).
+- **Cor:** branco (`#FFFFFF`) sobre fundo transparente.
+- **Altura sugerida no export:** ~400 px (`x400` no ImageMagick), largura proporcional.
+- **Admin:** cada item `{ id, src, alt }`; ordem no painel = ordem na faixa.
+
+### 9.3 Comportamento automático (JS)
+
+O script `home-logos-marquee.js` mede, em runtime, a largura do **bloco de logos** (um grupo com todas as marcas **uma vez**) e compara com a **viewport** da faixa:
+
+```
+segmentWidth = largura de .home-sobre-logos-marquee__group
+viewportWidth = largura de .home-sobre-logos-marquee__viewport
+```
+
+| Condição | Modo | Comportamento |
+|----------|------|----------------|
+| `segmentWidth ≤ viewportWidth` | **Estático** | Fila centrada, sem animação, **sem repetir** logos |
+| `segmentWidth > viewportWidth` | **Marquee** | Scroll infinito; **2 blocos idênticos** (original + 1 clone) |
+
+#### Modo estático
+
+- Classe `is-static` no track e viewport.
+- Sem clones no DOM.
+- Útil com **poucos logos** ou **1 logo** (ex.: BMW sozinha): aparece **uma vez**, centrada, em qualquer resolução enquanto couber.
+
+#### Modo marquee
+
+- Append de **exactamente 1 clone** do grupo (`.is-clone`, `aria-hidden="true"`, `alt=""` nos imgs duplicados).
+- Animação desloca **uma largura de segmento** (`--marquee-shift: -{segmentWidth}px`).
+- Loop contínuo: ao fim do 1.º bloco, o 2.º (cópia) ocupa o mesmo lugar visual — sem salto.
+- Cada marca aparece **1× por volta** dentro do bloco; a duplicação é só técnica para o loop.
+
+#### Velocidade
+
+Calibrada com a marquee de texto **«MUDAR A PERSPECTIVA…»**:
+
+- Lê `.home-manifesto-marquee__track` → `px/s = scrollWidth / 2 / 30`.
+- Duração do ciclo de logos: `segmentWidth / px/s` (mesma velocidade linear em pixels).
+- Timing `linear`; animação só arranca com `.is-marquee-synced`.
+
+#### Recálculo automático
+
+O layout reavalia quando:
+
+- a página carrega (após `document.fonts.ready` ou `load`, com fallback a 2 s);
+- a janela redimensiona (debounce 400 ms);
+- uma imagem de logo termina de carregar (`load`).
+
+Com `prefers-reduced-motion: reduce`, o JS **não corre**; o CSS mostra fila estática centrada (wrap).
+
+### 9.4 Responsividade da lógica
+
+A decisão estático/marquee **não usa breakpoints fixos** — depende só das medidas na viewport **actual**:
+
+| Exemplo | Comportamento |
+|---------|----------------|
+| 5 logos cabem no desktop | Estático no desktop |
+| Os mesmos 5 logos no mobile (overflow) | Marquee no mobile |
+| Rodar tablet ↔ telemóvel | Troca de modo automaticamente |
+| 1 logo | Estático em todas as larguras (enquanto couber) |
+
+Ou seja: a mesma lista de logos pode estar parada num ecrã e animada noutro.
+
+### 9.5 Quantos logos para «fechar o loop»?
+
+Estimativas com tamanhos actuais do CSS (altura + padding por item ≈ **120–220 px** por logo, conforme proporção da arte):
+
+| Viewport | Modo estático (cabe inteiro) | Marquee (overflow) |
+|----------|------------------------------|---------------------|
+| **~375 px** (mobile) | 1–2 logos | 3+ logos |
+| **~768 px** (tablet) | 2–4 logos | 5+ logos |
+| **~1440 px** (desktop) | 5–8 logos | 9+ logos |
+
+Notas:
+
+- **Fechar o loop** no modo marquee exige sempre **2 cópias do conjunto completo** (implementado pelo JS) — não N cópias do mesmo logo isolado.
+- Com **1 logo**, nunca entra em marquee por overflow típico → sem repetição visível.
+- Logos muito **largos** (wordmarks) reduzem a quantidade que cabe em estático; logos compactos permitem mais marcas antes do overflow.
+- Valores da tabela são orientativos; o JS mede o resultado real após render + load das imagens.
+
+### 9.6 Valores CSS fluidos (padronizados)
+
+Definidos em `assets/css/home-about.css`, alinhados visualmente à marquee do manifesto:
+
+| Propriedade | Selector | Valor |
+|-------------|----------|-------|
+| Padding da seção | `.home-sobre-logos-marquee` | `clamp(2.5rem, 5vw, 3.75rem) 0` |
+| Espaçamento entre logos | `.home-sobre-logos-marquee__item` | `padding: 0 clamp(1.5rem, 4vw, 2.5rem)` |
+| Altura dos logos (desktop) | `.home-sobre-logos-marquee__item img` | `clamp(3.09rem, 10.89vw, 8.25rem)` |
+| Altura dos logos (tablet, ≤1024px) | idem | `clamp(3.28rem, 11.55vw, 8.75rem)` |
+| Altura dos logos (mobile, ≤768px) | idem | `clamp(4.375rem, 11.55vw, 8.75rem)` |
+
+O piso elevado no mobile (`4.375rem`) evita que o termo `vw` encolha demais o logo em ecrãs estreitos; tablet e desktop mantêm escala fluida via `clamp()`.
+
+Comparação com o manifesto (referência visual):
+
+| | Manifesto «PERSPECTIVA» | Logos |
+|--|-------------------------|-------|
+| Padding da faixa | `clamp(2.5rem, 5vw, 3.75rem)` | igual |
+| Espaçamento horizontal | `clamp(1.5rem, 4vw, 2.5rem)` | igual |
+| Altura / escala | `font-size: clamp(1.875rem, 6.6vw, 5rem)` | imgs com clamps proporcionais (+65% desktop, +75% tablet) |
+
+### 9.7 Persistência (D1 + R2)
+
+| O quê | Onde |
+|-------|------|
+| Lista `{ id, src, alt }` | D1 → `site_settings.key = 'home_about_logos'` |
+| Ficheiro da imagem | R2 → `reverso-media` → `site/home-about-logo-{hash}.{ext}` |
+| URL pública | `https://cms.reversofilmes.com.br/media/site/home-about-logo-…` |
+
+Cada novo upload gera **chave nova** no R2; a anterior não é apagada automaticamente (pode ficar órfã). Só a `src` guardada no D1 é usada no site.
+
+Consulta rápida:
+
+```powershell
+cd cf-worker
+npx wrangler d1 execute reverso-db --remote --command "SELECT value FROM site_settings WHERE key = 'home_about_logos'"
+```
+
+---
+
+## 10. Referências DNS
 
 Ficheiros em `docs/` para migração Cloudflare (referência):
 

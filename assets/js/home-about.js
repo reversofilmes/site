@@ -653,7 +653,7 @@
   }
 
   function initHomeEquipeCarousel() {
-    var section = document.querySelector(".home-sobre-equipe--carousel");
+    var section = document.querySelector(".home-sobre-equipe");
     if (!section) return;
 
     var grid = section.querySelector(".home-sobre-equipe__grid");
@@ -661,21 +661,47 @@
     var next = section.querySelector(".home-sobre-equipe__nav--next");
     if (!grid || !prev || !next) return;
 
-    prev.hidden = false;
-    next.hidden = false;
+    var items = grid.querySelectorAll(".home-sobre-equipe__item");
+    section.style.setProperty("--equipe-count", String(items.length || 1));
+
+    var hasOverflow = false;
+    var lastWidth = 0;
 
     function scrollStep(direction) {
+      var gap = parseFloat(getComputedStyle(grid).columnGap || getComputedStyle(grid).gap || "0") || 0;
       var item = grid.querySelector(".home-sobre-equipe__item");
       if (!item) return;
-      var gap = parseFloat(getComputedStyle(grid).columnGap || getComputedStyle(grid).gap || "0") || 0;
-      var step = (item.offsetWidth + gap) * 2;
+      var step = Math.max(item.offsetWidth + gap, grid.clientWidth * 0.72);
       grid.scrollBy({ left: direction * step, behavior: "smooth" });
     }
 
-    function updateNav() {
-      var maxScroll = grid.scrollWidth - grid.clientWidth;
-      prev.disabled = grid.scrollLeft <= 2;
-      next.disabled = grid.scrollLeft >= maxScroll - 2;
+    function updateNavState() {
+      if (!hasOverflow) {
+        prev.classList.add("home-sobre-equipe__nav--inactive");
+        next.classList.add("home-sobre-equipe__nav--inactive");
+        return;
+      }
+
+      var maxScroll = Math.max(0, grid.scrollWidth - grid.clientWidth);
+      prev.classList.toggle("home-sobre-equipe__nav--inactive", grid.scrollLeft <= 1);
+      next.classList.toggle("home-sobre-equipe__nav--inactive", grid.scrollLeft >= maxScroll - 1);
+    }
+
+    function measureOverflow() {
+      section.classList.remove("home-sobre-equipe--fits");
+      section.classList.add("home-sobre-equipe--carousel");
+
+      var overflow = grid.scrollWidth > grid.clientWidth + 2;
+      hasOverflow = overflow;
+
+      section.classList.toggle("home-sobre-equipe--carousel", overflow);
+      section.classList.toggle("home-sobre-equipe--fits", !overflow);
+
+      if (!overflow) {
+        grid.scrollLeft = 0;
+      }
+
+      updateNavState();
     }
 
     prev.addEventListener("click", function () {
@@ -684,9 +710,32 @@
     next.addEventListener("click", function () {
       scrollStep(1);
     });
-    grid.addEventListener("scroll", updateNav, { passive: true });
-    window.addEventListener("resize", updateNav);
-    updateNav();
+    grid.addEventListener("scroll", updateNavState, { passive: true });
+
+    window.addEventListener("resize", function () {
+      var w = grid.clientWidth;
+      if (w === lastWidth) return;
+      lastWidth = w;
+      measureOverflow();
+    });
+
+    grid.querySelectorAll("img").forEach(function (img) {
+      if (img.complete) return;
+      img.addEventListener("load", measureOverflow, { once: true });
+    });
+
+    if (typeof ResizeObserver !== "undefined") {
+      var ro = new ResizeObserver(function () {
+        var w = grid.clientWidth;
+        if (w === lastWidth) return;
+        lastWidth = w;
+        requestAnimationFrame(measureOverflow);
+      });
+      ro.observe(grid);
+    }
+
+    lastWidth = grid.clientWidth;
+    measureOverflow();
   }
 
   function initHomeEquipe() {
