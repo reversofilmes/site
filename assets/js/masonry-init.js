@@ -1,10 +1,15 @@
 /**
- * Home — 5 colunas com empilhamento vertical + redistribuição dinâmica ao filtrar.
+ * Home — grid em colunas com empilhamento vertical + paginação "Carregar mais".
  *
- * Modo "__all__" (sem filtro): itens nas colunas originais definidas por home_col/order (Liquid).
- * Modo filtrado: greedy shortest-column-first (ordenados por data desc), excepto mobile ≤767px — uma coluna.
+ * Dois modos de layout:
+ * - Editorial (desktop/tablet, filtro TODOS): colunas fixas do CMS (Liquid/home_col).
+ *   Paginação por linhas sincronizadas — cada clique revela N linhas em todas as colunas.
+ * - Greedy (mobile 2 col, ou filtro ativo): shortest-column só com itens visíveis.
  *
- * Mobile ≤767px + "__all__": 2 colunas, greedy shortest-column-first; ordem global por data-order ASC, desempate data-home-col ASC.
+ * Ordem de revelação:
+ * - TODOS + mobile: order ASC (desempate home_col)
+ * - TODOS + desktop/tablet: raster das colunas originais
+ * - filtrado: data desc
  */
 var resizeTimeout = null;
 var homeEntranceAnimationDone = false;
@@ -13,10 +18,14 @@ var GUTTER = 14;
 var HOME_GRID_COLUMNS = 5;
 var INITIAL_VISIBLE = 25;
 var LOAD_STEP = 8;
+/** Editorial (5 col): linhas visíveis por coluna — 5 linhas ≈ 25 cards */
+var INITIAL_ROWS = 5;
+var LOAD_STEP_ROWS = 2;
 var HIDDEN = 'is-pack-hidden';
 
 /** Desktop/tablet vs mobile — alinhar com CSS @media (max-width: 767px) */
 var lastMobileLayout = null;
+var lastResizeWidth = null;
 
 function isMobileHomeGrid() {
   return typeof window.matchMedia === 'function'
@@ -31,6 +40,7 @@ function getEffectiveColumns() {
 
 var state = {
   filter: '__all__',
+  visibleRows: INITIAL_ROWS,
   visibleLimit: INITIAL_VISIBLE,
   columns: HOME_GRID_COLUMNS,
 };
@@ -194,108 +204,96 @@ function restoreOriginalPositions() {
   });
 }
 
-/** Mobile + filtro “TODOS”: uma coluna, ordem global order ASC, desempate home_col ASC */
-function layoutMobileAllMode() {
-  var container = document.getElementById('masonry-container');
-  if (!container || !originalColumnItems.length) return;
-  var cols = Array.from(container.querySelectorAll('.projects-col'));
-  if (!cols.length) return;
-  var flat = [];
-  originalColumnItems.forEach(function (colItems) {
-    colItems.forEach(function (item) { flat.push(item); });
-  });
-  flat.sort(function (a, b) {
+/** Mobile + filtro “TODOS”: ordem global order ASC, desempate home_col ASC */
+function sortMobileAllItems(items) {
+  return items.slice().sort(function (a, b) {
     var oa = getOrderValue(a);
     var ob = getOrderValue(b);
     if (oa !== ob) return oa - ob;
     return getHomeColValue(a) - getHomeColValue(b);
   });
-  var colHeights = [0, 0];
-  flat.forEach(function (item) {
-    var minIdx = colHeights[1] < colHeights[0] ? 1 : 0;
-    cols[minIdx].appendChild(item);
-    var s = parseSize(item);
-    colHeights[minIdx] += s.h;
-  });
 }
 
-/* ─── redistribuição (greedy shortest-column-first) ─── */
-
-function redistributeItems() {
-  var container = document.getElementById('masonry-container');
-  if (!container) return;
-  var cols = Array.from(container.querySelectorAll('.projects-col'));
-  if (cols.length < HOME_GRID_COLUMNS) return;
-
-  var matching = allItems.filter(itemMatchesFilter);
-
-  matching.sort(function (a, b) {
-    var da = getDateValue(a);
-    var db = getDateValue(b);
-    if (db !== da) return db - da;
-    return getOrderValue(a) - getOrderValue(b);
-  });
-
-  var numCols = getEffectiveColumns();
-  var colHeights = [];
-  for (var i = 0; i < numCols; i++) colHeights.push(0);
-
-  matching.forEach(function (item) {
-    var minIdx = 0;
-    for (var i = 1; i < numCols; i++) {
-      if (colHeights[i] < colHeights[minIdx]) minIdx = i;
-    }
-    cols[minIdx].appendChild(item);
-    var s = parseSize(item);
-    colHeights[minIdx] += s.h;
-  });
-}
-
-/* ─── raster order (linha por linha) ─── */
-
-function getRasterOrderItems() {
-  var cont = document.getElementById('masonry-container');
-  if (!cont) return [];
-  var cols = Array.from(cont.querySelectorAll('.projects-col'));
-  if (cols.length < HOME_GRID_COLUMNS) {
-    return Array.from(cont.querySelectorAll('.project-item'));
-  }
-  if (isMobileHomeGrid()) {
-    var mobileCols = HOME_MOBILE_COLUMNS;
-    var mobileBuckets = [];
-    for (var mi = 0; mi < mobileCols; mi++) {
-      mobileBuckets.push(cols[mi] ? Array.from(cols[mi].querySelectorAll('.project-item')) : []);
-    }
-    var mobileMaxH = 0;
-    mobileBuckets.forEach(function (b) { if (b.length > mobileMaxH) mobileMaxH = b.length; });
-    var mobileOut = [];
-    for (var mr = 0; mr < mobileMaxH; mr++) {
-      for (var mc = 0; mc < mobileCols; mc++) {
-        if (mobileBuckets[mc] && mobileBuckets[mc][mr]) mobileOut.push(mobileBuckets[mc][mr]);
-      }
-    }
-    return mobileOut;
-  }
-  var buckets = cols.map(function (cel) {
-    return Array.from(cel.querySelectorAll('.project-item'));
-  });
+/** Ordem linha-a-linha das colunas originais (Liquid) — sequência de revelação no desktop/tablet. */
+function getOriginalRasterOrder() {
+  var cols = originalColumnItems;
+  if (!cols.length) return [];
   var maxH = 0;
-  buckets.forEach(function (b) { if (b.length > maxH) maxH = b.length; });
+  cols.forEach(function (b) { if (b.length > maxH) maxH = b.length; });
   var out = [];
   for (var r = 0; r < maxH; r++) {
     for (var c = 0; c < HOME_GRID_COLUMNS; c++) {
-      if (buckets[c] && buckets[c][r]) out.push(buckets[c][r]);
+      if (cols[c] && cols[c][r]) out.push(cols[c][r]);
     }
   }
   return out;
 }
 
-/* ─── visibilidade (paginação) ─── */
+function getMatchingItemsSorted() {
+  if (isFilterActive()) {
+    return allItems.filter(itemMatchesFilter).sort(function (a, b) {
+      var da = getDateValue(a);
+      var db = getDateValue(b);
+      if (db !== da) return db - da;
+      return getOrderValue(a) - getOrderValue(b);
+    });
+  }
+  if (isMobileHomeGrid()) {
+    var flat = [];
+    originalColumnItems.forEach(function (colItems) {
+      colItems.forEach(function (item) { flat.push(item); });
+    });
+    return sortMobileAllItems(flat);
+  }
+  return getOriginalRasterOrder();
+}
 
-function applyVisibilityClasses() {
-  var loadMoreWrap = document.getElementById('load-more-wrap');
-  var raster = getRasterOrderItems().filter(itemMatchesFilter);
-  var visibleSet = new Set(raster.slice(0, state.visibleLimit));
+function layoutGreedy(items, numCols) {
+  var container = document.getElementById('masonry-container');
+  if (!container) return;
+  var cols = Array.from(container.querySelectorAll('.projects-col'));
+  if (!cols.length) return;
+  var colHeights = [];
+  for (var i = 0; i < numCols; i++) colHeights.push(0);
+  items.forEach(function (item) {
+    var minIdx = 0;
+    for (var j = 1; j < numCols; j++) {
+      if (colHeights[j] < colHeights[minIdx]) minIdx = j;
+    }
+    cols[minIdx].appendChild(item);
+    colHeights[minIdx] += parseSize(item).h;
+  });
+}
+
+/** Greedy só quando a grade não pode seguir as 5 colunas editoriais do CMS. */
+function usesGreedyLayout() {
+  return isMobileHomeGrid() || isFilterActive();
+}
+
+/** Itens visíveis no modo editorial: mesma profundidade (linhas) em cada coluna. */
+function getEditorialVisibleItems(visibleRows) {
+  var out = [];
+  originalColumnItems.forEach(function (colItems) {
+    var n = Math.min(visibleRows, colItems.length);
+    for (var r = 0; r < n; r++) {
+      out.push(colItems[r]);
+    }
+  });
+  return out;
+}
+
+function isEditorialFullyVisible(visibleRows) {
+  if (!originalColumnItems.length) return true;
+  return originalColumnItems.every(function (colItems) {
+    return visibleRows >= colItems.length;
+  });
+}
+
+/** Desktop/tablet + TODOS: mantém home_col do CMS; só alterna visibilidade. */
+function relayoutVisibleEditorial() {
+  restoreOriginalPositions();
+  var visible = getEditorialVisibleItems(state.visibleRows);
+  var visibleSet = new Set(visible);
   allItems.forEach(function (item) {
     if (visibleSet.has(item)) {
       item.classList.remove(HIDDEN);
@@ -303,9 +301,43 @@ function applyVisibilityClasses() {
       item.classList.add(HIDDEN);
     }
   });
+  var loadMoreWrap = document.getElementById('load-more-wrap');
   if (loadMoreWrap) {
-    loadMoreWrap.hidden = state.visibleLimit >= raster.length;
+    loadMoreWrap.hidden = isEditorialFullyVisible(state.visibleRows);
   }
+}
+
+/** Redistribui só itens visíveis — mobile 2 col ou filtro ativo. */
+function relayoutVisibleGreedy() {
+  var matching = getMatchingItemsSorted();
+  var visible = matching.slice(0, state.visibleLimit);
+  var visibleSet = new Set(visible);
+  allItems.forEach(function (item) {
+    if (visibleSet.has(item)) {
+      item.classList.remove(HIDDEN);
+    } else {
+      item.classList.add(HIDDEN);
+    }
+  });
+  layoutGreedy(visible, getEffectiveColumns());
+  var loadMoreWrap = document.getElementById('load-more-wrap');
+  if (loadMoreWrap) {
+    loadMoreWrap.hidden = state.visibleLimit >= matching.length;
+  }
+}
+
+function relayoutVisible() {
+  if (usesGreedyLayout()) {
+    relayoutVisibleGreedy();
+  } else {
+    relayoutVisibleEditorial();
+  }
+}
+
+/* ─── visibilidade (paginação) ─── */
+
+function applyVisibilityClasses() {
+  relayoutVisible();
 }
 
 function sizeVisibleItems() {
@@ -371,9 +403,7 @@ function runGridInit() {
 
   saveOriginalPositions();
   lastMobileLayout = isMobileHomeGrid();
-  if (!isFilterActive() && isMobileHomeGrid()) {
-    layoutMobileAllMode();
-  }
+  lastResizeWidth = window.innerWidth;
 
   applyVisibilityClasses();
   if (allItems.length === 0) return;
@@ -400,6 +430,10 @@ function relayoutKeepingState() {
 function handleResize() {
   clearTimeout(resizeTimeout);
   resizeTimeout = setTimeout(function () {
+    var w = window.innerWidth;
+    if (lastResizeWidth !== null && w === lastResizeWidth) return;
+    lastResizeWidth = w;
+
     var nowMobile = isMobileHomeGrid();
     if (gridEl && lastMobileLayout !== null && lastMobileLayout !== nowMobile) {
       rebuildDomLayoutFromState();
@@ -411,11 +445,6 @@ function handleResize() {
 
 function rebuildDomLayoutFromState() {
   restoreOriginalPositions();
-  if (isFilterActive()) {
-    redistributeItems();
-  } else if (isMobileHomeGrid()) {
-    layoutMobileAllMode();
-  }
   applyVisibilityClasses();
   sizeVisibleItems();
 }
@@ -428,19 +457,13 @@ function rebuildForFilter() {
   killRunningTweens();
 
   restoreOriginalPositions();
-
-  if (isFilterActive()) {
-    redistributeItems();
-  } else if (isMobileHomeGrid()) {
-    layoutMobileAllMode();
-  }
-
   applyVisibilityClasses();
   sizeVisibleItems();
   animateFilterTransition();
 }
 
 function initMasonry() {
+  state.visibleRows = INITIAL_ROWS;
   state.visibleLimit = INITIAL_VISIBLE;
   state.filter = '__all__';
   allItems = [];
@@ -463,47 +486,33 @@ function initMasonry() {
 function setFilter(svc) {
   clearStabilizeTimers();
   state.filter = svc || '__all__';
+  state.visibleRows = INITIAL_ROWS;
   state.visibleLimit = INITIAL_VISIBLE;
   rebuildForFilter();
 }
 
 function loadMore() {
   clearStabilizeTimers();
-  var container = document.getElementById('masonry-container');
-  if (!container) return;
+  if (!document.getElementById('masonry-container')) return;
 
-  state.visibleLimit += LOAD_STEP;
+  if (usesGreedyLayout()) {
+    state.visibleLimit += LOAD_STEP;
+  } else {
+    state.visibleRows += LOAD_STEP_ROWS;
+  }
 
   if (!gridEl) { rebuildForFilter(); return; }
 
-  var matching = getRasterOrderItems().filter(itemMatchesFilter);
-  var newlyVisible = [];
-  matching.forEach(function (item, idx) {
-    var shouldShow = idx < state.visibleLimit;
-    var wasHidden = item.classList.contains(HIDDEN);
-    if (shouldShow && wasHidden) {
-      item.classList.remove(HIDDEN);
-      newlyVisible.push(item);
-    }
+  var prevVisible = allItems.filter(function (el) { return !el.classList.contains(HIDDEN); });
+  relayoutVisible();
+  sizeVisibleItems();
+
+  var newlyVisible = allItems.filter(function (el) {
+    return !el.classList.contains(HIDDEN) && prevVisible.indexOf(el) === -1;
   });
-
-  var loadMoreWrap = document.getElementById('load-more-wrap');
-  if (loadMoreWrap) {
-    loadMoreWrap.hidden = state.visibleLimit >= matching.length;
-  }
-
   if (newlyVisible.length === 0) return;
 
-  var grid = container.querySelector('.projects-grid');
-  if (!grid) return;
-  var dims = calculateColumnWidth(grid);
-  state.columns = dims.columns;
-
-  newlyVisible.forEach(function (item) {
-    sizeItem(item, dims.columnWidth, dims.rowHeight, dims.columns);
-    item.style.opacity = '0';
-  });
-
+  newlyVisible.forEach(function (item) { item.style.opacity = '0'; });
   if (typeof gsap !== 'undefined') {
     gsap.to(newlyVisible, {
       opacity: 1, duration: 0.35, stagger: 0.04, ease: 'power2.out',

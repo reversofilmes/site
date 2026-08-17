@@ -461,6 +461,7 @@ a:hover::after {
   width: 100%;
   max-width: 100%;
   min-height: 100vh;
+  min-height: 100svh;
   position: relative;
   /* overflow-x:hidden faz overflow-y efetivo ≠ visible e corta o scale(1.02) ao hover */
   overflow: visible;
@@ -479,6 +480,7 @@ a:hover::after {
   width: 100%;
   max-width: 100%;
   min-height: 100vh;
+  min-height: 100svh;
   position: relative;
   opacity: 1;
   box-sizing: border-box;

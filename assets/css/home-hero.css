@@ -7,7 +7,7 @@
   position: relative;
   width: 100%;
   min-height: 100vh;
-  min-height: 100dvh;
+  min-height: 100svh;
   overflow: hidden;
   background: #0a0a0a;
 
@@ -209,7 +209,8 @@
   background: transparent;
   opacity: 1;
   min-height: 40vh;
-  margin-top: calc(-1 * var(--home-grid-overlap, 0px));
+  margin-top: 0;
+  transform: translateY(calc(-1 * var(--home-grid-overlap, 0px)));
   transition: opacity 0.5s ease;
 }
 
@@ -224,6 +225,12 @@ body.is-home .masonry-container {
   transform: translateY(16px);
   transition: opacity 0.55s ease, transform 0.55s ease;
   pointer-events: none;
+  /* Altura segue só os cards visíveis — evita vão enorme até "Carregar mais" no tablet */
+  min-height: 0;
+}
+
+body.is-home .projects-grid {
+  min-height: 0;
 }
 
 body.is-home.home-grid-revealed .masonry-container {

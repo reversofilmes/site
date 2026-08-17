@@ -802,8 +802,22 @@ document.addEventListener("DOMContentLoaded", () => {
     return Math.min(window.innerHeight * 0.055, 64);
   }
 
+  const mobileStableScrollFx = window.matchMedia("(max-width: 1024px)").matches;
+
   function updateHomeScrollFx() {
     if (!homeBelow) return;
+
+    if (mobileStableScrollFx) {
+      const revealed = window.scrollY > 24;
+      document.body.classList.toggle("home-grid-revealed", revealed);
+      homeBelow.style.setProperty("--home-grid-overlap", "0px");
+      if (scrollHint) {
+        scrollHint.classList.toggle("home-hero__scroll--hidden", revealed);
+        scrollHint.classList.toggle("home-hero__scroll--visible", !revealed);
+      }
+      return;
+    }
+
     const vh = window.innerHeight || 1;
     const y = window.scrollY;
     const revealAt = vh * 0.08;
