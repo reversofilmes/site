@@ -169,37 +169,52 @@
 
       <ul class="home-sobre-mundo__grid">
         <li class="home-sobre-mundo__item">
-          <div class="home-sobre-mundo__media">
-            <img
-              src="{{ _card_festivais }}"
-              alt="Festivais & Eventos"
-              loading="lazy"
-              decoding="async"
-            />
-          </div>
-          <p class="home-sobre-mundo__label">FESTIVAIS &amp; EVENTOS</p>
+          <a
+            href="{{ '/projetos/' | relative_url }}#category={{ 'Festivais & Eventos' | url_encode }}"
+            class="home-sobre-mundo__link"
+          >
+            <div class="home-sobre-mundo__media">
+              <img
+                src="{{ _card_festivais }}"
+                alt="Festivais & Eventos"
+                loading="lazy"
+                decoding="async"
+              />
+            </div>
+            <p class="home-sobre-mundo__label">FESTIVAIS &amp; EVENTOS</p>
+          </a>
         </li>
         <li class="home-sobre-mundo__item">
-          <div class="home-sobre-mundo__media">
-            <img
-              src="{{ _card_arte }}"
-              alt="Arte & Cultura"
-              loading="lazy"
-              decoding="async"
-            />
-          </div>
-          <p class="home-sobre-mundo__label">ARTE &amp; CULTURA</p>
+          <a
+            href="{{ '/projetos/' | relative_url }}#category={{ 'Arte & Cultura' | url_encode }}"
+            class="home-sobre-mundo__link"
+          >
+            <div class="home-sobre-mundo__media">
+              <img
+                src="{{ _card_arte }}"
+                alt="Arte & Cultura"
+                loading="lazy"
+                decoding="async"
+              />
+            </div>
+            <p class="home-sobre-mundo__label">ARTE &amp; CULTURA</p>
+          </a>
         </li>
         <li class="home-sobre-mundo__item">
-          <div class="home-sobre-mundo__media">
-            <img
-              src="{{ _card_corporativo }}"
-              alt="Corporativo"
-              loading="lazy"
-              decoding="async"
-            />
-          </div>
-          <p class="home-sobre-mundo__label">CORPORATIVO</p>
+          <a
+            href="{{ '/projetos/' | relative_url }}#category={{ 'Corporativo' | url_encode }}"
+            class="home-sobre-mundo__link"
+          >
+            <div class="home-sobre-mundo__media">
+              <img
+                src="{{ _card_corporativo }}"
+                alt="Corporativo"
+                loading="lazy"
+                decoding="async"
+              />
+            </div>
+            <p class="home-sobre-mundo__label">CORPORATIVO</p>
+          </a>
         </li>
       </ul>
     </div>
@@ -413,7 +428,7 @@
 
   <section
     id="contato"
-    class="home-sobre-fechamento{% if _footer_bg != '' %} home-sobre-fechamento--has-bg{% endif %}"
+    class="home-sobre-fechamento home-sobre-visual{% if _footer_bg != '' %} home-sobre-fechamento--has-bg{% endif %}"
     aria-labelledby="home-sobre-fechamento-title"
   >
     {% if _footer_bg != '' %}
@@ -424,6 +439,7 @@
       ></div>
       <div class="home-sobre-fechamento__overlay" aria-hidden="true"></div>
     {% endif %}
+    <div class="home-sobre-fade" aria-hidden="true"></div>
     <header class="home-sobre-fechamento__head">
       <div class="home-sobre-fechamento__copy-width">
         <p class="home-sobre-fechamento__kicker">CHEGOU A HORA DE FAZER DIFERENTE.</p>

@@ -59,18 +59,23 @@
     var photo = block.querySelector(photoSelector);
     if (!photo) return;
 
+    var mobileMq = window.matchMedia("(max-width: 1024px)");
+
     if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
-    if (window.matchMedia("(max-width: 1024px)").matches) return;
 
     var shiftRatio = maxShiftRatio != null ? maxShiftRatio : 0.05;
     var overscanScale = 1 + shiftRatio * 2 + 0.02;
     var ticking = false;
 
+    function clearParallax() {
+      photo.style.transform = "";
+    }
+
     function updateParallax() {
       ticking = false;
 
-      if (window.matchMedia("(max-width: 1024px)").matches) {
-        photo.style.transform = "";
+      if (mobileMq.matches) {
+        clearParallax();
         return;
       }
 
@@ -98,8 +103,14 @@
       requestAnimationFrame(updateParallax);
     }
 
+    function onBreakpointChange() {
+      clearParallax();
+      if (!mobileMq.matches) updateParallax();
+    }
+
     window.addEventListener("scroll", onScroll, { passive: true });
     window.addEventListener("resize", onScroll, { passive: true });
+    mobileMq.addEventListener("change", onBreakpointChange);
     updateParallax();
   }
 
