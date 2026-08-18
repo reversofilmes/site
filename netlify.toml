@@ -7,6 +7,37 @@
   # Mesmo host que site.reverso_cms_api + /api/projects/export. Com custom domain cms.*, alinhar meta + CSP abaixo.
   WORKER_EXPORT_URL = "https://cms.reversofilmes.com.br/api/projects/export"
 
+# Mídia legada removida do repositório (pré-CMS). 410 evita re-download e reduz bandwidth fantasma.
+[[redirects]]
+  from = "/assets/video/projects/*"
+  to = "/404.html"
+  status = 410
+  force = true
+
+[[redirects]]
+  from = "/assets/img/projects/*"
+  to = "/404.html"
+  status = 410
+  force = true
+
+[[redirects]]
+  from = "/assets/videos/reverso-demoreel-2024-vertical.m4v"
+  to = "/404.html"
+  status = 410
+  force = true
+
+[[redirects]]
+  from = "/assets/videos/reverso-demoreel-2024-vertical.webm"
+  to = "/404.html"
+  status = 410
+  force = true
+
+[[redirects]]
+  from = "/assets/videos/reverso-demoreel-2024-thumbnail.png"
+  to = "/404.html"
+  status = 410
+  force = true
+
 # Alpine.js avalia x-data / @click / etc. com Function() — exige 'unsafe-eval' em script-src (só neste path).
 [[headers]]
   for = "/admin/*"
