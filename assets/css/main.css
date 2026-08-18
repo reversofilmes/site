@@ -979,6 +979,7 @@ body.is-home .project-item.is-preview-playing .project-thumbnail-container {
 }
 
 /* Projetos: fila horizontal; min-width:0 permite rolagem interna em vez de cortar */
+.filter-group--categories,
 .filter-group--services {
   min-width: 0;
   width: 100%;

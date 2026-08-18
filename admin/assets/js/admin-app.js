@@ -20,22 +20,18 @@ function isAdminDesktopViewport() {
 const DRAFT_NEW = '__new__';
 
 const ADMIN_CONFIG = {
+  categories: [
+    'Festivais & Eventos',
+    'Arte & Cultura',
+    'Corporativo',
+  ],
   serviceTypes: [
-    'EFEITOS VISUAIS',
-    'ANIMAÇÃO & MOTION GRAPHICS',
-    'FESTIVAIS & EVENTOS',
-    'INSTITUCIONAL',
-    'EVENTO CORPORATIVO',
-    'PUBLICITÁRIO',
-    'ARTE & CULTURA',
-    'MAKING OF',
-    'DOCUMENTÁRIO',
-    'MOBILE',
-    'FOTOS',
-    'VFX',
-    'ARTISTICOS',
-    'MIDIAS SOCIAIS',
-    'EVENTOS',
+    'Aftermovie & Reels',
+    'Institucional',
+    'Publicitário',
+    'Motion & VFX',
+    'Conteúdo Mobile',
+    'Fotografia & GIFs',
   ],
 };
 
@@ -300,6 +296,8 @@ function adminApp() {
 
     publishing: false,
     publishPhase: '',
+    deployQuota: null,
+    deployQuotaLoading: false,
 
     _auth: null,
     _api: null,
@@ -375,6 +373,7 @@ function adminApp() {
         await this._loadProjects();
         // Carrega definições do Site (hero video) para a aba Hero, que é a default.
         await this._loadSiteSettings();
+        await this._loadDeployQuota();
         await this.$nextTick();
         this.$watch(
           'form',
@@ -1068,11 +1067,57 @@ function adminApp() {
     },
 
     get canPublish() {
-      return (
-        this.hasStagedProjects ||
-        this.hasStagedSite ||
-        (this.editorOpen && (this.formDirty || this.thumbFile || this.videoFile))
-      );
+      if (this.deployQuota?.blocked) return false;
+      return this.hasUnpublishedChanges;
+    },
+
+    get deployQuotaBarPercent() {
+      const q = this.deployQuota;
+      if (!q?.monthly_credits) return 0;
+      const used = q.credits_estimated_deploys ?? 0;
+      return Math.min(100, Math.round((used / q.monthly_credits) * 100));
+    },
+
+    formatQuotaDate(iso) {
+      if (!iso) return '—';
+      const parts = String(iso).slice(0, 10).split('-');
+      if (parts.length !== 3) return iso;
+      return `${parts[2]}/${parts[1]}/${parts[0]}`;
+    },
+
+    async _loadDeployQuota() {
+      if (!this._api) return;
+      this.deployQuotaLoading = true;
+      try {
+        this.deployQuota = await this._api.getDeployStatus();
+      } catch {
+        this.deployQuota = null;
+      } finally {
+        this.deployQuotaLoading = false;
+      }
+    },
+
+    async refreshDeployQuota() {
+      await this._loadDeployQuota();
+      if (this.deployQuota?.blocked) {
+        this._toast('Deploy ainda bloqueado. Confira o saldo na Netlify.', 'warning');
+      } else {
+        this._toast('Status de créditos atualizado.', 'success');
+      }
+    },
+
+    async acknowledgeDeployBlock() {
+      if (!this._api) return;
+      try {
+        const res = await this._api.resetDeployBlock();
+        this.deployQuota = res;
+        this._toast(
+          'Bloqueio local removido. Se os créditos ainda estiverem esgotados, a Netlify voltará a rejeitar o deploy.',
+          'warning',
+        );
+      } catch (e) {
+        this._toast(e.message || 'Não foi possível remover o bloqueio.', 'error');
+      }
     },
 
     get unpublishedSummary() {
@@ -1108,6 +1153,7 @@ function adminApp() {
         body_md: p.body_md || '',
         description: p.description != null ? p.description : null,
         service_types: Array.isArray(p.service_types) ? [...p.service_types] : [],
+        category: p.category || null,
         client: p.client || '',
         date_yymmdd: p.date_yymmdd || '',
         year: p.year != null ? p.year : null,
@@ -1166,6 +1212,9 @@ function adminApp() {
         if (!Array.isArray(this.form.service_types)) {
           this.form.service_types = [];
         }
+        if (this.form.category === undefined) {
+          this.form.category = null;
+        }
         const draft = this.projectDrafts[project._slug];
         if (draft) {
           this._applyDraftPayloadToForm(draft);
@@ -1190,6 +1239,7 @@ function adminApp() {
       this.form.body = pl.body_md || '';
       this.form.description = pl.description != null ? pl.description : '';
       this.form.service_types = Array.isArray(pl.service_types) ? [...pl.service_types] : [];
+      this.form.category = pl.category || null;
       this.form.client = pl.client || '';
       this.form.date_yymmdd = pl.date_yymmdd || '';
       this.form.year = pl.year != null ? pl.year : this.form.year;
@@ -1231,6 +1281,7 @@ function adminApp() {
         thumbnail: '',
         hover_preview: '',
         service_types: [],
+        category: null,
         client: '',
         date_yymmdd: '',
         year: new Date().getFullYear(),
@@ -1335,6 +1386,9 @@ function adminApp() {
         if (!Array.isArray(this.form.service_types)) {
           this.form.service_types = [];
         }
+        if (this.form.category === undefined) {
+          this.form.category = null;
+        }
         /* Não fazer _mergeYouTubeTimeDraft aqui: o «Descartar» deve reflectir só o servidor. */
       } catch (e) {
         this._toast('Erro ao recarregar projeto', 'error');
@@ -1349,6 +1403,14 @@ function adminApp() {
         await new Promise((r) => requestAnimationFrame(() => requestAnimationFrame(r)));
       }
       this._initYoutubePlayerPanel();
+    },
+
+    selectCategory(category) {
+      this.form.category = this.form.category === category ? null : category;
+    },
+
+    hasCategory(category) {
+      return this.form.category === category;
     },
 
     toggleService(svc) {
@@ -1375,6 +1437,7 @@ function adminApp() {
         body_md: this.form.body || '',
         description: (this.form.description || '').trim() || null,
         service_types: this.form.service_types || [],
+        category: this.form.category || null,
         client: this.form.client || '',
         date_yymmdd: this.form.date_yymmdd || '',
         year: this.form.year ? Number(this.form.year) : null,
@@ -1503,6 +1566,7 @@ function adminApp() {
           thumbnail: draftThumbUrl,
           hover_preview: draftVideoUrl,
           service_types: [...(this.form.service_types || [])],
+          category: this.form.category || null,
           date_yymmdd: this.form.date_yymmdd || '',
           year: this.form.year || new Date().getFullYear(),
           home_size: this.form.home_size || '1x1',
@@ -1520,7 +1584,7 @@ function adminApp() {
       this._persistYouTubeTimeDraft();
       if (!silent) {
         this._toast(
-          'Rascunho guardado. Clique em «Publicar» (topo) para enviar ao servidor e atualizar o site.',
+          'Rascunho salvo. Clique em «Publicar» (topo) para enviar ao servidor e atualizar o site.',
           'success',
         );
         this.$nextTick(() => {
@@ -1614,20 +1678,32 @@ function adminApp() {
 
         await this._publishSiteLists();
 
-        this.publishPhase = 'Disparando deploy no Netlify…';
+        this.publishPhase = 'Atualizando site (Netlify)…';
         try {
           const deployRes = await this._api.triggerDeploy();
+          if (deployRes?.blocked != null) {
+            this.deployQuota = { ...this.deployQuota, ...deployRes };
+          } else {
+            await this._loadDeployQuota();
+          }
           if (deployRes?.skipped) {
             this._toast(
-              deployRes.message || 'Deploy adiado (debounce de 5 min). Os dados já foram salvos.',
+              deployRes.message || 'Atualização adiada (intervalo de 5 min). Os dados já foram salvos.',
               'warning',
             );
           } else {
             this._toast('Publicação concluída.', 'success');
           }
         } catch (de) {
+          if (de.data) {
+            this.deployQuota = { ...this.deployQuota, ...de.data };
+          } else {
+            await this._loadDeployQuota();
+          }
           this._toast(
-            `Dados salvos no servidor; deploy falhou: ${de.message}`,
+            de.data?.blocked
+              ? `${de.message} Os dados já foram salvos no servidor.`
+              : `Dados salvos no servidor; atualização do site falhou: ${de.message}`,
             'error',
           );
         }
@@ -2031,14 +2107,29 @@ function adminApp() {
       if (!result?.triggerDeploy) return;
       try {
         const deployRes = await this._api.triggerDeploy();
+        if (deployRes?.blocked != null) {
+          this.deployQuota = { ...this.deployQuota, ...deployRes };
+        } else {
+          await this._loadDeployQuota();
+        }
         if (deployRes?.skipped) {
           this._toast(
-            deployRes.message || 'Deploy no Netlify adiado (debounce de 5 min).',
+            deployRes.message || 'Atualização do site adiada (intervalo de 5 min).',
             'warning',
           );
         }
       } catch (e) {
-        this._toast('Deploy no Netlify falhou: ' + e.message, 'error');
+        if (e.data) {
+          this.deployQuota = { ...this.deployQuota, ...e.data };
+        } else {
+          await this._loadDeployQuota();
+        }
+        this._toast(
+          e.data?.blocked
+            ? e.message
+            : 'Atualização do site falhou: ' + e.message,
+          'error',
+        );
       }
     },
 
@@ -2494,6 +2585,10 @@ function adminApp() {
       setTimeout(() => {
         this.toast = null;
       }, 4000);
+    },
+
+    get categoryOptions() {
+      return ADMIN_CONFIG.categories;
     },
 
     get serviceOptions() {

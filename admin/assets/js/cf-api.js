@@ -57,7 +57,10 @@ class CfAPI {
 
     if (!res.ok) {
       const data = await res.json().catch(() => ({}));
-      throw new Error(data.error || `API ${res.status}`);
+      const err = new Error(data.error || `API ${res.status}`);
+      err.status = res.status;
+      err.data = data;
+      throw err;
     }
 
     if (res.status === 204) return null;
@@ -117,6 +120,14 @@ class CfAPI {
    */
   updateSetting(key, value) {
     return this._req(`/api/site-settings/${key}`, { method: 'PATCH', body: { value } });
+  }
+
+  getDeployStatus() {
+    return this._req('/api/deploy/status');
+  }
+
+  resetDeployBlock() {
+    return this._req('/api/deploy/quota/reset-block', { method: 'POST' });
   }
 
   triggerDeploy() {

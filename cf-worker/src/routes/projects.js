@@ -7,6 +7,10 @@ import {
   isYoutubeHostedThumbnail,
   youtubeVideoId,
 } from '../utils/youtube.js';
+import {
+  isValidCategory,
+  normalizeServiceTypes,
+} from '../utils/project-taxonomy.js';
 
 const MAX_TITLE = 200;
 const MAX_BODY = 102400;
@@ -87,6 +91,15 @@ function validate(data, isCreate) {
   if (data.service_types !== undefined && data.service_types !== null && !Array.isArray(data.service_types)) {
     errs.push('service_types must be an array');
   }
+  if (data.category !== undefined && data.category !== null && !isValidCategory(data.category)) {
+    errs.push('invalid category');
+  }
+  if (Array.isArray(data.service_types)) {
+    const normalized = normalizeServiceTypes(data.service_types);
+    if (normalized.length !== data.service_types.length) {
+      errs.push('invalid service_types value');
+    }
+  }
   for (const [key, val] of [
     ['youtube_thumb_time_sec', data.youtube_thumb_time_sec],
     ['youtube_preview_start_sec', data.youtube_preview_start_sec],
@@ -116,7 +129,7 @@ function validate(data, isCreate) {
 export async function handleExport(env) {
   // Build Jekyll: inclui `show_on_home` para a Home filtrar e ordenar.
   const { results } = await env.DB.prepare(
-    `SELECT slug, title, body_md, description, thumbnail, hover_preview, service_types,
+    `SELECT slug, title, body_md, description, thumbnail, hover_preview, category, service_types,
             client, date_yymmdd, year, "order", home_size, show_on_home,
             home_col, home_row,
             youtube_url, pixieset_url,
@@ -139,7 +152,7 @@ export async function handleExport(env) {
 
 export async function handleList(env) {
   const { results } = await env.DB.prepare(
-    `SELECT id, slug, title, thumbnail, hover_preview, service_types,
+    `SELECT id, slug, title, thumbnail, hover_preview, category, service_types,
             client, date_yymmdd, year, "order", home_size, show_on_home,
             home_col, home_row,
             youtube_url, pixieset_url, youtube_thumb_time_sec, youtube_preview_start_sec,
@@ -195,9 +208,13 @@ export async function handleCreate(request, env, ctx) {
   let hoverVal = data.hover_preview || null;
   hoverVal = stripMediaBaseToKey(hoverVal, env.MEDIA_BASE_URL || '');
 
-  const svcJson = Array.isArray(data.service_types)
-    ? JSON.stringify(data.service_types)
-    : '[]';
+  const categoryVal =
+    data.category != null && String(data.category).trim() !== ''
+      ? String(data.category).trim()
+      : null;
+  const svcJson = JSON.stringify(
+    Array.isArray(data.service_types) ? normalizeServiceTypes(data.service_types) : [],
+  );
 
   const thumbT =
     data.youtube_thumb_time_sec != null && data.youtube_thumb_time_sec !== ''
@@ -216,15 +233,15 @@ export async function handleCreate(request, env, ctx) {
 
   await env.DB.prepare(
     `INSERT INTO projects (slug, title, body_md, description, thumbnail, hover_preview,
-      service_types, client, date_yymmdd, year, "order",
+      category, service_types, client, date_yymmdd, year, "order",
       home_size, show_on_home, home_col, home_row, youtube_url, pixieset_url,
       youtube_thumb_time_sec, youtube_preview_start_sec)
-     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
   ).bind(
     data.slug, data.title, data.body_md || null,
     data.description != null ? String(data.description) : null,
     thumbnailVal, hoverVal,
-    svcJson, data.client || null, data.date_yymmdd || null,
+    categoryVal, svcJson, data.client || null, data.date_yymmdd || null,
     data.year || null,
     normalizeHomeOrder(data.order), homeSize, showHome,
     Number.isInteger(data.home_col) && data.home_col >= 1 && data.home_col <= 5
@@ -336,9 +353,20 @@ export async function handleUpdate(slug, request, env, ctx) {
     }
   }
 
+  if (data.category !== undefined) {
+    fields.push('category = ?');
+    values.push(
+      data.category != null && String(data.category).trim() !== ''
+        ? String(data.category).trim()
+        : null,
+    );
+  }
+
   if (data.service_types !== undefined) {
     fields.push('service_types = ?');
-    values.push(JSON.stringify(Array.isArray(data.service_types) ? data.service_types : []));
+    values.push(JSON.stringify(
+      Array.isArray(data.service_types) ? normalizeServiceTypes(data.service_types) : [],
+    ));
   }
 
   fields.push('version = version + 1');
