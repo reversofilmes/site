@@ -24,19 +24,8 @@ theme: minima
 plugins:
   - jekyll-feed
 
-# Collections
-collections:
-  projects:
-    output: true
-    permalink: /projects/:name/
-
-# Defaults
-defaults:
-  - scope:
-      path: ""
-      type: projects
-    values:
-      layout: project
+# Projetos vêm do CMS (_data/projects.json + _plugins/data_page_generator.rb).
+# Markdown legado arquivado em docs/archive/legacy-projects/ (pré-CMS).
 
 # Exclude from processing.
 # The following items will not be processed, by default.

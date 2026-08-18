@@ -6,7 +6,7 @@ layout: none
 <html lang="pt-BR">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover, interactive-widget=overlays-content" />
   <title>{{ page.title }} | {{ site.title }}</title>
   <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600&family=Poppins:wght@400;500;900&display=swap" rel="stylesheet" />
 
@@ -62,8 +62,9 @@ layout: none
                   <button
                     type="button"
                     class="servico-link projects-filter__btn"
-                    :class="{ 'projects-filter__btn--active': selectedCategories.includes(category) }"
-                    @click="toggleCategory(category)"
+                    :class="{ 'projects-filter__btn--active': isCategorySelected(category) }"
+                    :aria-pressed="isCategorySelected(category)"
+                    @click.stop="toggleCategory(category); releaseFilterBtn($event)"
                     x-text="category"
                   ></button>
                 </template>
@@ -97,8 +98,9 @@ layout: none
                   <button
                     type="button"
                     class="servico-link projects-filter__btn"
-                    :class="{ 'projects-filter__btn--active': selectedServiceTypes.includes(serviceType) }"
-                    @click="toggleServiceType(serviceType)"
+                    :class="{ 'projects-filter__btn--active': isServiceTypeSelected(serviceType) }"
+                    :aria-pressed="isServiceTypeSelected(serviceType)"
+                    @click.stop="toggleServiceType(serviceType); releaseFilterBtn($event)"
                     x-text="serviceType"
                   ></button>
                 </template>
@@ -117,10 +119,12 @@ layout: none
         <div class="filter-group filter-group--search">
           <label for="search-input" class="filter-label">Buscar</label>
           <input
-            type="text"
+            type="search"
             id="search-input"
             class="filter-input"
             placeholder="Buscar por título, cliente, categoria ou serviço..."
+            autocomplete="off"
+            enterkeyhint="search"
             x-model="searchTerm"
             @input="updateFilters()"
           />

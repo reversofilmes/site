@@ -742,6 +742,11 @@ body.is-home .project-item.is-preview-playing .project-thumbnail-container {
   padding: 2rem;
   padding-top: 2rem;
   padding-bottom: 8rem;
+  width: 100%;
+  max-width: 100%;
+  box-sizing: border-box;
+  overflow-x: hidden;
+  overflow-x: clip;
 }
 
 /* Header */
@@ -843,7 +848,7 @@ body.is-home .project-item.is-preview-playing .project-thumbnail-container {
   display: flex;
   flex-direction: column;
   gap: 1.25rem;
-  overflow-x: visible;
+  overflow-x: clip;
   overflow-y: visible;
 }
 
@@ -1135,6 +1140,35 @@ body.is-home .project-item.is-preview-playing .project-thumbnail-container {
   border-color: #ff0000 !important;
   box-shadow: 0 4px 12px rgba(255, 0, 0, 0.3);
   transform: translateY(-2px);
+}
+
+/* Touch: :hover fica “preso” após o toque — só o estado --active deve parecer selecionado */
+@media (hover: none), (pointer: coarse) {
+  .projects-page .servico-link.projects-filter__btn:not(.projects-filter__btn--active):hover,
+  .projects-page .servico-link.projects-filter__btn:not(.projects-filter__btn--active):focus {
+    background-color: rgba(255, 0, 0, 0.1);
+    border-color: rgba(255, 0, 0, 0.3);
+    transform: none;
+    box-shadow: none;
+  }
+
+  .projects-page .servico-link.projects-filter__btn:not(.projects-filter__btn--active):active {
+    background-color: rgba(255, 0, 0, 0.14);
+    border-color: rgba(255, 0, 0, 0.45);
+    transform: none;
+    box-shadow: none;
+  }
+}
+
+html.projects-search-focused,
+html.projects-search-focused body {
+  overflow-x: hidden;
+  max-width: 100%;
+}
+
+html.projects-search-focused .projects-page {
+  overflow-x: clip;
+  max-width: 100%;
 }
 
 @media (min-width: 1025px) {
@@ -1459,6 +1493,10 @@ body.is-home .project-item.is-preview-playing .project-thumbnail-container {
     padding-bottom: 8rem;
   }
 
+  .projects-page .filter-input {
+    font-size: 16px;
+  }
+
   .projects-header {
     padding: 1.5rem 1rem 1rem;
     gap: 1rem;
@@ -1536,6 +1574,10 @@ body.is-home .project-item.is-preview-playing .project-thumbnail-container {
   .filter-select {
     padding: 0.625rem 0.875rem;
     font-size: 0.9rem;
+  }
+
+  .projects-page .filter-input {
+    font-size: 16px;
   }
 
   .project-card-info {

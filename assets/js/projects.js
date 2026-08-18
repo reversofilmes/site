@@ -278,6 +278,7 @@ function projectsPage(projectsJsonUrl) {
           if (window.location.hash && window.location.hash.length > 1) {
             this.showFilters = true;
           }
+          this.initSearchViewportFix();
         }, 0);
 
         this.loading = false;
@@ -375,25 +376,57 @@ function projectsPage(projectsJsonUrl) {
     },
 
     toggleCategory(category) {
-      const sel = this.selectedCategories;
-      const i = sel.indexOf(category);
-      if (i === -1) {
-        this.selectedCategories = [...sel, category];
+      if (this.isCategorySelected(category)) {
+        this.selectedCategories = this.selectedCategories.filter((s) => s !== category);
       } else {
-        this.selectedCategories = sel.filter((s) => s !== category);
+        this.selectedCategories = [...this.selectedCategories, category];
       }
       this.updateFilters();
     },
 
     toggleServiceType(serviceType) {
-      const sel = this.selectedServiceTypes;
-      const i = sel.indexOf(serviceType);
-      if (i === -1) {
-        this.selectedServiceTypes = [...sel, serviceType];
+      if (this.isServiceTypeSelected(serviceType)) {
+        this.selectedServiceTypes = this.selectedServiceTypes.filter((s) => s !== serviceType);
       } else {
-        this.selectedServiceTypes = sel.filter((s) => s !== serviceType);
+        this.selectedServiceTypes = [...this.selectedServiceTypes, serviceType];
       }
       this.updateFilters();
+    },
+
+    isCategorySelected(category) {
+      return this.selectedCategories.includes(category);
+    },
+
+    isServiceTypeSelected(serviceType) {
+      return this.selectedServiceTypes.includes(serviceType);
+    },
+
+    releaseFilterBtn(event) {
+      const el = event?.currentTarget;
+      if (el && typeof el.blur === 'function') {
+        requestAnimationFrame(() => el.blur());
+      }
+    },
+
+    initSearchViewportFix() {
+      const input = document.getElementById('search-input');
+      if (!input || input.dataset.viewportFixBound === '1') return;
+      input.dataset.viewportFixBound = '1';
+
+      const root = document.documentElement;
+      const page = document.querySelector('.projects-page');
+
+      const contain = () => {
+        root.classList.add('projects-search-focused');
+        if (page) page.classList.add('projects-search-focused');
+      };
+      const release = () => {
+        root.classList.remove('projects-search-focused');
+        if (page) page.classList.remove('projects-search-focused');
+      };
+
+      input.addEventListener('focus', contain);
+      input.addEventListener('blur', release);
     },
 
     updateFilters() {

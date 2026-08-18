@@ -1,0 +1,395 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Tráfego Netlify × Cloudflare — Reverso Filmes</title>
+  <style>
+    :root {
+      --text: #111;
+      --muted: #444;
+      --border: #ccc;
+      --fill: #f5f5f5;
+      --accent: #0d6e6e;
+      --warn: #9a3412;
+      --ok: #166534;
+    }
+    * { box-sizing: border-box; }
+    body {
+      font-family: "Segoe UI", system-ui, sans-serif;
+      font-size: 11pt;
+      line-height: 1.45;
+      color: var(--text);
+      max-width: 900px;
+      margin: 0 auto;
+      padding: 24px 28px 48px;
+    }
+    h1 { font-size: 1.65rem; margin: 0 0 0.35rem; }
+    h2 { font-size: 1.1rem; margin: 1.75rem 0 0.6rem; border-bottom: 1px solid var(--border); padding-bottom: 0.25rem; }
+    h3 { font-size: 0.95rem; margin: 1rem 0 0.4rem; }
+    .meta { color: var(--muted); font-size: 0.9rem; margin-bottom: 1.25rem; }
+    .badges { margin-bottom: 1rem; }
+    .badge {
+      display: inline-block;
+      font-size: 0.75rem;
+      font-weight: 600;
+      padding: 0.15rem 0.5rem;
+      border-radius: 4px;
+      margin-right: 0.35rem;
+      background: var(--fill);
+      border: 1px solid var(--border);
+    }
+    .badge--accent { background: #e6f4f4; border-color: #9dd; color: var(--accent); }
+    .badge--warn { background: #fff7ed; border-color: #fdba74; color: var(--warn); }
+    .stats {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 12px;
+      margin: 1rem 0;
+    }
+    .stats--3 { grid-template-columns: repeat(3, 1fr); }
+    .stats--2 { grid-template-columns: repeat(2, 1fr); }
+    .stat {
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      padding: 10px 12px;
+      background: #fff;
+    }
+    .stat__value { font-size: 1.25rem; font-weight: 700; }
+    .stat__label { font-size: 0.72rem; color: var(--muted); margin-top: 0.2rem; }
+    .callout {
+      background: var(--fill);
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      padding: 12px 14px;
+      margin: 1rem 0;
+    }
+    .callout--accent { border-left: 4px solid var(--accent); }
+    .callout--ok { border-left: 4px solid var(--ok); }
+    .grid-2 {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 20px;
+      margin: 1rem 0;
+    }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 0.88rem;
+      margin: 0.5rem 0 1rem;
+    }
+    th, td {
+      border: 1px solid var(--border);
+      padding: 6px 8px;
+      text-align: left;
+    }
+    th { background: var(--fill); font-weight: 600; }
+    td.num, th.num { text-align: right; }
+    tr.total { font-weight: 600; background: #fafafa; }
+    ul { margin: 0.4rem 0; padding-left: 1.25rem; }
+    li { margin: 0.35rem 0; }
+    .muted { color: var(--muted); font-size: 0.85rem; }
+    .warn { color: var(--warn); font-weight: 600; }
+    .ok { color: var(--ok); font-weight: 600; }
+    .card {
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      margin: 1rem 0;
+      overflow: hidden;
+    }
+    .card__header {
+      background: var(--fill);
+      padding: 8px 12px;
+      font-weight: 600;
+      font-size: 0.9rem;
+      border-bottom: 1px solid var(--border);
+    }
+    .card__body { padding: 12px 14px; }
+    .print-hint {
+      background: #fffbeb;
+      border: 1px solid #fcd34d;
+      padding: 10px 12px;
+      border-radius: 6px;
+      margin-bottom: 1.5rem;
+      font-size: 0.88rem;
+    }
+    @media print {
+      body { padding: 0; max-width: none; }
+      .print-hint, .no-print { display: none !important; }
+      h2 { break-after: avoid; }
+      table, .callout, .stat, .card { break-inside: avoid; }
+      .stats, .stats--3, .stats--2 { grid-template-columns: repeat(2, 1fr); }
+      .grid-2 { grid-template-columns: 1fr; }
+    }
+  </style>
+</head>
+<body>
+  <p class="print-hint no-print">
+    <strong>Exportar PDF:</strong> Ctrl+P → Destino «Salvar como PDF» → ative
+    «Gráficos de segundo plano» → Margens «Padrão» ou «Mínima» → Salvar.
+  </p>
+
+  <div class="badges">
+    <span class="badge badge--accent">Medição real</span>
+    <span class="badge">18/08/2026</span>
+    <span class="badge">Reverso Filmes</span>
+  </div>
+
+  <h1>Tráfego do site: Netlify × Cloudflare</h1>
+  <p class="meta">
+    Chromium desktop 1440×900, produção, evento <code>load</code> + 12 segundos.
+    Bytes medidos pelo <code>encodedDataLength</code> (CDP). Segunda carga =
+    cache do navegador.
+  </p>
+
+  <div class="stats">
+    <div class="stat">
+      <div class="stat__value">0,54 MB</div>
+      <div class="stat__label">Netlify · Home sem cache</div>
+    </div>
+    <div class="stat">
+      <div class="stat__value">27,61 MB</div>
+      <div class="stat__label">Cloudflare · Home sem cache</div>
+    </div>
+    <div class="stat">
+      <div class="stat__value">1,6 KB</div>
+      <div class="stat__label">Netlify · Home com cache</div>
+    </div>
+    <div class="stat">
+      <div class="stat__value">11.292</div>
+      <div class="stat__label">Sessões/mês · cenário conservador Free</div>
+    </div>
+  </div>
+
+  <div class="callout">
+    <strong>Resultado principal:</strong> 97,7% dos dados da primeira carga vieram
+    do Cloudflare. A Netlify enviou apenas 0,54 MB (1,9% do total). O vídeo Hero
+    (22,27 MB) não consome créditos de bandwidth da Netlify.
+  </div>
+
+  <h2>Home: origem dos dados transferidos</h2>
+  <table>
+    <thead>
+      <tr>
+        <th>Origem</th>
+        <th class="num">Sem cache</th>
+        <th class="num">Requisições</th>
+        <th class="num">Com cache</th>
+        <th class="num">Requisições</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td>Netlify</td>
+        <td class="num">0,54 MB</td>
+        <td class="num">24</td>
+        <td class="num">1,6 KB</td>
+        <td class="num">23</td>
+      </tr>
+      <tr>
+        <td>Cloudflare R2/Worker</td>
+        <td class="num">27,61 MB</td>
+        <td class="num">47</td>
+        <td class="num">0</td>
+        <td class="num">46</td>
+      </tr>
+      <tr>
+        <td>Terceiros</td>
+        <td class="num">0,10 MB</td>
+        <td class="num">7</td>
+        <td class="num">0</td>
+        <td class="num">7</td>
+      </tr>
+      <tr class="total">
+        <td>Total</td>
+        <td class="num">28,25 MB</td>
+        <td class="num">78</td>
+        <td class="num">1,6 KB</td>
+        <td class="num">76</td>
+      </tr>
+    </tbody>
+  </table>
+  <p class="muted">
+    Fonte: medição Playwright/CDP em produção, 18/08/2026. «Com cache» = recarga
+    imediata no mesmo navegador. Transferência Netlify caiu 99,7%.
+  </p>
+
+  <div class="grid-2">
+    <div>
+      <h2>Capacidade mensal estimada</h2>
+      <p class="muted">Free · 6 deploys</p>
+      <p>300 créditos − 90 (deploys) = <strong>210 créditos</strong> para bandwidth + web requests.</p>
+      <table>
+        <thead><tr><th>Comportamento mensal</th><th class="num">Capacidade</th></tr></thead>
+        <tbody>
+          <tr><td>100% Home sem cache</td><td class="num">13.376 visualizações</td></tr>
+          <tr><td>100% sessão nova: Home + 1 projeto</td><td class="num">11.292 sessões</td></tr>
+          <tr><td>70% novas / 30% recorrentes</td><td class="num">13.824 sessões</td></tr>
+          <tr><td>50% novas / 50% recorrentes</td><td class="num">16.254 sessões</td></tr>
+          <tr><td>100% Home com cache</td><td class="num">45.338 visualizações</td></tr>
+        </tbody>
+      </table>
+      <p class="muted">
+        Inclui 20 créditos/GB e 2 créditos/10.000 requisições Netlify (GB decimal).
+        Não inclui funções, formulários ou outros projetos da equipe.
+      </p>
+    </div>
+    <div>
+      <h2>Uma sessão realista</h2>
+      <p class="muted">
+        Primeira visita à Home + projeto «Bloco da Amandona 2026», mantendo cache:
+      </p>
+      <div class="stats stats--2">
+        <div class="stat">
+          <div class="stat__value">0,56 MB</div>
+          <div class="stat__label">Netlify na sessão</div>
+        </div>
+        <div class="stat">
+          <div class="stat__value">37</div>
+          <div class="stat__label">Requisições Netlify</div>
+        </div>
+      </div>
+      <p>O projeto adicionou somente <strong>0,015 MB</strong> da Netlify porque fontes, estilos e logo já estavam no cache.</p>
+      <p class="muted">Abrir diretamente o mesmo projeto com cache limpo transferiu <strong>0,391 MB</strong> da Netlify.</p>
+    </div>
+  </div>
+
+  <h2>O que mais pesa</h2>
+  <table>
+    <thead>
+      <tr><th>Recurso</th><th>Origem</th><th class="num">Transferência</th><th>Impacto Netlify</th></tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td>Vídeo Hero</td><td>Cloudflare</td><td class="num">22,27 MB</td>
+        <td>Nenhum crédito de bandwidth</td>
+      </tr>
+      <tr>
+        <td>Thumbnails e mídia da Home</td><td>Cloudflare</td><td class="num">≈ 5,34 MB</td>
+        <td>Nenhum crédito de bandwidth</td>
+      </tr>
+      <tr>
+        <td>Font Awesome + assets do site</td><td>Netlify</td><td class="num">≈ 0,54 MB</td>
+        <td>Conta no bandwidth</td>
+      </tr>
+      <tr>
+        <td>Google Fonts / bibliotecas externas</td><td>Terceiros</td><td class="num">≈ 0,10 MB</td>
+        <td>Não conta na Netlify</td>
+      </tr>
+    </tbody>
+  </table>
+
+  <h2>Account usage insights <span class="badge badge--warn">Gargalo identificado</span></h2>
+  <table>
+    <thead>
+      <tr>
+        <th>Ciclo</th>
+        <th class="num">Créditos</th>
+        <th class="num">Bandwidth</th>
+        <th class="num">Web requests</th>
+        <th class="num">Deploys inferidos</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td>18/jun – 17/jul</td>
+        <td class="num">228</td>
+        <td class="num">5,2 GB ≈ 104 créditos</td>
+        <td class="num">16 mil ≈ 3,2 créditos</td>
+        <td class="num">≈ 8 = 120 créditos</td>
+      </tr>
+      <tr>
+        <td>18/jul – 17/ago</td>
+        <td class="num">469</td>
+        <td class="num">11 GB ≈ 220–224 créditos</td>
+        <td class="num">26 mil ≈ 5,2 créditos</td>
+        <td class="num">≈ 16 = 240 créditos</td>
+      </tr>
+    </tbody>
+  </table>
+  <p class="muted">
+    Deploys inferidos: 15 créditos cada. Build minutes não geram cobrança adicional;
+    o custo é fixo por deploy de produção.
+  </p>
+
+  <div class="stats stats--3">
+    <div class="stat">
+      <div class="stat__value">≈ 51%</div>
+      <div class="stat__label">Créditos de deploy · jul–ago</div>
+    </div>
+    <div class="stat">
+      <div class="stat__value">≈ 48%</div>
+      <div class="stat__label">Créditos de bandwidth · jul–ago</div>
+    </div>
+    <div class="stat">
+      <div class="stat__value">≈ 1%</div>
+      <div class="stat__label">Créditos de web requests · jul–ago</div>
+    </div>
+  </div>
+
+  <div class="callout callout--ok">
+    <strong>Resolvido (18/08/2026):</strong> mídia legada removida do repositório.
+    13 previews pré-CMS (~390 MB), 13 thumbnails, 3 demo reels (~110 MB) e markdowns
+    legados. Deploy publica ~500 MB a menos. URLs de mídia antigas → HTTP 410 via
+    <code>netlify.toml</code>.
+    <br /><br />
+    O pico de 11 GB (jul–ago) provavelmente incluiu downloads desses arquivos por
+    robôs, links antigos ou testes. Após o deploy, o bandwidth deve cair — confirme
+    no Account usage insights.
+  </div>
+
+  <div class="grid-2">
+    <div>
+      <h2>Evidência do tamanho das respostas</h2>
+      <ul class="muted">
+        <li>18/jun–17/jul: 5,2 GB / 16 mil req. ≈ <strong>325 KB/req.</strong></li>
+        <li>18/jul–17/ago: 11 GB / 26 mil req. ≈ <strong>423 KB/req.</strong></li>
+        <li>Home medida agora: ≈ <strong>23 KB/req.</strong> Netlify</li>
+      </ul>
+      <p><strong>O histórico tem média 14–19× maior</strong> — compatível com downloads de vídeo legado.</p>
+    </div>
+    <div>
+      <h2>Risco do plano Free</h2>
+      <p class="muted">
+        Cenário antigo (11 GB + 6 deploys): ≈ 315–319 créditos — ainda acima de 300.
+      </p>
+      <p>
+        Com mídia legada removida e ~6 deploys/mês, a projeção fica <strong>bem abaixo
+        de 300 créditos</strong> — confirme após um ciclo completo pós-deploy.
+      </p>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card__header">Plano de operação (Personal → monitorar → decidir) · Atualizado 18/08</div>
+    <div class="card__body">
+      <p class="ok"><strong>Concluído</strong></p>
+      <ul>
+        <li>Removida mídia legada (~500 MB) e redirects 410 para assets antigos</li>
+        <li>Painel admin com estimativa de créditos/deploy (requer Worker publicado)</li>
+      </ul>
+      <p><strong>Próximos passos</strong></p>
+      <ol>
+        <li>Manter ≤6 publicações/mês no admin (agrupar alterações)</li>
+        <li>Monitorar Account usage insights por 1 ciclo completo (até ~17/09/2026)</li>
+        <li>Apresentar limites ao cliente: manter Personal ($9) + auto-recharge opcional, ou downgrade se bandwidth &lt; 5 GB/mês</li>
+      </ol>
+      <p class="muted">
+        Páginas legadas <code>/projects/250…/</code> usam o 404 padrão — sem redirect especial.
+      </p>
+    </div>
+  </div>
+
+  <h2>Limites da medição</h2>
+  <ul class="muted">
+    <li>Desktop apenas; sem hover sistemático em todos os projetos</li>
+    <li>12 s após <code>load</code>; vídeos longos aumentam Cloudflare, não Netlify</li>
+    <li>Recuperação do Hero pode forçar novo download de 22,27 MB (Cloudflare)</li>
+    <li>Capacidade = sessões, não visitantes únicos; pressupõe 210 créditos só para este site</li>
+  </ul>
+
+  <p class="muted" style="margin-top:2rem;font-size:0.8rem;">
+    Relatório espelhado do Canvas «Tráfego Netlify × Cloudflare» · Reverso Filmes · 18/08/2026
+  </p>
+</body>
+</html>
