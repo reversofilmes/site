@@ -863,6 +863,10 @@ document.addEventListener("DOMContentLoaded", () => {
     updateHomeScrollFx();
   }
 
+  window.addEventListener("pageshow", (ev) => {
+    if (ev && ev.persisted) updateHomeScrollFx();
+  });
+
   let introAlreadySeen = false;
   try {
     introAlreadySeen = sessionStorage.getItem(INTRO_DONE_KEY) === "1";
