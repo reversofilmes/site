@@ -51,6 +51,7 @@
           title: p.title, description: p.description,
           thumbnail: p.thumbnail, hover_preview: p.hover_preview,
           service_types: p.service_types || [],
+          category: p.category || null,
           client: p.client, date_yymmdd: p.date_yymmdd, year: p.year,
           order: p.order || 999, home_size: p.home_size || '1x1', /* normalizado pelo Worker */
           show_on_home: p.show_on_home || false,
@@ -62,6 +63,22 @@
     };
 
     CfAPI.prototype.getSettings = async function () { return { settings: [] }; };
+
+    CfAPI.prototype.getDeployStatus = async function () {
+      return {
+        blocked: false,
+        cycle_start: '2026-08-18',
+        cycle_end: '2026-09-17',
+        monthly_credits: 1000,
+        credits_per_deploy: 15,
+        deploys_success_this_cycle: 0,
+        credits_estimated_deploys: 0,
+        credits_remaining_estimate: 1000,
+        deploys_remaining_estimate: 66,
+        note: 'Estimativa (modo dev).',
+        billing_url: 'https://app.netlify.com/teams/reversofilmes/billing',
+      };
+    };
 
     ['createProject', 'updateProject', 'deleteProject', 'triggerDeploy', 'updateSetting',
      'uploadMedia', 'uploadSiteMedia'].forEach(function (m) {
@@ -94,12 +111,12 @@
       <p class="viewport-gate__subtitle">Portfolio Manager</p>
       <p class="viewport-gate__title">Disponível apenas em desktop</p>
       <p class="viewport-gate__message">
-        O painel de gestão do portfólio foi concebido para ecrãs largos e requer funcionalidades
-        que não estão disponíveis em telemóvel ou tablet — como arrastar projetos na grelha da Home
+        O painel de gestão do portfólio foi pensado para telas largas e exige recursos
+        que não estão disponíveis em celular ou tablet — como arrastar projetos na grade da Home
         e a automação com YouTube e Pixieset via Reverso Media Launcher.
       </p>
       <p class="viewport-gate__hint">
-        Aceda a esta página num computador com janela de, pelo menos, 1024&nbsp;px de largura.
+        Acesse esta página em um computador com janela de, pelo menos, 1024&nbsp;px de largura.
       </p>
     </div>
   </div>
@@ -155,7 +172,9 @@
                 class="btn btn-primary"
                 @click="publishAll()"
                 :disabled="!canPublish || publishing"
-                title="Salvar rascunhos no servidor e disparar um deploy">
+                :title="deployQuota?.blocked
+                  ? 'Publicação bloqueada: créditos Netlify esgotados'
+                  : 'Salvar rascunhos no servidor e atualizar o site'">
           <span x-show="publishing" class="spinner-sm"></span>
           Publicar
         </button>
@@ -171,6 +190,45 @@
         </div>
       </div>
     </header>
+
+    <div class="deploy-quota-panel" x-show="deployQuota && !deployQuotaLoading" x-cloak
+         :class="{ 'deploy-quota-panel--blocked': deployQuota?.blocked }">
+      <div class="deploy-quota-panel__main">
+        <template x-if="deployQuota?.blocked">
+          <p class="deploy-quota-panel__title">
+            <strong>Deploy bloqueado</strong> — a Netlify rejeitou a última tentativa
+            (<span x-text="deployQuota.blocked_reason || 'créditos esgotados'"></span>).
+            Os dados podem ser salvos, mas o site não será atualizado até resolver o saldo.
+          </p>
+        </template>
+        <template x-if="!deployQuota?.blocked">
+          <p class="deploy-quota-panel__title">
+            <strong>Créditos Netlify (estimativa)</strong> —
+            <span x-text="deployQuota.deploys_success_this_cycle"></span> deploy(s) neste ciclo
+            (~<span x-text="deployQuota.credits_estimated_deploys"></span> créditos de
+            <span x-text="deployQuota.monthly_credits"></span>).
+            Renova em <span x-text="formatQuotaDate(deployQuota.cycle_end)"></span>.
+          </p>
+        </template>
+        <p class="deploy-quota-panel__note" x-text="deployQuota?.note"></p>
+        <div class="deploy-quota-panel__bar" aria-hidden="true">
+          <div class="deploy-quota-panel__bar-fill"
+               :style="'width:' + deployQuotaBarPercent + '%'"></div>
+        </div>
+      </div>
+      <div class="deploy-quota-panel__actions">
+        <a :href="deployQuota?.billing_url" target="_blank" rel="noopener noreferrer"
+           class="btn btn-sm btn-secondary">Abrir billing Netlify</a>
+        <button type="button" class="btn btn-sm btn-secondary" @click="refreshDeployQuota()">
+          Atualizar
+        </button>
+        <button type="button" x-show="deployQuota?.blocked" class="btn btn-sm btn-secondary"
+                @click="acknowledgeDeployBlock()"
+                title="Remove o bloqueio local após comprar créditos ou renovar o ciclo">
+          Liberar publicação
+        </button>
+      </div>
+    </div>
 
     <main class="admin-main">
 
@@ -211,9 +269,9 @@
       <div class="projetos-list-area" x-show="view === 'projetos'">
         <div class="projetos-header">
           <div class="projetos-header__text">
-            <h2 class="projetos-title">Todos os projectos</h2>
+            <h2 class="projetos-title">Todos os projetos</h2>
             <p class="projetos-hint">
-              Ordenados por data (mais recente primeiro). Clique num card
+              Ordenados por data (mais recente primeiro). Clique em um card
               para editar — inclui projetos fora da Home.
             </p>
           </div>
@@ -259,7 +317,7 @@
         <div class="projetos-header">
           <div class="projetos-header__text">
             <h2 class="projetos-title">Layout da Home</h2>
-            <p class="projetos-hint">Réplica das mídias editáveis na ordem real da página. Envie arquivos <strong>já editados</strong> (JPEG, PNG, WebP, GIF, MP4, WebM) até 25&nbsp;MB. Alterações ficam em rascunho até «Publicar».</p>
+            <p class="projetos-hint">Réplica das mídias editáveis na ordem real da página. Envie arquivos <strong>já editados</strong> (JPEG, PNG, WebP, GIF, MP4, WebM) de até 25&nbsp;MB por arquivo no upload pelo painel. Alterações ficam em rascunho até «Publicar».</p>
           </div>
         </div>
 
@@ -628,6 +686,15 @@
             </div>
           </div>
 
+          <label class="field-label">Categoria</label>
+          <div class="chips">
+            <template x-for="cat in categoryOptions" :key="cat">
+              <button type="button" @click="selectCategory(cat)"
+                      :class="{ selected: hasCategory(cat) }"
+                      class="chip" x-text="cat"></button>
+            </template>
+          </div>
+
           <label class="field-label">Tipos de serviço</label>
           <div class="chips">
             <template x-for="svc in serviceOptions" :key="svc">
@@ -651,7 +718,7 @@
             </div>
             <div class="field-col field-col--format">
               <label class="field-label">Formato na Home</label>
-              <div class="format-picker" role="group" aria-label="Formato na grelha da Home">
+              <div class="format-picker" role="group" aria-label="Formato na grade da Home">
                 <button
                   type="button"
                   class="format-picker__btn"
@@ -699,6 +766,7 @@
           <div class="field-row editor-media-row">
             <div class="field-col">
               <label class="field-label">Thumbnail</label>
+              <p class="field-hint">Até 25 MB por arquivo (upload pelo painel).</p>
               <div class="upload-area">
                 <img x-show="thumbPreview || form.thumbnail"
                      :src="thumbPreview || form.thumbnail"
@@ -715,6 +783,7 @@
             </div>
             <div class="field-col">
               <label class="field-label">Vídeo preview (hover)</label>
+              <p class="field-hint">Até 25 MB por arquivo (upload pelo painel).</p>
               <div class="upload-area">
                 <video x-show="videoPreview || form.hover_preview"
                        :src="videoPreview || form.hover_preview"
@@ -844,7 +913,7 @@
             <div class="editor-actions__left">
               <button type="button" @click="saveProject()" :disabled="publishing"
                       class="btn btn-primary"
-                      title="Guarda o rascunho e fecha o editor. Depois use Publicar.">
+                      title="Salva o rascunho e fecha o editor. Depois use Publicar.">
                 Salvar
               </button>
               <button type="button" @click="discardEditorDraft()" :disabled="publishing"

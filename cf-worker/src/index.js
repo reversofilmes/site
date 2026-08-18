@@ -15,7 +15,7 @@ import {
   handleYoutubeManifest,
 } from './routes/projects.js';
 import { handleUpload } from './routes/upload.js';
-import { handleDeploy } from './routes/deploy.js';
+import { handleDeploy, handleDeployStatus, handleDeployQuotaReset } from './routes/deploy.js';
 import { weeklyBackup } from './cron/backup.js';
 import { dailyCleanup } from './cron/cleanup.js';
 import { json, error } from './utils/response.js';
@@ -177,6 +177,12 @@ async function route(request, env, ctx, path) {
   }
   if (path === '/api/upload' && method === 'POST') {
     return handleUpload(request, env, ctx);
+  }
+  if (path === '/api/deploy/status' && method === 'GET') {
+    return handleDeployStatus(env);
+  }
+  if (path === '/api/deploy/quota/reset-block' && method === 'POST') {
+    return handleDeployQuotaReset(env, ctx);
   }
   if (path === '/api/deploy' && method === 'POST') {
     return handleDeploy(env, ctx);

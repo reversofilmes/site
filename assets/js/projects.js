@@ -1,7 +1,41 @@
 /**
  * Alpine.js data and methods for the Projects page
- * Listagem: sempre por date_yymmdd (mais recente primeiro), após filtros Buscar + Tipos de serviço.
+ * Listagem: sempre por date_yymmdd (mais recente primeiro), após filtros Buscar + Categoria + Serviços.
  */
+
+const PROJECT_CATEGORIES = [
+  'Festivais & Eventos',
+  'Arte & Cultura',
+  'Corporativo',
+];
+
+const PROJECT_SERVICE_TYPES = [
+  'Aftermovie & Reels',
+  'Institucional',
+  'Publicitário',
+  'Motion & VFX',
+  'Conteúdo Mobile',
+  'Fotografia & GIFs',
+];
+
+/** Legado: nomes antigos em service_types → novos rótulos (filtros / links antigos). */
+const LEGACY_SERVICE_ALIASES = {
+  'FESTIVAIS & EVENTOS': 'Festivais & Eventos',
+  'ARTE & CULTURA': 'Arte & Cultura',
+  'EVENTO CORPORATIVO': 'Corporativo',
+  EVENTOS: 'Festivais & Eventos',
+  FOTOS: 'Fotografia & GIFs',
+  MOBILE: 'Conteúdo Mobile',
+  INSTITUCIONAL: 'Institucional',
+  PUBLICITÁRIO: 'Publicitário',
+  'ANIMAÇÃO & MOTION GRAPHICS': 'Motion & VFX',
+  'EFEITOS VISUAIS': 'Motion & VFX',
+  VFX: 'Motion & VFX',
+  'MAKING OF': 'Aftermovie & Reels',
+  DOCUMENTÁRIO: 'Institucional',
+  'MIDIAS SOCIAIS': 'Conteúdo Mobile',
+  ARTISTICOS: 'Aftermovie & Reels',
+};
 
 /**
  * Códigos curtos na URL (iniciais por palavra; caracteres especiais ignorados).
@@ -119,14 +153,17 @@ function projectsPage(projectsJsonUrl) {
     projectsJsonUrl: projectsJsonUrl || '/projects.json',
 
     searchTerm: '',
+    selectedCategories: [],
     selectedServiceTypes: [],
     showFilters: false,
 
-    availableServiceTypes: [],
+    availableCategories: PROJECT_CATEGORIES,
+    availableServiceTypes: PROJECT_SERVICE_TYPES,
 
-    /** label canónico → código URL (ex. "ANIMAÇÃO & MOTION GRAPHICS" → "AMG") */
+    /** label canónico → código URL */
+    _categoryToUrlCode: {},
+    _urlCodeToCategory: {},
     _serviceToUrlCode: {},
-    /** código URL → label (maiúsculas) */
     _urlCodeToService: {},
 
     urlSyncTimer: null,
@@ -162,10 +199,7 @@ function projectsPage(projectsJsonUrl) {
       return v;
     },
 
-    /**
-     * Associa string da URL ao nome completo do serviço (URLs antigas com nome + percent-encoding).
-     */
-    _matchServiceTypeFromUrl(raw, allowedSet) {
+    _matchLabelFromUrl(raw, allowedSet) {
       let v = String(raw || '').trim();
       if (!v) return null;
       if (allowedSet.has(v)) return v;
@@ -182,9 +216,20 @@ function projectsPage(projectsJsonUrl) {
       return null;
     },
 
-    /**
-     * Resolve um token do hash: código curto, nome completo ou legado codificado.
-     */
+    _resolveCategoryCandidate(raw, allowedSet) {
+      const v = String(raw || '').trim();
+      if (!v) return null;
+      if (allowedSet.has(v)) return v;
+
+      const fromCode = this._urlCodeToCategory[v.toUpperCase()];
+      if (fromCode && allowedSet.has(fromCode)) return fromCode;
+
+      const alias = LEGACY_SERVICE_ALIASES[v.toUpperCase()] || LEGACY_SERVICE_ALIASES[v];
+      if (alias && PROJECT_CATEGORIES.includes(alias) && allowedSet.has(alias)) return alias;
+
+      return this._matchLabelFromUrl(v, allowedSet);
+    },
+
     _resolveServiceCandidate(raw, allowedSet) {
       const v = String(raw || '').trim();
       if (!v) return null;
@@ -193,7 +238,21 @@ function projectsPage(projectsJsonUrl) {
       const fromCode = this._urlCodeToService[v.toUpperCase()];
       if (fromCode && allowedSet.has(fromCode)) return fromCode;
 
-      return this._matchServiceTypeFromUrl(v, allowedSet);
+      const alias = LEGACY_SERVICE_ALIASES[v.toUpperCase()] || LEGACY_SERVICE_ALIASES[v];
+      if (alias && PROJECT_SERVICE_TYPES.includes(alias) && allowedSet.has(alias)) return alias;
+
+      return this._matchLabelFromUrl(v, allowedSet);
+    },
+
+    _normalizeProject(project) {
+      const category =
+        project.category && PROJECT_CATEGORIES.includes(project.category)
+          ? project.category
+          : null;
+      const service_types = Array.isArray(project.service_types)
+        ? project.service_types.filter((t) => PROJECT_SERVICE_TYPES.includes(String(t || '').trim()))
+        : [];
+      return { ...project, category, service_types };
     },
 
     async init() {
@@ -206,13 +265,13 @@ function projectsPage(projectsJsonUrl) {
         }
 
         const raw = await response.json();
-        const projects = Array.isArray(raw) ? raw : [];
+        const projects = (Array.isArray(raw) ? raw : []).map((p) => this._normalizeProject(p));
 
         this.allProjects = projects;
         this.filteredProjects = projects.slice();
         this._sortByDateDesc(this.filteredProjects);
 
-        this.extractFilterOptions();
+        this._initUrlMaps();
 
         setTimeout(() => {
           this.applyUrlFilters();
@@ -229,11 +288,22 @@ function projectsPage(projectsJsonUrl) {
       }
     },
 
+    _initUrlMaps() {
+      const catMaps = buildServiceUrlMaps(this.availableCategories);
+      this._categoryToUrlCode = catMaps.toCode;
+      this._urlCodeToCategory = catMaps.fromCode;
+
+      const svcMaps = buildServiceUrlMaps(this.availableServiceTypes);
+      this._serviceToUrlCode = svcMaps.toCode;
+      this._urlCodeToService = svcMaps.fromCode;
+    },
+
     /**
      * Hash: #search=... opcional;
-     *   - #service=AMG (código curto) ou nome completo (legado / links Jekyll)
-     *   - #services=AMG,AC,EC (vários códigos, separados por vírgula)
-     * Legado: #services= com | entre nomes; #service= repetido; codificação dupla.
+     *   - #category=FE (código) ou nome completo
+     *   - #categories=FE,AC
+     *   - #service=AR (código) ou nome completo (legado)
+     *   - #services=AR,IN
      */
     applyUrlFilters() {
       if (!window.location.hash || window.location.hash.length <= 1) return;
@@ -245,55 +315,74 @@ function projectsPage(projectsJsonUrl) {
         this.searchTerm = this._unescapeUrlToken(searchParam);
       }
 
-      const bundled = params.get('services');
-      const legacyRepeated = params.getAll('service');
-      const candidates = [];
+      const catBundled = params.get('categories');
+      const catRepeated = params.getAll('category');
+      const catCandidates = [];
 
-      if (bundled) {
-        bundled.split(/[|,]/).forEach((s) => {
+      if (catBundled) {
+        catBundled.split(/[|,]/).forEach((s) => {
           const t = s.trim();
-          if (t) candidates.push(t);
+          if (t) catCandidates.push(t);
         });
       }
-      legacyRepeated.forEach((s) => {
+      catRepeated.forEach((s) => {
         const t = (s || '').trim();
-        if (t) candidates.push(t);
+        if (t) catCandidates.push(t);
       });
 
-      const allowed = new Set(this.availableServiceTypes);
-      const resolved = [];
-      const seen = new Set();
-      candidates.forEach((c) => {
-        const norm = this._resolveServiceCandidate(c, allowed);
-        if (norm && !seen.has(norm)) {
-          seen.add(norm);
-          resolved.push(norm);
+      const catAllowed = new Set(this.availableCategories);
+      const resolvedCats = [];
+      const seenCats = new Set();
+      catCandidates.forEach((c) => {
+        const norm = this._resolveCategoryCandidate(c, catAllowed);
+        if (norm && !seenCats.has(norm)) {
+          seenCats.add(norm);
+          resolvedCats.push(norm);
         }
       });
-      this.selectedServiceTypes = resolved;
+      this.selectedCategories = resolvedCats;
 
-      if (searchParam || candidates.length > 0) {
+      const svcBundled = params.get('services');
+      const svcRepeated = params.getAll('service');
+      const svcCandidates = [];
+
+      if (svcBundled) {
+        svcBundled.split(/[|,]/).forEach((s) => {
+          const t = s.trim();
+          if (t) svcCandidates.push(t);
+        });
+      }
+      svcRepeated.forEach((s) => {
+        const t = (s || '').trim();
+        if (t) svcCandidates.push(t);
+      });
+
+      const svcAllowed = new Set(this.availableServiceTypes);
+      const resolvedSvcs = [];
+      const seenSvcs = new Set();
+      svcCandidates.forEach((c) => {
+        const norm = this._resolveServiceCandidate(c, svcAllowed);
+        if (norm && !seenSvcs.has(norm)) {
+          seenSvcs.add(norm);
+          resolvedSvcs.push(norm);
+        }
+      });
+      this.selectedServiceTypes = resolvedSvcs;
+
+      if (searchParam || catCandidates.length > 0 || svcCandidates.length > 0) {
         this.updateFilters();
       }
     },
 
-    extractFilterOptions() {
-      const serviceTypesSet = new Set();
-
-      this.allProjects.forEach((project) => {
-        if (project.service_types && Array.isArray(project.service_types)) {
-          project.service_types.forEach((type) => {
-            if (type && type.trim()) {
-              serviceTypesSet.add(type.trim());
-            }
-          });
-        }
-      });
-
-      this.availableServiceTypes = Array.from(serviceTypesSet).sort();
-      const maps = buildServiceUrlMaps(this.availableServiceTypes);
-      this._serviceToUrlCode = maps.toCode;
-      this._urlCodeToService = maps.fromCode;
+    toggleCategory(category) {
+      const sel = this.selectedCategories;
+      const i = sel.indexOf(category);
+      if (i === -1) {
+        this.selectedCategories = [...sel, category];
+      } else {
+        this.selectedCategories = sel.filter((s) => s !== category);
+      }
+      this.updateFilters();
     },
 
     toggleServiceType(serviceType) {
@@ -314,6 +403,12 @@ function projectsPage(projectsJsonUrl) {
         const searchLower = this.searchTerm.toLowerCase().trim();
         filtered = filtered.filter((project) => {
           return project.search_blob && project.search_blob.toLowerCase().includes(searchLower);
+        });
+      }
+
+      if (this.selectedCategories.length > 0) {
+        filtered = filtered.filter((project) => {
+          return project.category && this.selectedCategories.includes(project.category);
         });
       }
 
@@ -348,13 +443,22 @@ function projectsPage(projectsJsonUrl) {
           params.set('search', this.searchTerm.trim());
         }
 
+        const cats = this.selectedCategories;
+        const encCat = (label) => this._categoryToUrlCode[label] || label;
+
+        if (cats.length === 1) {
+          params.set('category', encCat(cats[0]));
+        } else if (cats.length > 1) {
+          params.set('categories', cats.map(encCat).join(','));
+        }
+
         const types = this.selectedServiceTypes;
-        const enc = (label) => this._serviceToUrlCode[label] || label;
+        const encSvc = (label) => this._serviceToUrlCode[label] || label;
 
         if (types.length === 1) {
-          params.set('service', enc(types[0]));
+          params.set('service', encSvc(types[0]));
         } else if (types.length > 1) {
-          params.set('services', types.map(enc).join(','));
+          params.set('services', types.map(encSvc).join(','));
         }
 
         const newHash = params.toString();
@@ -368,13 +472,18 @@ function projectsPage(projectsJsonUrl) {
 
     clearFilters() {
       this.searchTerm = '';
+      this.selectedCategories = [];
       this.selectedServiceTypes = [];
       this.updateFilters();
       history.pushState(null, '', window.location.pathname);
     },
 
     hasActiveFilters() {
-      return this.searchTerm.trim() !== '' || this.selectedServiceTypes.length > 0;
+      return (
+        this.searchTerm.trim() !== ''
+        || this.selectedCategories.length > 0
+        || this.selectedServiceTypes.length > 0
+      );
     },
   };
 }

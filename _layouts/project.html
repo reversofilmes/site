@@ -25,13 +25,18 @@ layout: none
     <!-- Title -->
     <header class="project-hero">
       <h1 class="project-detail-title">{{ page.title }}</h1>
-      {% if page.client or page.year or page.service_types %}
+      {% if page.client or page.year or page.category or page.service_types %}
         <div class="project-meta">
           {% if page.client %}
             <span class="project-detail-client">{{ page.client }}</span>
           {% endif %}
           {% if page.year %}
             <span class="project-year">{{ page.year }}</span>
+          {% endif %}
+          {% if page.category %}
+            <div class="project-service-types">
+              <a href="{{ '/projetos/' | relative_url }}#category={{ page.category | url_encode }}" class="service-type-tag">{{ page.category }}</a>
+            </div>
           {% endif %}
           {% if page.service_types and page.service_types.size > 0 %}
             <div class="project-service-types">

@@ -137,7 +137,7 @@ input, textarea, select { font: inherit; }
 
 .admin-app {
   display: grid;
-  grid-template-rows: var(--header-h) 1fr;
+  grid-template-rows: auto auto minmax(0, 1fr);
   grid-template-columns: 1fr;
   height: 100vh;
 }
@@ -197,6 +197,57 @@ input, textarea, select { font: inherit; }
 .user-avatar {
   width: 28px; height: 28px; border-radius: 50%;
   border: 1px solid var(--border);
+}
+
+.deploy-quota-panel {
+  grid-column: 1 / -1;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 0.75rem 1rem;
+  padding: 0.65rem 1.25rem;
+  background: rgba(45, 212, 191, 0.08);
+  border-bottom: 1px solid var(--border);
+  font-size: 0.78rem;
+  color: var(--text-2);
+}
+.deploy-quota-panel--blocked {
+  background: rgba(239, 68, 68, 0.12);
+  color: #fecaca;
+}
+.deploy-quota-panel__title {
+  margin: 0 0 0.35rem;
+  color: var(--text);
+  line-height: 1.45;
+}
+.deploy-quota-panel--blocked .deploy-quota-panel__title { color: #fee2e2; }
+.deploy-quota-panel__note {
+  margin: 0 0 0.5rem;
+  font-size: 0.72rem;
+  opacity: 0.85;
+  max-width: 52rem;
+}
+.deploy-quota-panel__bar {
+  height: 4px;
+  border-radius: 2px;
+  background: rgba(255, 255, 255, 0.08);
+  max-width: 20rem;
+  overflow: hidden;
+}
+.deploy-quota-panel__bar-fill {
+  height: 100%;
+  background: var(--accent, #2dd4bf);
+  transition: width 0.3s ease;
+}
+.deploy-quota-panel--blocked .deploy-quota-panel__bar-fill {
+  background: #ef4444;
+}
+.deploy-quota-panel__actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+  align-items: center;
 }
 
 /* ---- badge helpers (used on admin-project-item cards) ---- */
@@ -261,6 +312,12 @@ input, textarea, select { font: inherit; }
   color: var(--text-2);
   text-transform: uppercase;
   letter-spacing: 0.04em;
+}
+.field-hint {
+  margin: 0.15rem 0 0.5rem;
+  font-size: 0.72rem;
+  color: var(--text-2);
+  opacity: 0.85;
 }
 
 .input {
@@ -653,7 +710,6 @@ input, textarea, select { font: inherit; }
 
 .admin-main {
   overflow-y: auto;
-  height: calc(100vh - var(--header-h));
   min-height: 0;
   box-sizing: border-box;
 }
