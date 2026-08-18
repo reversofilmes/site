@@ -215,11 +215,15 @@
     init();
   }
 
-  // Ao voltar via bfcache, alguns estilos inline do fade-out podem persistir.
+  // Ao voltar via bfcache, o JS não reinicializa — isTransitioning e estilos
+  // inline do fade-out podem ficar presos e bloquear todos os links internos.
   window.addEventListener('pageshow', function () {
-    if (document.body.classList.contains('is-home')) {
-      resetInlineStyles(contentElements());
-      document.body.classList.add('page-loaded');
-    }
+    isTransitioning = false;
+    resetInlineStyles(contentElements());
+    document.body.classList.add('page-loaded');
+  });
+
+  window.addEventListener('pagehide', function () {
+    isTransitioning = false;
   });
 })();
