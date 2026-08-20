@@ -33,55 +33,6 @@
     });
   }
 
-  /* Largura do bloco meta = largura da linha de contatos; copyright justificado à mesma largura */
-  let footerMetaResizeTimer = null;
-  function syncFooterMetaToContact() {
-    const meta = document.querySelector('.site-footer__meta');
-    const contact = document.querySelector('.site-footer__contact');
-    if (!meta || !contact) return;
-    meta.style.width = '';
-    /* Medir como uma única linha: rect.width após aplicar meta pode ficar estreito demais e
-       ativar flex-wrap (email / telefone empilhados), visível sobretudo na Curupire-se (body flex). */
-    const prevWrap = contact.style.flexWrap;
-    contact.style.flexWrap = 'nowrap';
-    const singleLine = Math.ceil(contact.scrollWidth);
-    contact.style.flexWrap = prevWrap;
-
-    const inner = meta.closest('.site-footer__inner');
-    let cap = Infinity;
-    if (inner) {
-      const cs = window.getComputedStyle(inner);
-      const padX = parseFloat(cs.paddingLeft) + parseFloat(cs.paddingRight);
-      cap = Math.max(1, Math.floor(inner.clientWidth - padX));
-    }
-
-    const w = singleLine > 0 ? Math.min(singleLine, cap) : 0;
-
-    if (w > 0) meta.style.width = w + 'px';
-  }
-
-  function scheduleFooterMetaSync() {
-    syncFooterMetaToContact();
-    requestAnimationFrame(syncFooterMetaToContact);
-  }
-
-  if (document.fonts && document.fonts.ready) {
-    document.fonts.ready.then(scheduleFooterMetaSync);
-  } else {
-    window.addEventListener('load', scheduleFooterMetaSync, { once: true });
-  }
-
-  window.addEventListener(
-    'resize',
-    function () {
-      clearTimeout(footerMetaResizeTimer);
-      footerMetaResizeTimer = setTimeout(syncFooterMetaToContact, 120);
-    },
-    { passive: true },
-  );
-
-  setTimeout(scheduleFooterMetaSync, 400);
-
   const row = document.querySelector('.site-footer__marquee-row');
   const marquee = document.querySelector('.site-footer__marquee');
   const first = row && row.querySelector('.site-footer__marquee-group');
