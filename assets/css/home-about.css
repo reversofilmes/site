@@ -1937,8 +1937,9 @@
   display: flex;
   flex-direction: column;
   align-items: center;
+  width: 100%;
   gap: clamp(2.5rem, 6vw, 4rem);
-  margin: 0 auto clamp(0.75rem, 2vw, 1.25rem);
+  margin: 0 auto;
 }
 
 .home-sobre-fechamento__logo-link {
@@ -1965,114 +1966,6 @@
   width: clamp(5.5rem, 14vw, 8.75rem);
   height: auto;
   margin: 0;
-}
-
-.home-sobre-fechamento__social {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: clamp(1.25rem, 3vw, 2rem);
-  margin: 0;
-  padding: 0;
-  background: none;
-  border: none;
-}
-
-.home-sobre-fechamento__meta {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  width: 100%;
-  max-width: min(100%, 46rem);
-  margin-inline: auto;
-  gap: clamp(0.45rem, 1vw, 0.65rem);
-}
-
-.home-sobre-fechamento__contact {
-  margin: 0;
-  width: 100%;
-  font-family: "Poppins", sans-serif;
-  font-weight: 700;
-  font-size: clamp(0.8125rem, 1.7vw, 1rem);
-  line-height: 1.45;
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  gap: 0.45rem;
-  text-align: center;
-  /* Compensa letter-spacing para centralização óptica */
-  padding-inline: 0.08em;
-  box-sizing: border-box;
-}
-
-.home-sobre-fechamento__sep {
-  display: none;
-}
-
-.home-sobre-fechamento__link {
-  display: block;
-  max-width: 100%;
-  color: #fff;
-  text-align: center;
-  text-decoration: none;
-  overflow-wrap: anywhere;
-  transition: color 0.2s ease;
-}
-
-.home-sobre-fechamento__link:hover,
-.home-sobre-fechamento__link:focus-visible {
-  color: #ff3b2f;
-  outline: none;
-}
-
-.home-sobre-fechamento__legal {
-  margin: 0;
-  width: 100%;
-  font-family: "Poppins", sans-serif;
-  font-weight: 700;
-  font-size: clamp(0.75rem, 1.5vw, 0.875rem);
-  line-height: 1.4;
-  letter-spacing: 0.1em;
-  text-transform: uppercase;
-  color: rgba(255, 255, 255, 0.92);
-  display: flex;
-  flex-wrap: wrap;
-  justify-content: center;
-  align-items: baseline;
-  gap: 0.3em;
-  text-align: center;
-  padding-inline: 0.1em;
-  box-sizing: border-box;
-}
-
-.home-sobre-fechamento__reservados {
-  white-space: nowrap;
-}
-
-.home-sobre-fechamento__r-flip {
-  display: inline-block;
-  transform: scaleX(-1);
-}
-
-@media (min-width: 1025px) {
-  .home-sobre-fechamento__contact {
-    flex-direction: row;
-    flex-wrap: nowrap;
-    gap: 0.35rem 0.75rem;
-  }
-
-  .home-sobre-fechamento__link {
-    display: inline;
-  }
-
-  .home-sobre-fechamento__sep {
-    display: inline;
-    color: rgba(255, 255, 255, 0.72);
-    user-select: none;
-  }
 }
 
 @media (max-width: 1024px) {
