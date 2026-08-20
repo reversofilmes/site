@@ -11,15 +11,23 @@
   if (!track || !viewport || !firstGroup) return;
   if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
 
-  var MANIFESTO_DURATION_S = 30;
+  var MANIFESTO_DURATION_FALLBACK_S = 33;
   var resizeTimer = null;
   var lastMode = null;
   var lastShiftPx = 0;
 
+  function manifestoDurationS() {
+    var manifestoTrack = document.querySelector(".home-manifesto-marquee__track");
+    if (!manifestoTrack) return MANIFESTO_DURATION_FALLBACK_S;
+    var raw = getComputedStyle(manifestoTrack).animationDuration || "";
+    var n = parseFloat(raw);
+    return isNaN(n) ? MANIFESTO_DURATION_FALLBACK_S : n;
+  }
+
   function manifestoPxPerSecond() {
     var manifestoTrack = document.querySelector(".home-manifesto-marquee__track");
     if (!manifestoTrack || manifestoTrack.scrollWidth < 2) return 120;
-    return manifestoTrack.scrollWidth / 2 / MANIFESTO_DURATION_S;
+    return manifestoTrack.scrollWidth / 2 / manifestoDurationS();
   }
 
   function segmentWidthPx() {

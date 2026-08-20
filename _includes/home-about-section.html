@@ -73,12 +73,13 @@
 
   <div class="home-manifesto-marquee" aria-hidden="true">
     <div class="home-manifesto-marquee__track">
-      <span>MUDAR A <span class="hl">PERSPECTIVA</span> MUDA O <span class="hl">RESULTADO</span> |</span>
-      <span>MUDAR A <span class="hl">PERSPECTIVA</span> MUDA O <span class="hl">RESULTADO</span> |</span>
-      <span>MUDAR A <span class="hl">PERSPECTIVA</span> MUDA O <span class="hl">RESULTADO</span> |</span>
-      <span>MUDAR A <span class="hl">PERSPECTIVA</span> MUDA O <span class="hl">RESULTADO</span> |</span>
-      <span>MUDAR A <span class="hl">PERSPECTIVA</span> MUDA O <span class="hl">RESULTADO</span> |</span>
-      <span>MUDAR A <span class="hl">PERSPECTIVA</span> MUDA O <span class="hl">RESULTADO</span> |</span>
+      {% capture _manifesto_segment %}<span class="home-manifesto-marquee__segment">MUDAR A <span class="hl">PERSPECTIVA</span> MUDA O <span class="hl">RESULTADO</span><span class="home-manifesto-marquee__sep" aria-hidden="true">|</span></span>{% endcapture %}
+      {{ _manifesto_segment }}
+      {{ _manifesto_segment }}
+      {{ _manifesto_segment }}
+      {{ _manifesto_segment }}
+      {{ _manifesto_segment }}
+      {{ _manifesto_segment }}
     </div>
   </div>
 
@@ -124,8 +125,11 @@
         href="https://wa.me/5531996005678"
         target="_blank"
         rel="noopener noreferrer"
+        aria-label="Dê vida a uma nova ideia — contato via WhatsApp"
       >
-        → DÊ VIDA A UMA <span class="site-footer__marquee-contrario" data-sobre-contrario>NOVA IDEIA</span>
+        <span class="home-sobre__cta-label"
+          >→ DÊ VIDA A UMA <span class="site-footer__marquee-contrario" data-sobre-contrario>NOVA IDEIA</span></span
+        >
       </a>
     </div>
   </div>
@@ -144,12 +148,15 @@
       />
     </figure>
     <div class="home-sobre-fade" aria-hidden="true"></div>
-    <p class="home-sobre-respiro__line home-sobre-respiro__line--top">O COMUM</p>
-    <p class="home-sobre-respiro__line home-sobre-respiro__line--bottom">NUNCA FOI SUFICIENTE.</p>
+    <div class="home-sobre-respiro__copy">
+      <p class="home-sobre-respiro__line home-sobre-respiro__line--top">O COMUM</p>
+      <p class="home-sobre-respiro__line home-sobre-respiro__line--bottom">NUNCA FOI SUFICIENTE.</p>
+    </div>
   </section>
   <div class="home-sobre-junction" aria-hidden="true"></div>
 
   <section
+    id="servicos"
     class="home-sobre-mundo home-sobre-visual"
     aria-labelledby="home-sobre-mundo-title"
   >
@@ -173,14 +180,7 @@
             href="{{ '/projetos/' | relative_url }}#category={{ 'Festivais & Eventos' | url_encode }}"
             class="home-sobre-mundo__link"
           >
-            <div class="home-sobre-mundo__media">
-              <img
-                src="{{ _card_festivais }}"
-                alt="Festivais & Eventos"
-                loading="lazy"
-                decoding="async"
-              />
-            </div>
+            {% include home-mundo-card-media.html url=_card_festivais alt="Festivais & Eventos" %}
             <p class="home-sobre-mundo__label">FESTIVAIS &amp; EVENTOS</p>
           </a>
         </li>
@@ -189,14 +189,7 @@
             href="{{ '/projetos/' | relative_url }}#category={{ 'Arte & Cultura' | url_encode }}"
             class="home-sobre-mundo__link"
           >
-            <div class="home-sobre-mundo__media">
-              <img
-                src="{{ _card_arte }}"
-                alt="Arte & Cultura"
-                loading="lazy"
-                decoding="async"
-              />
-            </div>
+            {% include home-mundo-card-media.html url=_card_arte alt="Arte & Cultura" %}
             <p class="home-sobre-mundo__label">ARTE &amp; CULTURA</p>
           </a>
         </li>
@@ -205,14 +198,7 @@
             href="{{ '/projetos/' | relative_url }}#category={{ 'Corporativo' | url_encode }}"
             class="home-sobre-mundo__link"
           >
-            <div class="home-sobre-mundo__media">
-              <img
-                src="{{ _card_corporativo }}"
-                alt="Corporativo"
-                loading="lazy"
-                decoding="async"
-              />
-            </div>
+            {% include home-mundo-card-media.html url=_card_corporativo alt="Corporativo" %}
             <p class="home-sobre-mundo__label">CORPORATIVO</p>
           </a>
         </li>
@@ -418,7 +404,9 @@
     </figure>
     <div class="home-sobre-fade" aria-hidden="true"></div>
     <div class="home-sobre-curupire__copy">
-      <a class="home-sobre-curupire__title" href="{{ '/curupire-se/' | relative_url }}">CURUPIRE-SE</a>
+      <a class="home-sobre-curupire__title" href="{{ '/curupire-se/' | relative_url }}"
+        ><span class="site-footer__marquee-contrario" data-curupire-contrario>CURUPIRE-SE</span></a
+      >
       <p class="home-sobre-curupire__sub">
         VENHA FAZER PARTE<br />DO NOSSO TIME
       </p>
@@ -437,7 +425,6 @@
         style="background-image: url('{{ _footer_bg }}')"
         aria-hidden="true"
       ></div>
-      <div class="home-sobre-fechamento__overlay" aria-hidden="true"></div>
     {% endif %}
     <div class="home-sobre-fade" aria-hidden="true"></div>
     <header class="home-sobre-fechamento__head">
@@ -445,14 +432,26 @@
         <p class="home-sobre-fechamento__kicker">CHEGOU A HORA DE FAZER DIFERENTE.</p>
         <p class="home-sobre-fechamento__kicker">SUA PRÓXIMA HISTÓRIA COMEÇA AQUI.</p>
         <h3 id="home-sobre-fechamento-title" class="home-sobre-fechamento__title">
-          <span class="home-sobre-fechamento__title-line">
-            <span class="home-sobre-fechamento__vamos">
-              <span class="home-sobre-fechamento__bar" aria-hidden="true"></span>
-              <span class="home-sobre-fechamento__vamos-word">VAMOS</span>
+          <a
+            class="home-sobre-fechamento__cta"
+            href="https://wa.me/5531996005678"
+            target="_blank"
+            rel="noopener noreferrer"
+            aria-label="Vamos criar algo incrível juntos — contato via WhatsApp"
+          >
+            <span class="home-sobre-fechamento__cta-label">
+              <span class="home-sobre-fechamento__title-line">
+                <span class="home-sobre-fechamento__vamos">
+                  <span class="home-sobre-fechamento__bar" aria-hidden="true"></span>
+                  <span class="home-sobre-fechamento__vamos-word">VAMOS</span>
+                </span>
+                <span class="home-sobre-fechamento__title-rest"> CRIAR ALGO</span>
+              </span>
+              <span class="home-sobre-fechamento__title-line home-sobre-fechamento__title-line--second"
+                >INCRÍVEL JUNTOS?</span
+              >
             </span>
-            <span class="home-sobre-fechamento__title-rest"> CRIAR ALGO</span>
-          </span>
-          <span class="home-sobre-fechamento__title-line home-sobre-fechamento__title-line--second">INCRÍVEL JUNTOS?</span>
+          </a>
         </h3>
       </div>
     </header>

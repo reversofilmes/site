@@ -52,11 +52,14 @@
       onComplete: opts.onComplete,
     });
 
-    tl.to(wrapper, { opacity: 0, duration: opts.blinkDuration, ease: "power2.inOut" })
-      .to(wrapper, { opacity: 1, duration: opts.blinkDuration, ease: "power2.inOut" })
-      .to(wrapper, { opacity: 0, duration: opts.blinkDuration, ease: "power2.inOut" })
-      .to(wrapper, { opacity: 1, duration: opts.blinkDuration, ease: "power2.inOut" })
-      .to(wrapper, {
+    if (!opts.skipBlink) {
+      tl.to(wrapper, { opacity: 0, duration: opts.blinkDuration, ease: "power2.inOut" })
+        .to(wrapper, { opacity: 1, duration: opts.blinkDuration, ease: "power2.inOut" })
+        .to(wrapper, { opacity: 0, duration: opts.blinkDuration, ease: "power2.inOut" })
+        .to(wrapper, { opacity: 1, duration: opts.blinkDuration, ease: "power2.inOut" });
+    }
+
+    tl.to(wrapper, {
         duration: opts.outlineHold,
         ease: "power2.inOut",
         onStart: function () {
@@ -68,8 +71,10 @@
         duration: opts.flipDuration,
         ease: "power2.inOut",
         stagger: opts.flipStagger,
-      })
-      .to(
+      });
+
+    if (!opts.holdInverted) {
+      tl.to(
         wrapper,
         {
           duration: opts.unflipHold,
@@ -79,8 +84,7 @@
           },
         },
         "+=" + opts.unflipDelay,
-      )
-      .to(
+      ).to(
         letters,
         {
           rotationX: 0,
@@ -90,8 +94,62 @@
         },
         "<",
       );
+    }
 
     return tl;
+  }
+
+  function buildFlipOutTimeline(wrapper, letters, opts) {
+    gsap.set(wrapper, { opacity: 1 });
+
+    var tl = gsap.timeline({
+      onComplete: function () {
+        wrapper.classList.remove(opts.outlineClass);
+        gsap.set(letters, { rotationX: 0, clearProps: "transform" });
+        wrapper._rvContrarioTl = null;
+      },
+    });
+
+    tl.to(wrapper, {
+      duration: 0,
+      onStart: function () {
+        wrapper.classList.remove(opts.outlineClass);
+      },
+    }).to(letters, {
+      rotationX: 0,
+      duration: opts.unflipDuration,
+      ease: "power2.inOut",
+      stagger: opts.unflipStagger,
+    });
+
+    return tl;
+  }
+
+  function killTimeline(wrapper) {
+    if (wrapper._rvContrarioTl) {
+      wrapper._rvContrarioTl.kill();
+      wrapper._rvContrarioTl = null;
+    }
+  }
+
+  function resolveOpts(wrapper, options) {
+    return Object.assign(
+      {
+        letterClass: FOOTER_LETTER_CLASS,
+        outlineClass: FOOTER_OUTLINE_CLASS,
+        repeat: 0,
+        repeatDelay: 2,
+        skipBlink: false,
+        holdInverted: false,
+      },
+      FOOTER_TIMINGS,
+      options || {},
+    );
+  }
+
+  function getLetters(wrapper, opts) {
+    splitLetters(wrapper, opts.letterClass);
+    return wrapper.querySelectorAll("." + opts.letterClass);
   }
 
   window.ReversoContrarioFlip = {
@@ -104,19 +162,8 @@
     play: function (wrapper, options) {
       if (!wrapper || typeof gsap === "undefined") return null;
 
-      var opts = Object.assign(
-        {
-          letterClass: FOOTER_LETTER_CLASS,
-          outlineClass: FOOTER_OUTLINE_CLASS,
-          repeat: 0,
-          repeatDelay: 2,
-        },
-        FOOTER_TIMINGS,
-        options || {},
-      );
-
-      splitLetters(wrapper, opts.letterClass);
-      var letters = wrapper.querySelectorAll("." + opts.letterClass);
+      var opts = resolveOpts(wrapper, options);
+      var letters = getLetters(wrapper, opts);
       if (!letters.length) return null;
 
       if (wrapper._rvContrarioTl) return wrapper._rvContrarioTl;
@@ -141,6 +188,58 @@
         repeatDelay: opts.repeatDelay,
         onRepeat: onRepeat,
         onComplete: opts.onComplete,
+        outlineClass: opts.outlineClass,
+        skipBlink: opts.skipBlink,
+        holdInverted: opts.holdInverted,
+      });
+
+      wrapper._rvContrarioTl = tl;
+      return tl;
+    },
+
+    /** Contorno + inversão; permanece invertido até flipOut. Sem piscadas. */
+    flipIn: function (wrapper, options) {
+      if (!wrapper || typeof gsap === "undefined") return null;
+
+      killTimeline(wrapper);
+
+      var opts = resolveOpts(wrapper, options);
+      var letters = getLetters(wrapper, opts);
+      if (!letters.length) return null;
+
+      var tl = buildTimeline(wrapper, letters, {
+        blinkDuration: opts.blinkDuration,
+        outlineHold: opts.outlineHold,
+        flipDuration: opts.flipDuration,
+        flipStagger: opts.flipStagger,
+        unflipDelay: opts.unflipDelay,
+        unflipHold: opts.unflipHold,
+        unflipDuration: opts.unflipDuration,
+        unflipStagger: opts.unflipStagger,
+        repeat: 0,
+        repeatDelay: 0,
+        outlineClass: opts.outlineClass,
+        skipBlink: true,
+        holdInverted: true,
+      });
+
+      wrapper._rvContrarioTl = tl;
+      return tl;
+    },
+
+    /** Desinversão ao sair do hover / fechar CTA. */
+    flipOut: function (wrapper, options) {
+      if (!wrapper || typeof gsap === "undefined") return null;
+
+      killTimeline(wrapper);
+
+      var opts = resolveOpts(wrapper, options);
+      var letters = getLetters(wrapper, opts);
+      if (!letters.length) return null;
+
+      var tl = buildFlipOutTimeline(wrapper, letters, {
+        unflipDuration: opts.unflipDuration,
+        unflipStagger: opts.unflipStagger,
         outlineClass: opts.outlineClass,
       });
 

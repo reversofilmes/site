@@ -1,0 +1,29 @@
+{% assign media_url = include.url %}
+{% assign alt = include.alt %}
+{% assign media_lower = media_url | downcase %}
+<div class="home-sobre-mundo__media">
+  {% if media_lower contains '.mp4' or media_lower contains '.webm' %}
+    <video
+      class="home-sobre-mundo__video"
+      muted
+      loop
+      playsinline
+      preload="metadata"
+      webkit-playsinline="true"
+      aria-hidden="true"
+    >
+      {% if media_lower contains '.webm' %}
+        <source src="{{ media_url }}" type="video/webm">
+      {% else %}
+        <source src="{{ media_url }}" type="video/mp4">
+      {% endif %}
+    </video>
+  {% else %}
+    <img
+      src="{{ media_url }}"
+      alt="{{ alt }}"
+      loading="lazy"
+      decoding="async"
+    />
+  {% endif %}
+</div>

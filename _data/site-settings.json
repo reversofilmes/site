@@ -15,54 +15,64 @@
   "home_about_servico_motion": "https://cms.reversofilmes.com.br/media/site/home-about-servico-motion-b1a3bf16.mp4",
   "home_about_servico_conteudo_mobile": "https://cms.reversofilmes.com.br/media/site/home-about-servico-conteudo-mobile-e9141609.mp4",
   "home_about_servico_fotografia": "https://cms.reversofilmes.com.br/media/site/home-about-servico-fotografia-a8e9ce27.mp4",
-  "home_footer_bg": null,
+  "home_footer_bg": "https://cms.reversofilmes.com.br/media/site/home-footer-bg-440f2180.jpg",
   "home_about_logos": [
     {
       "id": "logo-msw7cxwd-hjoq9",
       "src": "https://cms.reversofilmes.com.br/media/site/home-about-logo-27e90c02.png",
       "alt": "BMW"
+    },
+    {
+      "id": "logo-msyv540p-6fduk",
+      "src": "https://cms.reversofilmes.com.br/media/site/home-about-logo-f9fd2b6b.png",
+      "alt": "BH + Feliz"
+    },
+    {
+      "id": "logo-msyv6bst-i3wg5",
+      "src": "https://cms.reversofilmes.com.br/media/site/home-about-logo-6ac80d47.png",
+      "alt": "EMCCAMP Águas Residence"
     }
   ],
   "home_about_equipe": [
     {
       "id": "indio",
       "name": "ÍNDIO",
-      "role": "(FUNÇÃO AQUI)",
-      "fact": "Frase ou fun fact aqui",
-      "photo": "https://cms.reversofilmes.com.br/media/site/home-about-equipe-photo-3c830a9d.jpg",
-      "instagram": ""
+      "role": "",
+      "fact": "",
+      "photo": "https://cms.reversofilmes.com.br/media/site/home-about-equipe-photo-1e0c94da.jpg",
+      "instagram": "https://www.instagram.com/indioevindio/"
     },
     {
       "id": "lele",
       "name": "LELÊ",
-      "role": "(FUNÇÃO AQUI)",
-      "fact": "Frase ou fun fact aqui",
-      "photo": "https://cms.reversofilmes.com.br/media/site/home-about-equipe-photo-1fd8f351.jpg",
-      "instagram": ""
+      "role": "",
+      "fact": "",
+      "photo": "https://cms.reversofilmes.com.br/media/site/home-about-equipe-photo-4fb08e8f.jpg",
+      "instagram": "https://www.instagram.com/alemayrink/"
     },
     {
       "id": "pedrada",
       "name": "PEDRADA",
-      "role": "(FUNÇÃO AQUI)",
-      "fact": "Frase ou fun fact aqui",
-      "photo": null,
-      "instagram": ""
+      "role": "",
+      "fact": "",
+      "photo": "https://cms.reversofilmes.com.br/media/site/home-about-equipe-photo-d5db049b.jpg",
+      "instagram": "https://www.instagram.com/pedrada.rec/"
     },
     {
       "id": "patrick",
       "name": "PATRICK",
-      "role": "(FUNÇÃO AQUI)",
-      "fact": "Frase ou fun fact aqui",
-      "photo": null,
-      "instagram": ""
+      "role": "",
+      "fact": "",
+      "photo": "https://cms.reversofilmes.com.br/media/site/home-about-equipe-photo-3fe8ade8.jpg",
+      "instagram": "https://www.instagram.com/patrick_cks/"
     },
     {
       "id": "calurina",
       "name": "CALURINA",
-      "role": "(FUNÇÃO AQUI)",
-      "fact": "Frase ou fun fact aqui",
-      "photo": null,
-      "instagram": ""
+      "role": "",
+      "fact": "",
+      "photo": "https://cms.reversofilmes.com.br/media/site/home-about-equipe-photo-2365250f.jpg",
+      "instagram": "https://www.instagram.com/carolvialactea/"
     }
   ]
 }

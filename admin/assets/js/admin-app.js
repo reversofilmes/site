@@ -38,132 +38,205 @@ const ADMIN_CONFIG = {
 const SERVICO_MEDIA_ACCEPT =
   'image/gif,image/webp,image/png,video/mp4,video/webm';
 
+const IMAGE_MEDIA_ACCEPT = 'image/jpeg,image/png,image/webp';
+
+const SITE_UPLOAD_MAX_MB = 25;
+
+const SERVICO_MEDIA_ACCEPT_LABEL = 'JPEG, PNG, WebP, GIF, MP4, WebM';
+const IMAGE_MEDIA_ACCEPT_LABEL = 'JPEG, PNG, WebP';
+const VIDEO_MEDIA_ACCEPT_LABEL = 'MP4, WebM';
+const LOGO_MEDIA_ACCEPT = 'image/png,image/webp';
+const LOGO_MEDIA_ACCEPT_LABEL = 'PNG, WebP com fundo transparente';
+
+function mimeAcceptToLabel(accept) {
+  if (!accept) return IMAGE_MEDIA_ACCEPT_LABEL;
+  const map = {
+    'image/jpeg': 'JPEG',
+    'image/png': 'PNG',
+    'image/webp': 'WebP',
+    'image/gif': 'GIF',
+    'video/mp4': 'MP4',
+    'video/webm': 'WebM',
+  };
+  const labels = accept
+    .split(',')
+    .map((t) => map[t.trim()] || t.trim())
+    .filter(Boolean);
+  return [...new Set(labels)].join(', ');
+}
+
 const HOME_ABOUT_MEDIA = [
   {
     key: 'home_about_photo_intro',
     uploadType: 'home_about_photo_intro',
     label: 'Sobre (intro)',
     fallback: '/assets/images/240920_camaleao_@reversofilmes_@samucafischer_5.jpg',
-    aspect: '4 / 5',
-    fit: 'cover',
+    preview: 'natural',
+    aspectLabel: '4∶5 (retrato) — largura total na Home',
+    accept: IMAGE_MEDIA_ACCEPT,
+    acceptLabel: IMAGE_MEDIA_ACCEPT_LABEL,
   },
   {
     key: 'home_about_photo_respiro',
     uploadType: 'home_about_photo_respiro',
     label: 'Respiro',
     fallback: '/assets/images/251025_DKStudio_Imortal_@reversofilmes_@gabvalmoura_1.jpg',
-    aspect: '5 / 3',
-    fit: 'cover',
+    preview: 'natural',
+    aspectLabel: '5∶3 (paisagem) — largura total na Home',
+    accept: IMAGE_MEDIA_ACCEPT,
+    acceptLabel: IMAGE_MEDIA_ACCEPT_LABEL,
   },
   {
     key: 'home_about_bg_mundo',
     uploadType: 'home_about_bg_mundo',
     label: 'Fundo Mundo',
     fallback: '/assets/images/BG1.png',
+    preview: 'cover',
     aspect: '16 / 9',
     fit: 'cover',
+    aspectLabel: '16∶9 — preenche a seção (cover)',
+    accept: IMAGE_MEDIA_ACCEPT,
+    acceptLabel: IMAGE_MEDIA_ACCEPT_LABEL,
   },
   {
     key: 'home_about_card_festivais',
     uploadType: 'home_about_card_festivais',
     label: 'Festivais & Eventos',
     fallback: '/assets/images/festivais_eventos.png',
+    preview: 'cover',
     aspect: '3 / 4',
     fit: 'cover',
+    aspectLabel: '3∶4 (retrato)',
+    accept: SERVICO_MEDIA_ACCEPT,
+    acceptLabel: SERVICO_MEDIA_ACCEPT_LABEL,
   },
   {
     key: 'home_about_card_arte',
     uploadType: 'home_about_card_arte',
     label: 'Arte & Cultura',
     fallback: '/assets/images/arte_cultura.png',
+    preview: 'cover',
     aspect: '3 / 4',
     fit: 'cover',
+    aspectLabel: '3∶4 (retrato)',
+    accept: SERVICO_MEDIA_ACCEPT,
+    acceptLabel: SERVICO_MEDIA_ACCEPT_LABEL,
   },
   {
     key: 'home_about_card_corporativo',
     uploadType: 'home_about_card_corporativo',
     label: 'Corporativo',
     fallback: '/assets/images/corporativo.png',
+    preview: 'cover',
     aspect: '3 / 4',
     fit: 'cover',
+    aspectLabel: '3∶4 (retrato)',
+    accept: SERVICO_MEDIA_ACCEPT,
+    acceptLabel: SERVICO_MEDIA_ACCEPT_LABEL,
   },
   {
     key: 'home_about_photo_perspectivas',
     uploadType: 'home_about_photo_perspectivas',
     label: 'Perspectivas',
     fallback: '/assets/images/260411_BravaEscolaDeCirco_PalcoAberto_@ReversoFilmes_@indioevindio-336.jpg',
-    aspect: '16 / 9',
-    fit: 'cover',
+    preview: 'natural',
+    aspectLabel: 'Proporção livre — largura total na Home',
+    accept: IMAGE_MEDIA_ACCEPT,
+    acceptLabel: IMAGE_MEDIA_ACCEPT_LABEL,
   },
   {
     key: 'home_about_servico_aftermovie',
     uploadType: 'home_about_servico_aftermovie',
     label: 'Aftermovie & Reels',
     fallback: null,
+    preview: 'cover',
     aspect: '3 / 4',
     fit: 'cover',
+    aspectLabel: '3∶4 (retrato) — painel lateral na Home',
     accept: SERVICO_MEDIA_ACCEPT,
+    acceptLabel: SERVICO_MEDIA_ACCEPT_LABEL,
   },
   {
     key: 'home_about_servico_institucional',
     uploadType: 'home_about_servico_institucional',
     label: 'Institucional',
     fallback: null,
+    preview: 'cover',
     aspect: '3 / 4',
     fit: 'cover',
+    aspectLabel: '3∶4 (retrato) — painel lateral na Home',
     accept: SERVICO_MEDIA_ACCEPT,
+    acceptLabel: SERVICO_MEDIA_ACCEPT_LABEL,
   },
   {
     key: 'home_about_servico_publicitario',
     uploadType: 'home_about_servico_publicitario',
     label: 'Publicitário',
     fallback: null,
+    preview: 'cover',
     aspect: '3 / 4',
     fit: 'cover',
+    aspectLabel: '3∶4 (retrato) — painel lateral na Home',
     accept: SERVICO_MEDIA_ACCEPT,
+    acceptLabel: SERVICO_MEDIA_ACCEPT_LABEL,
   },
   {
     key: 'home_about_servico_motion',
     uploadType: 'home_about_servico_motion',
     label: 'Motion e VFX',
     fallback: null,
+    preview: 'cover',
     aspect: '3 / 4',
     fit: 'cover',
+    aspectLabel: '3∶4 (retrato) — painel lateral na Home',
     accept: SERVICO_MEDIA_ACCEPT,
+    acceptLabel: SERVICO_MEDIA_ACCEPT_LABEL,
   },
   {
     key: 'home_about_servico_conteudo_mobile',
     uploadType: 'home_about_servico_conteudo_mobile',
     label: 'Conteúdo Mobile',
     fallback: null,
+    preview: 'cover',
     aspect: '3 / 4',
     fit: 'cover',
+    aspectLabel: '3∶4 (retrato) — painel lateral na Home',
     accept: SERVICO_MEDIA_ACCEPT,
+    acceptLabel: SERVICO_MEDIA_ACCEPT_LABEL,
   },
   {
     key: 'home_about_servico_fotografia',
     uploadType: 'home_about_servico_fotografia',
     label: 'Fotografia e GIFs',
     fallback: null,
+    preview: 'cover',
     aspect: '3 / 4',
     fit: 'cover',
+    aspectLabel: '3∶4 (retrato) — painel lateral na Home',
     accept: SERVICO_MEDIA_ACCEPT,
+    acceptLabel: SERVICO_MEDIA_ACCEPT_LABEL,
   },
   {
     key: 'home_about_photo_curupire',
     uploadType: 'home_about_photo_curupire',
     label: 'Curupire-se',
     fallback: '/assets/images/anatemponi_reverso_filmes_02dia_86.jpg',
-    aspect: '16 / 9',
-    fit: 'cover',
+    preview: 'natural',
+    aspectLabel: '≈ 3∶2 (paisagem) — imagem inteira no desktop',
+    accept: IMAGE_MEDIA_ACCEPT,
+    acceptLabel: IMAGE_MEDIA_ACCEPT_LABEL,
   },
   {
     key: 'home_footer_bg',
     uploadType: 'home_footer_bg',
     label: 'Rodapé — imagem de fundo',
     fallback: null,
+    preview: 'cover',
     aspect: '16 / 9',
     fit: 'cover',
+    aspectLabel: '16∶9 ou wider — preenche a seção (cover)',
+    accept: IMAGE_MEDIA_ACCEPT,
+    acceptLabel: IMAGE_MEDIA_ACCEPT_LABEL,
   },
 ];
 
@@ -781,7 +854,71 @@ function adminApp() {
 
     siteMediaAccept(key) {
       const meta = HOME_ABOUT_MEDIA.find((m) => m.key === key);
-      return meta?.accept || 'image/jpeg,image/png,image/webp';
+      return meta?.accept || IMAGE_MEDIA_ACCEPT;
+    },
+
+    siteMediaThumbClass(item) {
+      const mode = item?.preview || 'cover';
+      if (mode === 'natural') return 'layout-card__thumb--natural';
+      return '';
+    },
+
+    siteMediaThumbStyle(item) {
+      const mode = item?.preview || 'cover';
+      if (mode === 'natural' || !item?.aspect) return '';
+      return `aspect-ratio:${item.aspect}`;
+    },
+
+    siteMediaImgStyle(item) {
+      const mode = item?.preview || 'cover';
+      if (mode === 'natural') return '';
+      return `object-fit:${item?.fit || 'cover'}`;
+    },
+
+    siteMediaVideoStyle(item) {
+      const mode = item?.preview || 'cover';
+      if (mode === 'natural') return 'width:100%;height:auto;object-fit:contain';
+      return `object-fit:${item?.fit || 'cover'};width:100%;height:100%`;
+    },
+
+    siteMediaSpecLines(item) {
+      if (!item) return [];
+      const lines = [];
+      if (item.aspectLabel) lines.push(`Proporção ideal: ${item.aspectLabel}`);
+      lines.push(`Formatos: ${item.acceptLabel || mimeAcceptToLabel(this.siteMediaAccept(item.key))}`);
+      lines.push(`Tamanho máximo: ${SITE_UPLOAD_MAX_MB} MB`);
+      return lines;
+    },
+
+    heroSpecLines(variant) {
+      if (variant === 'mobile') {
+        return [
+          'Proporção ideal: 9∶16 (retrato)',
+          `Formatos: ${VIDEO_MEDIA_ACCEPT_LABEL}`,
+          `Tamanho máximo: ${SITE_UPLOAD_MAX_MB} MB`,
+        ];
+      }
+      return [
+        'Proporção ideal: 16∶9 (paisagem)',
+        `Formatos: ${VIDEO_MEDIA_ACCEPT_LABEL}`,
+        `Tamanho máximo: ${SITE_UPLOAD_MAX_MB} MB`,
+      ];
+    },
+
+    logoUploadSpecLines() {
+      return [
+        'Proporção ideal: 1∶1 (quadrado)',
+        `Formatos: ${LOGO_MEDIA_ACCEPT_LABEL}`,
+        `Tamanho máximo: ${SITE_UPLOAD_MAX_MB} MB`,
+      ];
+    },
+
+    equipeUploadSpecLines() {
+      return [
+        'Proporção ideal: 3∶4 (retrato)',
+        `Formatos: ${IMAGE_MEDIA_ACCEPT_LABEL}`,
+        `Tamanho máximo: ${SITE_UPLOAD_MAX_MB} MB`,
+      ];
     },
 
     siteMediaIsVideo(key) {
@@ -894,7 +1031,7 @@ function adminApp() {
       if (e.target) e.target.value = '';
       if (!file) return;
       try {
-        MediaUpload.validate(file, MediaUpload.IMG_TYPES);
+        MediaUpload.validate(file, LOGO_MEDIA_ACCEPT.split(','));
       } catch (err) {
         this._toast(err.message || String(err), 'error');
         return;
@@ -996,7 +1133,7 @@ function adminApp() {
         for (const logo of logos) {
           if (logo._photoFile) {
             this.publishPhase = `Enviando logo «${logo.alt || 'sem nome'}»…`;
-            MediaUpload.validate(logo._photoFile, MediaUpload.IMG_TYPES);
+            MediaUpload.validate(logo._photoFile, LOGO_MEDIA_ACCEPT.split(','));
             const { key } = await this._api.uploadSiteMedia('home_about_logo', logo._photoFile);
             logo.src = key;
             if (logo._photoPreview) MediaUpload.revokePreview(logo._photoPreview);
