@@ -317,7 +317,7 @@
         <div class="projetos-header">
           <div class="projetos-header__text">
             <h2 class="projetos-title">Layout da Home</h2>
-            <p class="projetos-hint">Réplica das mídias editáveis na ordem real da página. Envie arquivos <strong>já editados</strong> (JPEG, PNG, WebP, GIF, MP4, WebM) de até 25&nbsp;MB por arquivo no upload pelo painel. Alterações ficam em rascunho até «Publicar».</p>
+            <p class="projetos-hint">Réplica das mídias editáveis na ordem real da página. Envie arquivos <strong>já editados</strong>. Alterações ficam em rascunho até «Publicar».</p>
           </div>
         </div>
 
@@ -339,6 +339,11 @@
               </div>
               <div class="layout-card__body">
                 <h3 class="layout-card__title">Vídeo Hero — Desktop</h3>
+                <ul class="layout-card__specs">
+                  <template x-for="line in heroSpecLines('desktop')" :key="line">
+                    <li x-text="line"></li>
+                  </template>
+                </ul>
                 <div class="layout-card__actions">
                   <input type="file" :id="'lf-hero-desktop'" accept="video/mp4,video/webm" class="file-input"
                          @change="onSiteHeroVideo($event, 'desktop')" :disabled="publishing" />
@@ -359,6 +364,11 @@
               </div>
               <div class="layout-card__body">
                 <h3 class="layout-card__title">Vídeo Hero — Mobile</h3>
+                <ul class="layout-card__specs">
+                  <template x-for="line in heroSpecLines('mobile')" :key="line">
+                    <li x-text="line"></li>
+                  </template>
+                </ul>
                 <div class="layout-card__actions">
                   <input type="file" :id="'lf-hero-mobile'" accept="video/mp4,video/webm" class="file-input"
                          @change="onSiteHeroVideo($event, 'mobile')" :disabled="publishing" />
@@ -373,9 +383,11 @@
           <!-- Foto Intro -->
           <template x-for="item in homeAboutMedia.filter(m => m.key === 'home_about_photo_intro')" :key="item.key">
             <div class="layout-card" :class="{ 'is-draft': !!siteMediaDrafts[item.key] }">
-              <div class="layout-card__thumb" :style="'aspect-ratio:' + item.aspect">
-                <img x-show="siteMediaPreview(item.key)" :src="siteMediaPreview(item.key)" :alt="item.label" loading="lazy"
-                     :style="'object-fit:' + item.fit" />
+              <div class="layout-card__thumb" :class="siteMediaThumbClass(item)" :style="siteMediaThumbStyle(item)">
+                <img x-show="siteMediaPreview(item.key) && !siteMediaIsVideo(item.key)" :src="siteMediaPreview(item.key)" :alt="item.label" loading="lazy"
+                     :style="siteMediaImgStyle(item)" />
+                <video x-show="siteMediaPreview(item.key) && siteMediaIsVideo(item.key)" :src="siteMediaPreview(item.key)" autoplay muted loop playsinline
+                       :style="siteMediaVideoStyle(item)"></video>
                 <span x-show="!siteMediaPreview(item.key)" class="layout-card__ph" x-text="item.label"></span>
                 <div class="layout-card__badges">
                   <span class="gc-badge" :class="siteMediaStatus(item.key).cls" x-text="siteMediaStatus(item.key).text"></span>
@@ -383,6 +395,11 @@
               </div>
               <div class="layout-card__body">
                 <h3 class="layout-card__title" x-text="item.label"></h3>
+                <ul class="layout-card__specs">
+                  <template x-for="line in siteMediaSpecLines(item)" :key="line">
+                    <li x-text="line"></li>
+                  </template>
+                </ul>
                 <div class="layout-card__actions">
                   <input type="file" class="file-input" :id="'lf-' + item.key" :accept="siteMediaAccept(item.key)"
                          @change="onSiteAboutImage($event, item.key)" :disabled="publishing" />
@@ -397,9 +414,11 @@
           <!-- Foto Respiro -->
           <template x-for="item in homeAboutMedia.filter(m => m.key === 'home_about_photo_respiro')" :key="item.key">
             <div class="layout-card" :class="{ 'is-draft': !!siteMediaDrafts[item.key] }">
-              <div class="layout-card__thumb" :style="'aspect-ratio:' + item.aspect">
-                <img x-show="siteMediaPreview(item.key)" :src="siteMediaPreview(item.key)" :alt="item.label" loading="lazy"
-                     :style="'object-fit:' + item.fit" />
+              <div class="layout-card__thumb" :class="siteMediaThumbClass(item)" :style="siteMediaThumbStyle(item)">
+                <img x-show="siteMediaPreview(item.key) && !siteMediaIsVideo(item.key)" :src="siteMediaPreview(item.key)" :alt="item.label" loading="lazy"
+                     :style="siteMediaImgStyle(item)" />
+                <video x-show="siteMediaPreview(item.key) && siteMediaIsVideo(item.key)" :src="siteMediaPreview(item.key)" autoplay muted loop playsinline
+                       :style="siteMediaVideoStyle(item)"></video>
                 <span x-show="!siteMediaPreview(item.key)" class="layout-card__ph" x-text="item.label"></span>
                 <div class="layout-card__badges">
                   <span class="gc-badge" :class="siteMediaStatus(item.key).cls" x-text="siteMediaStatus(item.key).text"></span>
@@ -407,6 +426,11 @@
               </div>
               <div class="layout-card__body">
                 <h3 class="layout-card__title" x-text="item.label"></h3>
+                <ul class="layout-card__specs">
+                  <template x-for="line in siteMediaSpecLines(item)" :key="line">
+                    <li x-text="line"></li>
+                  </template>
+                </ul>
                 <div class="layout-card__actions">
                   <input type="file" class="file-input" :id="'lf-' + item.key" :accept="siteMediaAccept(item.key)"
                          @change="onSiteAboutImage($event, item.key)" :disabled="publishing" />
@@ -422,16 +446,21 @@
           <div class="layout-page__mundo">
             <template x-for="item in homeAboutMedia.filter(m => m.key === 'home_about_bg_mundo')" :key="item.key">
               <div class="layout-card" :class="{ 'is-draft': !!siteMediaDrafts[item.key] }">
-                <div class="layout-card__thumb layout-card__thumb--bg" style="aspect-ratio:16/9">
-                  <div class="layout-card__bg-fill"
-                       :style="siteMediaPreview(item.key) ? 'background-image:url(' + siteMediaPreview(item.key) + ')' : ''"></div>
-                  <span x-show="!siteMediaPreview(item.key)" class="layout-card__ph">Fundo Mundo</span>
+                <div class="layout-card__thumb" :class="siteMediaThumbClass(item)" :style="siteMediaThumbStyle(item)">
+                  <img x-show="siteMediaPreview(item.key)" :src="siteMediaPreview(item.key)" :alt="item.label" loading="lazy"
+                       :style="siteMediaImgStyle(item)" />
+                  <span x-show="!siteMediaPreview(item.key)" class="layout-card__ph" x-text="item.label"></span>
                   <div class="layout-card__badges">
                     <span class="gc-badge" :class="siteMediaStatus(item.key).cls" x-text="siteMediaStatus(item.key).text"></span>
                   </div>
                 </div>
                 <div class="layout-card__body">
                   <h3 class="layout-card__title" x-text="item.label"></h3>
+                  <ul class="layout-card__specs">
+                    <template x-for="line in siteMediaSpecLines(item)" :key="line">
+                      <li x-text="line"></li>
+                    </template>
+                  </ul>
                   <div class="layout-card__actions">
                     <input type="file" class="file-input" :id="'lf-' + item.key" :accept="siteMediaAccept(item.key)"
                            @change="onSiteAboutImage($event, item.key)" :disabled="publishing" />
@@ -446,9 +475,11 @@
             <div class="layout-mundo-cards">
               <template x-for="card in homeAboutMedia.filter(m => m.key.startsWith('home_about_card'))" :key="card.key">
                 <div class="layout-card" :class="{ 'is-draft': !!siteMediaDrafts[card.key] }">
-                  <div class="layout-card__thumb" :style="'aspect-ratio:' + card.aspect">
-                    <img x-show="siteMediaPreview(card.key)" :src="siteMediaPreview(card.key)" :alt="card.label" loading="lazy"
-                         :style="'object-fit:' + card.fit" />
+                  <div class="layout-card__thumb" :class="siteMediaThumbClass(card)" :style="siteMediaThumbStyle(card)">
+                    <img x-show="siteMediaPreview(card.key) && !siteMediaIsVideo(card.key)" :src="siteMediaPreview(card.key)" :alt="card.label" loading="lazy"
+                         :style="siteMediaImgStyle(card)" />
+                    <video x-show="siteMediaPreview(card.key) && siteMediaIsVideo(card.key)" :src="siteMediaPreview(card.key)" autoplay muted loop playsinline
+                           :style="siteMediaVideoStyle(card)"></video>
                     <span x-show="!siteMediaPreview(card.key)" class="layout-card__ph" x-text="card.label"></span>
                     <div class="layout-card__badges">
                       <span class="gc-badge" :class="siteMediaStatus(card.key).cls" x-text="siteMediaStatus(card.key).text"></span>
@@ -456,6 +487,11 @@
                   </div>
                   <div class="layout-card__body">
                     <h3 class="layout-card__title" x-text="card.label"></h3>
+                    <ul class="layout-card__specs">
+                      <template x-for="line in siteMediaSpecLines(card)" :key="line">
+                        <li x-text="line"></li>
+                      </template>
+                    </ul>
                     <div class="layout-card__actions">
                       <input type="file" class="file-input" :id="'lf-' + card.key" :accept="siteMediaAccept(card.key)"
                              @change="onSiteAboutImage($event, card.key)" :disabled="publishing" />
@@ -472,9 +508,11 @@
           <!-- Perspectivas -->
           <template x-for="item in homeAboutMedia.filter(m => m.key === 'home_about_photo_perspectivas')" :key="item.key">
             <div class="layout-card" :class="{ 'is-draft': !!siteMediaDrafts[item.key] }">
-              <div class="layout-card__thumb" :style="'aspect-ratio:' + item.aspect">
-                <img x-show="siteMediaPreview(item.key)" :src="siteMediaPreview(item.key)" :alt="item.label" loading="lazy"
-                     :style="'object-fit:' + item.fit" />
+              <div class="layout-card__thumb" :class="siteMediaThumbClass(item)" :style="siteMediaThumbStyle(item)">
+                <img x-show="siteMediaPreview(item.key) && !siteMediaIsVideo(item.key)" :src="siteMediaPreview(item.key)" :alt="item.label" loading="lazy"
+                     :style="siteMediaImgStyle(item)" />
+                <video x-show="siteMediaPreview(item.key) && siteMediaIsVideo(item.key)" :src="siteMediaPreview(item.key)" autoplay muted loop playsinline
+                       :style="siteMediaVideoStyle(item)"></video>
                 <span x-show="!siteMediaPreview(item.key)" class="layout-card__ph" x-text="item.label"></span>
                 <div class="layout-card__badges">
                   <span class="gc-badge" :class="siteMediaStatus(item.key).cls" x-text="siteMediaStatus(item.key).text"></span>
@@ -482,6 +520,11 @@
               </div>
               <div class="layout-card__body">
                 <h3 class="layout-card__title" x-text="item.label"></h3>
+                <ul class="layout-card__specs">
+                  <template x-for="line in siteMediaSpecLines(item)" :key="line">
+                    <li x-text="line"></li>
+                  </template>
+                </ul>
                 <div class="layout-card__actions">
                   <input type="file" class="file-input" :id="'lf-' + item.key" :accept="siteMediaAccept(item.key)"
                          @change="onSiteAboutImage($event, item.key)" :disabled="publishing" />
@@ -499,11 +542,11 @@
             <div class="layout-servicos-cards">
               <template x-for="item in homeAboutMedia.filter(m => m.key.startsWith('home_about_servico_'))" :key="item.key">
                 <div class="layout-card" :class="{ 'is-draft': !!siteMediaDrafts[item.key] }">
-                  <div class="layout-card__thumb" :style="'aspect-ratio:' + item.aspect">
+                  <div class="layout-card__thumb" :class="siteMediaThumbClass(item)" :style="siteMediaThumbStyle(item)">
                     <img x-show="siteMediaPreview(item.key) && !siteMediaIsVideo(item.key)" :src="siteMediaPreview(item.key)" :alt="item.label" loading="lazy"
-                         :style="'object-fit:' + item.fit" />
+                         :style="siteMediaImgStyle(item)" />
                     <video x-show="siteMediaPreview(item.key) && siteMediaIsVideo(item.key)" :src="siteMediaPreview(item.key)" autoplay muted loop playsinline
-                           :style="'object-fit:' + item.fit + ';width:100%;height:100%'"></video>
+                           :style="siteMediaVideoStyle(item)"></video>
                     <span x-show="!siteMediaPreview(item.key)" class="layout-card__ph" x-text="item.label"></span>
                     <div class="layout-card__badges">
                       <span class="gc-badge" :class="siteMediaStatus(item.key).cls" x-text="siteMediaStatus(item.key).text"></span>
@@ -511,6 +554,11 @@
                   </div>
                   <div class="layout-card__body">
                     <h3 class="layout-card__title" x-text="item.label"></h3>
+                    <ul class="layout-card__specs">
+                      <template x-for="line in siteMediaSpecLines(item)" :key="line">
+                        <li x-text="line"></li>
+                      </template>
+                    </ul>
                     <div class="layout-card__actions">
                       <input type="file" class="file-input" :id="'lf-' + item.key" :accept="siteMediaAccept(item.key)"
                              @change="onSiteAboutImage($event, item.key)" :disabled="publishing" />
@@ -546,8 +594,13 @@
                   <div class="layout-card__body layout-card__body--list">
                     <label class="field-label">Nome / alt</label>
                     <input type="text" class="input input-sm" x-model="logo.alt" @input="_ensureLogosDraft()" placeholder="Ex.: Nike" />
+                    <ul class="layout-card__specs">
+                      <template x-for="line in logoUploadSpecLines()" :key="line">
+                        <li x-text="line"></li>
+                      </template>
+                    </ul>
                     <div class="layout-card__actions">
-                      <input type="file" class="file-input" :id="'lf-logo-' + logo.id" accept="image/jpeg,image/png,image/webp"
+                      <input type="file" class="file-input" :id="'lf-logo-' + logo.id" accept="image/png,image/webp"
                              @change="onLogoImage($event, index)" :disabled="publishing" />
                       <label :for="'lf-logo-' + logo.id" class="upload-btn">Alterar</label>
                       <button type="button" class="btn btn-sm btn-danger" @click="removeLogo(index)">Remover</button>
@@ -588,6 +641,11 @@
                     <label class="field-label">Instagram</label>
                     <input type="text" class="input input-sm" x-model="member.instagram" @input="_ensureEquipeDraft()"
                            placeholder="@usuario ou URL" autocomplete="off" spellcheck="false" />
+                    <ul class="layout-card__specs">
+                      <template x-for="line in equipeUploadSpecLines()" :key="line">
+                        <li x-text="line"></li>
+                      </template>
+                    </ul>
                     <div class="layout-card__actions">
                       <input type="file" class="file-input" :id="'lf-equipe-' + member.id" accept="image/jpeg,image/png,image/webp"
                              @change="onEquipePhoto($event, index)" :disabled="publishing" />
@@ -603,9 +661,11 @@
           <!-- Curupire-se -->
           <template x-for="item in homeAboutMedia.filter(m => m.key === 'home_about_photo_curupire')" :key="item.key">
             <div class="layout-card" :class="{ 'is-draft': !!siteMediaDrafts[item.key] }">
-              <div class="layout-card__thumb" :style="'aspect-ratio:' + item.aspect">
-                <img x-show="siteMediaPreview(item.key)" :src="siteMediaPreview(item.key)" :alt="item.label" loading="lazy"
-                     :style="'object-fit:' + item.fit" />
+              <div class="layout-card__thumb" :class="siteMediaThumbClass(item)" :style="siteMediaThumbStyle(item)">
+                <img x-show="siteMediaPreview(item.key) && !siteMediaIsVideo(item.key)" :src="siteMediaPreview(item.key)" :alt="item.label" loading="lazy"
+                     :style="siteMediaImgStyle(item)" />
+                <video x-show="siteMediaPreview(item.key) && siteMediaIsVideo(item.key)" :src="siteMediaPreview(item.key)" autoplay muted loop playsinline
+                       :style="siteMediaVideoStyle(item)"></video>
                 <span x-show="!siteMediaPreview(item.key)" class="layout-card__ph" x-text="item.label"></span>
                 <div class="layout-card__badges">
                   <span class="gc-badge" :class="siteMediaStatus(item.key).cls" x-text="siteMediaStatus(item.key).text"></span>
@@ -613,6 +673,11 @@
               </div>
               <div class="layout-card__body">
                 <h3 class="layout-card__title" x-text="item.label"></h3>
+                <ul class="layout-card__specs">
+                  <template x-for="line in siteMediaSpecLines(item)" :key="line">
+                    <li x-text="line"></li>
+                  </template>
+                </ul>
                 <div class="layout-card__actions">
                   <input type="file" class="file-input" :id="'lf-' + item.key" :accept="siteMediaAccept(item.key)"
                          @change="onSiteAboutImage($event, item.key)" :disabled="publishing" />
@@ -628,15 +693,21 @@
           <div class="layout-page__footer-bg">
             <template x-for="item in homeAboutMedia.filter(m => m.key === 'home_footer_bg')" :key="item.key">
               <div class="layout-card" :class="{ 'is-draft': !!siteMediaDrafts[item.key] }">
-                <div class="layout-card__thumb layout-card__thumb--bg" :style="'aspect-ratio:' + item.aspect">
-                  <div class="layout-card__bg-fill"
-                       :style="siteMediaPreview(item.key) ? 'background-image:url(' + siteMediaPreview(item.key) + ')' : ''"></div>
-                  <span x-show="!siteMediaPreview(item.key)" class="layout-card__ph">Fundo do rodapé</span>
+                <div class="layout-card__thumb" :class="siteMediaThumbClass(item)" :style="siteMediaThumbStyle(item)">
+                  <img x-show="siteMediaPreview(item.key)" :src="siteMediaPreview(item.key)" :alt="item.label" loading="lazy"
+                       :style="siteMediaImgStyle(item)" />
+                  <span x-show="!siteMediaPreview(item.key)" class="layout-card__ph" x-text="item.label"></span>
                   <div class="layout-card__badges">
                     <span class="gc-badge" :class="siteMediaStatus(item.key).cls" x-text="siteMediaStatus(item.key).text"></span>
                   </div>
                 </div>
                 <div class="layout-card__body">
+                  <h3 class="layout-card__title" x-text="item.label"></h3>
+                  <ul class="layout-card__specs">
+                    <template x-for="line in siteMediaSpecLines(item)" :key="line">
+                      <li x-text="line"></li>
+                    </template>
+                  </ul>
                   <div class="layout-card__actions">
                     <input type="file" class="file-input" :id="'lf-' + item.key" :accept="siteMediaAccept(item.key)"
                            @change="onSiteAboutImage($event, item.key)" :disabled="publishing" />

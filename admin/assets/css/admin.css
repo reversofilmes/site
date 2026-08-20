@@ -1231,6 +1231,23 @@ body.admin-home-sorting .admin-project-item__drag-handle {
   display: block;
 }
 
+.layout-card__thumb--natural {
+  min-height: 10rem;
+}
+
+.layout-card__thumb--natural img,
+.layout-card__thumb--natural video {
+  position: static;
+  inset: auto;
+  width: 100%;
+  height: auto;
+  object-fit: contain;
+}
+
+.layout-card__thumb--natural .layout-card__ph {
+  min-height: 8rem;
+}
+
 .layout-card__thumb--bg {
   background: #0a0a0a;
 }
@@ -1278,6 +1295,19 @@ body.admin-home-sorting .admin-project-item__drag-handle {
   margin: 0;
   line-height: 1.3;
   color: var(--text-1, #fff);
+}
+
+.layout-card__specs {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  font-size: 0.72rem;
+  line-height: 1.45;
+  color: var(--text-3, #888);
+}
+
+.layout-card__specs li + li {
+  margin-top: 0.15rem;
 }
 
 .layout-card__actions {
@@ -1369,7 +1399,7 @@ body.admin-home-sorting .admin-project-item__drag-handle {
 }
 
 .layout-card__thumb--logo {
-  aspect-ratio: 3 / 1;
+  aspect-ratio: 1 / 1;
   background: #0a0a0a;
 }
 

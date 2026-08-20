@@ -46,6 +46,14 @@ const SITE_SERVICO_TYPES = new Set([
   'home_about_servico_fotografia',
 ]);
 
+const SITE_CARD_TYPES = new Set([
+  'home_about_card_festivais',
+  'home_about_card_arte',
+  'home_about_card_corporativo',
+]);
+
+const SITE_LOGO_TYPES = new Set(['home_about_logo']);
+
 function sanitizeKey(slug, type, ext) {
   const hash = crypto.randomUUID().slice(0, 8);
   const sitePrefix = SITE_UPLOAD_PREFIX[type];
@@ -53,9 +61,13 @@ function sanitizeKey(slug, type, ext) {
     if (SITE_VIDEO_TYPES.has(type) && ext !== 'mp4' && ext !== 'webm') {
       throw new Error('Invalid video type for hero');
     }
-    if (SITE_SERVICO_TYPES.has(type)) {
+    if (SITE_LOGO_TYPES.has(type)) {
+      if (!['png', 'webp'].includes(ext)) {
+        throw new Error('Invalid image type for logo');
+      }
+    } else if (SITE_SERVICO_TYPES.has(type) || SITE_CARD_TYPES.has(type)) {
       if (!['jpg', 'png', 'webp', 'gif', 'mp4', 'webm'].includes(ext)) {
-        throw new Error('Invalid media type for servico preview');
+        throw new Error('Invalid media type for site preview');
       }
     } else if (!SITE_VIDEO_TYPES.has(type) && !['jpg', 'png', 'webp', 'gif'].includes(ext)) {
       throw new Error('Invalid image type for site media');
