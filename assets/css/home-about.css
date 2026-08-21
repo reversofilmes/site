@@ -897,25 +897,28 @@
   position: relative;
   background: #000;
   overflow: hidden;
+  aspect-ratio: 2667 / 2358;
   --perspectivas-copy-top: clamp(2.75rem, 7vw, 5.5rem);
   --perspectivas-copy-left: var(--sobre-intro-left);
   --perspectivas-copy-size: clamp(1.35rem, 3.1vw, 2.65rem);
-  --perspectivas-min-height: auto;
-  min-height: var(--perspectivas-min-height);
 }
 
 .home-sobre-perspectivas__figure {
   margin: 0;
-  position: relative;
+  position: absolute;
+  inset: 0;
   overflow: hidden;
   background: #000;
 }
 
 .home-sobre-perspectivas__photo {
+  position: absolute;
+  inset: 0;
   display: block;
   width: 100%;
-  height: auto;
-  vertical-align: top;
+  height: 100%;
+  object-fit: cover;
+  object-position: center center;
   transform: none;
   transform-origin: center center;
   will-change: transform;
@@ -982,21 +985,6 @@
   .home-sobre-perspectivas {
     --perspectivas-copy-size: clamp(1.15rem, 4.8vw, 2.1rem);
     --perspectivas-copy-top: clamp(2rem, 6vw, 3.75rem);
-    --perspectivas-min-height: max(62svh, 420px);
-  }
-
-  .home-sobre-perspectivas__figure {
-    position: absolute;
-    inset: 0;
-  }
-
-  .home-sobre-perspectivas__photo {
-    position: absolute;
-    inset: 0;
-    width: 100%;
-    height: 100%;
-    object-fit: cover;
-    object-position: 72% center;
   }
 }
 
@@ -1004,14 +992,12 @@
   .home-sobre-perspectivas {
     --perspectivas-copy-size: clamp(0.875rem, 5vw, 1.4rem);
     --perspectivas-copy-top: clamp(1.75rem, 5.5vw, 2.75rem);
-    --perspectivas-min-height: max(58svh, 360px);
   }
 }
 
 @media (max-width: 480px) {
   .home-sobre-perspectivas {
     --perspectivas-copy-size: clamp(0.75rem, 5.5vw, 1.15rem);
-    --perspectivas-min-height: max(52svh, 320px);
   }
 
   .home-sobre-perspectivas__line--final {
@@ -2064,7 +2050,7 @@
   }
 
   .home-sobre-perspectivas {
-    aspect-ratio: 4 / 5;
+    aspect-ratio: 2667 / 2358;
   }
 
   .home-sobre-perspectivas__figure {
@@ -2078,7 +2064,7 @@
     width: 100%;
     height: 100%;
     object-fit: cover;
-    object-position: 72% center;
+    object-position: center center;
   }
 
   .home-sobre-curupire {

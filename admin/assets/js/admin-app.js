@@ -144,9 +144,10 @@ const HOME_ABOUT_MEDIA = [
     label: 'Perspectivas',
     fallback: '/assets/images/260411_BravaEscolaDeCirco_PalcoAberto_@ReversoFilmes_@indioevindio-336.jpg',
     preview: 'cover',
-    aspect: '4 / 5',
+    aspect: '2667 / 2358',
     fit: 'cover',
-    aspectLabel: '4∶5 (retrato) — largura total na Home',
+    objectPosition: 'center center',
+    aspectLabel: '2667∶2358 (≈ 9∶8) — foto completa na largura total da Home',
     accept: IMAGE_MEDIA_ACCEPT,
     acceptLabel: IMAGE_MEDIA_ACCEPT_LABEL,
   },
@@ -880,7 +881,8 @@ function adminApp() {
     siteMediaImgStyle(item) {
       const mode = item?.preview || 'cover';
       if (mode === 'natural') return '';
-      return `object-fit:${item?.fit || 'cover'}`;
+      const pos = item?.objectPosition ? `;object-position:${item.objectPosition}` : '';
+      return `object-fit:${item?.fit || 'cover'}${pos}`;
     },
 
     siteMediaVideoStyle(item) {
@@ -892,7 +894,10 @@ function adminApp() {
     siteMediaSpecLines(item) {
       if (!item) return [];
       const lines = [];
-      if (item.aspectLabel) lines.push(`Proporção ideal: ${item.aspectLabel}`);
+      if (item.aspectLabel) lines.push(`Proporção do quadro: ${item.aspectLabel}`);
+      if (item.preview === 'cover' && item.aspect) {
+        lines.push('Preview = recorte real da Home (cover). Fora dessa proporção, laterais ou topo/base são cortados.');
+      }
       lines.push(`Formatos: ${item.acceptLabel || mimeAcceptToLabel(this.siteMediaAccept(item.key))}`);
       lines.push(`Tamanho máximo: ${SITE_UPLOAD_MAX_MB} MB`);
       return lines;
