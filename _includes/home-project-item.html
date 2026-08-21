@@ -16,7 +16,7 @@
             muted 
             playsinline 
             loop 
-            preload="metadata"
+            preload="none"
             poster="{% if _thumb contains '://' %}{{ _thumb }}{% else %}{{ _thumb | relative_url }}{% endif %}"
             webkit-playsinline="true">
             {% assign _hp = project.hover_preview | downcase %}

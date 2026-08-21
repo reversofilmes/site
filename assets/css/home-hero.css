@@ -26,6 +26,7 @@
   pointer-events: none;
   opacity: 1;
   visibility: visible;
+  display: block;
 }
 
 .home-hero__video--desktop {

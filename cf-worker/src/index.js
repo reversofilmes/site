@@ -39,9 +39,9 @@ export default {
     const url = new URL(request.url);
     const path = url.pathname;
 
-    if (request.method === 'GET' && path.startsWith('/media/')) {
+    if ((request.method === 'GET' || request.method === 'HEAD') && path.startsWith('/media/')) {
       try {
-        return await handlePublicMedia(env, path);
+        return await handlePublicMedia(env, request, path);
       } catch (e) {
         console.error('Media error:', e);
         return error('Internal server error', 500);
