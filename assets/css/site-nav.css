@@ -245,3 +245,54 @@ body.home-nav-open {
     max-width: min(16rem, calc(100vw - 0.35rem));
   }
 }
+
+@media (min-width: 1921px) {
+  .home-nav {
+    --nav-logo-w: clamp(5rem, 4.5vw, 7.5rem);
+    --nav-logo-h: clamp(6.25rem, 5.5vw, 9rem);
+    --nav-edge-t: max(1.75rem, env(safe-area-inset-top, 0px));
+    --nav-edge-r: max(1.75rem, env(safe-area-inset-right, 0px));
+    --nav-stack-gap: clamp(1rem, 2vmin, 1.35rem);
+  }
+
+  .home-nav__menu-label {
+    font-size: clamp(0.875rem, 0.7vw, 1.25rem);
+  }
+
+  .home-nav__panel {
+    max-width: min(28rem, calc(100vw - 2rem));
+    padding-right: max(1.75rem, env(safe-area-inset-right, 0px));
+    gap: clamp(0.35rem, 0.4vw, 0.6rem);
+  }
+
+  .home-nav__link {
+    min-height: clamp(3rem, 3.2vw, 4.25rem);
+    gap: clamp(0.65rem, 0.7vw, 1rem);
+    padding: 0.55rem 0.5rem 0.55rem 0.25rem;
+    font-size: clamp(1.15rem, 1.15vw, 1.65rem);
+    border-radius: 8px;
+  }
+
+  .home-nav__link i {
+    width: 1.35rem;
+    font-size: clamp(1.15rem, 1.1vw, 1.6rem);
+  }
+}
+
+@media (min-width: 2560px) {
+  .home-nav {
+    --nav-logo-w: clamp(6rem, 5vw, 9rem);
+    --nav-logo-h: clamp(7.5rem, 6vw, 10.5rem);
+    --nav-edge-t: max(2.25rem, env(safe-area-inset-top, 0px));
+    --nav-edge-r: max(2.25rem, env(safe-area-inset-right, 0px));
+  }
+
+  .home-nav__menu-label {
+    font-size: clamp(1rem, 0.65vw, 1.4rem);
+  }
+
+  .home-nav__link {
+    font-size: clamp(1.35rem, 1.05vw, 1.85rem);
+    min-height: clamp(3.5rem, 3vw, 4.75rem);
+  }
+}
