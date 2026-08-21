@@ -1217,6 +1217,7 @@ body.admin-home-sorting .admin-project-item__drag-handle {
 .layout-card__thumb {
   position: relative;
   width: 100%;
+  flex: 0 0 auto;
   background: #000;
   overflow: hidden;
 }
