@@ -828,22 +828,36 @@
     if (!section) return;
 
     var head = section.querySelector(".home-sobre-equipe__head");
-    if (head) {
-      initScrollReveal([head], {
-        showClass: "home-sobre-equipe__head--visible",
-      });
-    }
-
     var items = section.querySelectorAll(".home-sobre-equipe__item");
-    if (!items.length) return;
 
-    if (!prefersReducedMotion()) {
+    if (items.length && !prefersReducedMotion()) {
       items.forEach(function (item, index) {
         item.style.setProperty("--equipe-reveal-delay", index * 0.1 + "s");
       });
     }
 
-    initScrollReveal([section], { showClass: "home-sobre-equipe--revealed" });
+    function setEquipeVisible(visible) {
+      section.classList.toggle("home-sobre-equipe--revealed", visible);
+      if (head) {
+        head.classList.toggle("home-sobre-equipe__head--visible", visible);
+      }
+    }
+
+    if (prefersReducedMotion() || typeof IntersectionObserver === "undefined") {
+      setEquipeVisible(true);
+      return;
+    }
+
+    var observer = new IntersectionObserver(
+      function (entries) {
+        entries.forEach(function (entry) {
+          setEquipeVisible(entry.isIntersecting);
+        });
+      },
+      { rootMargin: SCROLL_REVEAL_MARGIN, threshold: SCROLL_REVEAL_THRESHOLD },
+    );
+
+    observer.observe(section);
   }
 
   function initHomeEquipeCarousel() {

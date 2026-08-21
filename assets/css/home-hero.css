@@ -201,6 +201,43 @@
   }
 }
 
+/* 4K / telas ultra-wide */
+@media (min-width: 1921px) {
+  .home-hero {
+    --hero-logo-w: clamp(26rem, 22vw, 42rem);
+  }
+
+  .home-hero__tagline {
+    top: calc(env(safe-area-inset-top, 0px) + 2rem);
+    left: calc(env(safe-area-inset-left, 0px) + 2rem);
+    width: clamp(22rem, 18vw, 32rem);
+  }
+
+  .home-hero__scroll {
+    bottom: max(4rem, calc(env(safe-area-inset-bottom, 0px) + 2.5rem));
+  }
+
+  .home-hero__scroll-arrow {
+    font-size: 1.75rem;
+  }
+}
+
+@media (min-width: 2560px) {
+  .home-hero {
+    --hero-logo-w: clamp(36rem, 20vw, 48rem);
+  }
+
+  .home-hero__tagline {
+    width: clamp(28rem, 16vw, 38rem);
+  }
+}
+
+@media (min-width: 1921px) {
+  .home-below .load-more-btn.servico-link {
+    min-height: clamp(3.5rem, 3.4vw, 4.75rem);
+  }
+}
+
 /* Conteúdo abaixo do hero — overlap progressivo via JS (--home-grid-overlap) */
 #home-below,
 .home-below {
