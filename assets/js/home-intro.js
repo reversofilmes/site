@@ -23,8 +23,10 @@ document.addEventListener("DOMContentLoaded", () => {
   }
 
   function getInactiveHeroVideo() {
-    if (heroMql.matches) return heroVideoDesktop;
-    return heroVideoMobile;
+    const active = getActiveHeroVideo();
+    const other = heroMql.matches ? heroVideoDesktop : heroVideoMobile;
+    if (!other || other === active) return null;
+    return other;
   }
 
   let heroVideo = getActiveHeroVideo();
@@ -129,11 +131,20 @@ document.addEventListener("DOMContentLoaded", () => {
     return !!heroVideo.error || heroVideo.networkState === 3;
   }
 
+  function heroIsStillFetching() {
+    if (!heroVideo) return false;
+    // NETWORK_LOADING = 2: o browser ainda está baixando. Não é travamento.
+    return heroVideo.networkState === 2 && !heroVideo.error;
+  }
+
   function heroVideoLooksStuck() {
     if (!heroVideo) return false;
     if (heroVideoHasError()) return true;
-    // Pausado + sem dados: algo travou o pipeline de mídia.
-    if (heroVideo.paused && heroVideo.readyState < 2) return true;
+    if (heroIsStillFetching()) return false;
+    // Sem metadados e sem fetch ativo: o pipeline parou de verdade.
+    if (heroVideo.paused && heroVideo.readyState < 2 && heroVideo.networkState !== 2) {
+      return true;
+    }
     return false;
   }
 
@@ -143,16 +154,12 @@ document.addEventListener("DOMContentLoaded", () => {
     // "tela preta" quando o vídeo *tecnicamente* está tocando.
     if (!heroVideo) return false;
     if (heroVideo.paused) return false;
-    // Se nenhum timeupdate foi registrado OU o último foi há muito.
-    const now = Date.now();
-    const timeSinceLastProgress =
-      heroLastProgressTimestamp === 0
-        ? Infinity
-        : now - heroLastProgressTimestamp;
+    if (heroIsStillFetching()) return false;
+    // Sem metadata o currentTime fica em 0 — isso é download, não decoder.
+    if (heroVideo.readyState < 1) return false;
+    if (heroLastProgressTimestamp === 0) return false;
     const stuckAtZero = heroVideo.currentTime < 0.05;
-    // 2+ segundos sem avanço de tempo com o elemento dizendo que
-    // está tocando é forte indicador de travamento no decoder.
-    return stuckAtZero && timeSinceLastProgress > 2000;
+    return stuckAtZero && Date.now() - heroLastProgressTimestamp > 2500;
   }
 
   function reloadHeroVideoPlain() {
@@ -172,6 +179,14 @@ document.addEventListener("DOMContentLoaded", () => {
   }
 
   function reloadHeroVideoWithCacheBust(reason) {
+    // Em produção o cache-bust aborta o download em curso, troca a URL
+    // (?_rv=) e força 22 MB de novo — piorando o first load. Só faz
+    // sentido no WEBrick local, onde o media cache do Chrome corrompe.
+    if (!heroIsLocalDev) {
+      heroLog("cache-bust ignorado em produção. motivo =", reason);
+      tryPlayHeroVideo();
+      return;
+    }
     if (!heroVideo || !heroSourceEl) return;
     const base = getHeroBaseSrc();
     if (!base) return;
@@ -227,10 +242,11 @@ document.addEventListener("DOMContentLoaded", () => {
       "networkState =", heroVideo.networkState,
       "currentTime =", heroVideo.currentTime,
       "error =", heroVideo.error && heroVideo.error.code,
-      "— aplicando cache-bust.",
     );
-    markHeroFailed();
-    reloadHeroVideoWithCacheBust(stuck ? "health-check" : "no-progress");
+    if (heroIsLocalDev) {
+      markHeroFailed();
+      reloadHeroVideoWithCacheBust(stuck ? "health-check" : "no-progress");
+    }
     tryPlayHeroVideo();
 
     // Agenda um segundo health-check depois do cache-bust. Se ainda
@@ -260,10 +276,12 @@ document.addEventListener("DOMContentLoaded", () => {
 
     heroLog(
       "progress-check detectou decoder travado (paused=false, currentTime=" +
-        heroVideo.currentTime + ") — cache-busting.",
+        heroVideo.currentTime + ").",
     );
-    markHeroFailed();
-    reloadHeroVideoWithCacheBust("progress-check");
+    if (heroIsLocalDev) {
+      markHeroFailed();
+      reloadHeroVideoWithCacheBust("progress-check");
+    }
     tryPlayHeroVideo();
   }
 
@@ -284,18 +302,15 @@ document.addEventListener("DOMContentLoaded", () => {
     heroVideo.playsInline = true;
     heroVideo.loop = true;
 
-    // Cache-bust preemptivo no PRIMEIRO bootstrap quando:
-    //  - estamos em dev local (WEBrick + vídeo grande é flaky), ou
-    //  - houve falha registrada em uma carga anterior desta sessão.
-    // Isso é crítico porque o `preload="auto"` da tag <video> já
-    // começou a baixar a URL original antes do JS rodar; se o cache
-    // do Chromium tem uma cópia ruim, só trocar a URL força o
-    // refetch. Custa 3.7 MB extra em dev — aceitável.
+    // Cache-bust preemptivo só no WEBrick local. Em produção uma
+    // "falha" anterior quase sempre foi first-load lento (moov no
+    // fim + contenção), não cache corrompido — bustar de novo
+    // descarta o Cache-Control de 1 ano e rebaixa o arquivo inteiro.
     if (
       !heroInitialBootstrapDone &&
       !forceCacheBust &&
       !forceReload &&
-      (heroIsLocalDev || heroHadPreviousFailure)
+      heroIsLocalDev
     ) {
       heroLog(
         "bootstrap com cache-bust preemptivo.",
@@ -363,12 +378,19 @@ document.addEventListener("DOMContentLoaded", () => {
           heroLog("error MEDIA_ERR_ABORTED (code 1) — ignorando (provável abort interno).");
           return;
         }
-        heroLog("evento error. code =", code, "— cache-busting.");
-        markHeroFailed();
-        setTimeout(() => {
-          reloadHeroVideoWithCacheBust("media-error");
-          tryPlayHeroVideo();
-        }, 200);
+        heroLog("evento error. code =", code);
+        if (heroIsLocalDev) {
+          markHeroFailed();
+          setTimeout(() => {
+            reloadHeroVideoWithCacheBust("media-error");
+            tryPlayHeroVideo();
+          }, 200);
+        } else {
+          setTimeout(() => {
+            reloadHeroVideoPlain();
+            tryPlayHeroVideo();
+          }, 200);
+        }
       });
       // Logs diagnósticos dos eventos iniciais — ajudam a entender por
       // que a recuperação às vezes não funciona.
@@ -388,23 +410,29 @@ document.addEventListener("DOMContentLoaded", () => {
           "readyState =", heroVideo.readyState,
         );
       });
-      // `stalled` = UA parou de buscar dados inesperadamente.
+      // `stalled` / `suspend` no first load costumam ser o browser
+      // pausando o fetch porque outros <video> ocuparam as conexões
+      // — não cache corrompido. Em produção só tentamos play().
       heroVideo.addEventListener("stalled", () => {
         if (heroVideo.readyState < 2) {
-          heroLog("stalled com readyState <2 — cache-busting.");
-          markHeroFailed();
-          reloadHeroVideoWithCacheBust("stalled");
+          heroLog("stalled com readyState <2.");
+          if (heroIsLocalDev) {
+            markHeroFailed();
+            reloadHeroVideoWithCacheBust("stalled");
+          } else {
+            tryPlayHeroVideo();
+          }
         }
       });
-      // `suspend` com networkState IDLE/NO_SOURCE e sem dados tende a
-      // ser cache corrompido no Chromium.
       heroVideo.addEventListener("suspend", () => {
         if (heroVideo.readyState === 0 && heroVideo.networkState !== 1) {
-          heroLog(
-            "suspend com readyState=0 — suspeita de cache corrompido, cache-busting.",
-          );
-          markHeroFailed();
-          reloadHeroVideoWithCacheBust("suspend-empty");
+          heroLog("suspend com readyState=0.");
+          if (heroIsLocalDev) {
+            markHeroFailed();
+            reloadHeroVideoWithCacheBust("suspend-empty");
+          } else {
+            tryPlayHeroVideo();
+          }
         }
       });
       // Se algo pausar inadvertidamente (bfcache Safari, visibilidade),
@@ -418,14 +446,16 @@ document.addEventListener("DOMContentLoaded", () => {
       });
     }
 
-    // Reset dos trackers de progresso para esta tentativa. Sem isso,
-    // um timestamp antigo poderia fazer `heroVideoHasNoProgress`
-    // retornar false incorretamente logo após um cache-bust.
-    heroLastCurrentTime = null;
-    heroLastProgressTimestamp = 0;
+    // Só zera os trackers quando de fato reiniciamos o pipeline.
+    // ensure() roda em pageshow/load/intro — resetar sempre fazia o
+    // health-check achar "sem progresso" e abortar o download.
+    if (forceReload || forceCacheBust) {
+      heroLastCurrentTime = null;
+      heroLastProgressTimestamp = 0;
+    }
 
     // Health-check: detecta travamento "silencioso" (nunca disparou
-    // error mas o vídeo nunca tocou) e aplica cache-bust.
+    // error mas o vídeo nunca tocou) e aplica cache-bust (só em dev).
     if (heroHealthTimer) clearTimeout(heroHealthTimer);
     heroHealthTimer = setTimeout(() => runHealthCheck(attemptSeq), 1500);
     // Progress-check mais tardio: pega especificamente o caso de
@@ -435,17 +465,44 @@ document.addEventListener("DOMContentLoaded", () => {
     heroProgressTimer = setTimeout(() => runProgressCheck(attemptSeq), 3000);
   }
 
+  function detachHeroSource(videoEl) {
+    if (!videoEl) return;
+    try { videoEl.pause(); } catch (_) {}
+    videoEl.removeAttribute("autoplay");
+    videoEl.preload = "none";
+    const srcEl = videoEl.querySelector("source");
+    if (srcEl && srcEl.getAttribute("src")) {
+      srcEl.setAttribute("data-src", srcEl.getAttribute("src"));
+      srcEl.removeAttribute("src");
+      try { videoEl.load(); } catch (_) {}
+    }
+  }
+
+  function attachHeroSource(videoEl) {
+    if (!videoEl) return;
+    const srcEl = videoEl.querySelector("source");
+    if (srcEl && !srcEl.getAttribute("src")) {
+      const saved = srcEl.getAttribute("data-src");
+      if (saved) srcEl.setAttribute("src", saved);
+    }
+    videoEl.preload = "auto";
+  }
+
+  (function pauseInactiveHeroOnBoot() {
+    const inactive = getInactiveHeroVideo();
+    if (inactive) detachHeroSource(inactive);
+  })();
+
   // Switch active hero video on breakpoint change (desktop <-> mobile)
   function switchHeroVideo() {
     const prev = heroVideo;
     const next = getActiveHeroVideo();
     const inactive = getInactiveHeroVideo();
     if (next === prev && prev) return;
-    // Pause the outgoing video
-    if (prev) { try { prev.pause(); } catch (_) {} }
-    if (inactive) { try { inactive.pause(); } catch (_) {} }
-    // Update references
+    if (prev) detachHeroSource(prev);
+    if (inactive && inactive !== next) detachHeroSource(inactive);
     heroVideo = next;
+    attachHeroSource(heroVideo);
     heroSourceEl = heroVideo ? heroVideo.querySelector("source") : null;
     heroOriginalSrc = null;
     heroInitialBootstrapDone = false;
