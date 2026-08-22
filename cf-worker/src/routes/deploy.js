@@ -5,7 +5,6 @@ import {
   isCreditBlockError,
   isDeployBlocked,
   logDeployAttempt,
-  quotaConfig,
   setDeployBlocked,
   clearDeployBlock,
 } from '../utils/deploy-quota.js';
