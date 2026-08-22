@@ -69,13 +69,7 @@
         blocked: false,
         cycle_start: '2026-08-18',
         cycle_end: '2026-09-17',
-        monthly_credits: 1000,
-        credits_per_deploy: 15,
         deploys_success_this_cycle: 0,
-        credits_estimated_deploys: 0,
-        credits_remaining_estimate: 1000,
-        deploys_remaining_estimate: 66,
-        note: 'Estimativa (modo dev).',
         billing_url: 'https://app.netlify.com/teams/reversofilmes/billing',
       };
     };
@@ -196,25 +190,21 @@
       <div class="deploy-quota-panel__main">
         <template x-if="deployQuota?.blocked">
           <p class="deploy-quota-panel__title">
-            <strong>Deploy bloqueado</strong> — a Netlify rejeitou a última tentativa
+            <strong>Publicação bloqueada</strong> — a Netlify rejeitou a última tentativa
             (<span x-text="deployQuota.blocked_reason || 'créditos esgotados'"></span>).
-            Os dados podem ser salvos, mas o site não será atualizado até resolver o saldo.
+            Os dados podem ser salvos, mas o site não atualiza até haver saldo.
           </p>
         </template>
         <template x-if="!deployQuota?.blocked">
           <p class="deploy-quota-panel__title">
-            <strong>Créditos Netlify (estimativa)</strong> —
-            <span x-text="deployQuota.deploys_success_this_cycle"></span> deploy(s) neste ciclo
-            (~<span x-text="deployQuota.credits_estimated_deploys"></span> créditos de
-            <span x-text="deployQuota.monthly_credits"></span>).
-            Renova em <span x-text="formatQuotaDate(deployQuota.cycle_end)"></span>.
+            <strong>Publicação disponível</strong> —
+            <span x-text="formatPanelPublishes(deployQuota.deploys_success_this_cycle)"></span>.
+            Ciclo até <span x-text="formatQuotaDate(deployQuota.cycle_end)"></span>.
           </p>
         </template>
-        <p class="deploy-quota-panel__note" x-text="deployQuota?.note"></p>
-        <div class="deploy-quota-panel__bar" aria-hidden="true">
-          <div class="deploy-quota-panel__bar-fill"
-               :style="'width:' + deployQuotaBarPercent + '%'"></div>
-        </div>
+        <p class="deploy-quota-panel__note">
+          O saldo real de créditos (tráfego, deploys fora do painel e outros sites da equipe) está só no billing da Netlify.
+        </p>
       </div>
       <div class="deploy-quota-panel__actions">
         <a :href="deployQuota?.billing_url" target="_blank" rel="noopener noreferrer"
