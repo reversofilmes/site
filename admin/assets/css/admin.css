@@ -1357,6 +1357,14 @@ body.admin-home-sorting .admin-project-item__drag-handle {
   gap: 1rem;
 }
 
+.layout-equipe-cards .layout-card {
+  contain: layout paint;
+}
+
+.layout-equipe-cards .layout-card__thumb {
+  aspect-ratio: 3 / 4;
+}
+
 .layout-page__servicos,
 .layout-page__equipe,
 .layout-page__logos,

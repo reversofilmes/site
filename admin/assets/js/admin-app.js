@@ -401,6 +401,7 @@ function adminApp() {
     siteMediaDrafts: {},
     /** @type {{ logos: Array|null, equipe: Array|null }} */
     siteListsDraft: { logos: null, equipe: null },
+    equipeThumbDisplay: {},
     masonryReady: false,
 
     async init() {
@@ -930,7 +931,8 @@ function adminApp() {
       return [
         'Proporção ideal: 3∶4 (retrato)',
         `Formatos: ${IMAGE_MEDIA_ACCEPT_LABEL}`,
-        `Tamanho máximo: ${SITE_UPLOAD_MAX_MB} MB`,
+        'O admin reduz a foto para ~1400 px na maior aresta',
+        `Tamanho máximo de envio: ${SITE_UPLOAD_MAX_MB} MB`,
       ];
     },
 
@@ -1099,7 +1101,7 @@ function adminApp() {
       this.siteListsDraft.equipe.splice(index, 1);
     },
 
-    onEquipePhoto(e, index) {
+    async onEquipePhoto(e, index) {
       const file = e.target?.files?.[0];
       if (e.target) e.target.value = '';
       if (!file) return;
@@ -1112,16 +1114,35 @@ function adminApp() {
       this._ensureEquipeDraft();
       const member = this.siteListsDraft.equipe[index];
       if (member._photoPreview) MediaUpload.revokePreview(member._photoPreview);
-      member._photoFile = file;
-      member._photoPreview = MediaUpload.preview(file);
+      const { file: ready } = await MediaUpload.resizeStill(file, {
+        maxEdge: 1400,
+        quality: 0.82,
+      });
+      member._photoFile = ready;
+      member._photoPreview = MediaUpload.preview(ready);
       this.siteListsDraft.equipe = [...this.siteListsDraft.equipe];
       this._toast('Foto em rascunho. Clique em «Publicar».', 'success');
     },
 
+    async downscaleLayoutThumb(e) {
+      const img = e?.target;
+      if (!img || img.dataset.resized === '1') return;
+      const raw = img.currentSrc || img.src;
+      if (!raw || raw.startsWith('blob:')) {
+        img.dataset.resized = '1';
+        return;
+      }
+      const url = await MediaUpload.downscaleImageElement(img, 720);
+      if (url) {
+        this.equipeThumbDisplay = { ...this.equipeThumbDisplay, [raw]: url };
+      }
+    },
+
     equipePhotoPreview(member) {
       if (!member) return null;
-      if (member._photoPreview) return member._photoPreview;
-      return member.photo || null;
+      const raw = member._photoPreview || member.photo || null;
+      if (!raw) return null;
+      return this.equipeThumbDisplay[raw] || raw;
     },
 
     equipeMemberStatus(member) {
