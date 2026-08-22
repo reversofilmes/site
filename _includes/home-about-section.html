@@ -359,10 +359,12 @@
                 <div class="home-sobre-equipe__media" aria-hidden="true">
                   {% if member.photo and member.photo != '' %}
                     <img
-                      src="{% if member.photo contains '://' %}{{ member.photo }}{% else %}{{ member.photo | relative_url }}{% endif %}"
+                      data-equipe-src="{% if member.photo contains '://' %}{{ member.photo }}{% else %}{{ member.photo | relative_url }}{% endif %}"
                       alt=""
-                      loading="lazy"
+                      width="720"
+                      height="1020"
                       decoding="async"
+                      crossorigin="anonymous"
                     />
                   {% endif %}
                 </div>

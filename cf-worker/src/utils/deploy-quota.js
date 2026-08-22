@@ -1,12 +1,10 @@
 export function quotaConfig(env) {
-  const monthly = parseInt(env.NETLIFY_MONTHLY_CREDITS || '300', 10);
-  const perDeploy = parseInt(env.NETLIFY_CREDITS_PER_DEPLOY || '15', 10);
   const cycleStart = String(env.NETLIFY_CYCLE_START || '').trim() || null;
   const cycleEnd = String(env.NETLIFY_CYCLE_END || '').trim() || null;
   const billingUrl =
     String(env.NETLIFY_BILLING_URL || '').trim() ||
     'https://app.netlify.com/teams/reversofilmes/billing';
-  return { monthly, perDeploy, cycleStart, cycleEnd, billingUrl };
+  return { cycleStart, cycleEnd, billingUrl };
 }
 
 export function isCreditBlockError(status, bodyText) {
@@ -111,10 +109,6 @@ export async function getDeployQuotaStatus(env) {
      FROM deploy_quota_state WHERE id = 1`,
   ).first();
 
-  const creditsEstimatedDeploys = deploysSuccess * cfg.perDeploy;
-  const creditsRemainingEstimate = Math.max(0, cfg.monthly - creditsEstimatedDeploys);
-  const deploysRemainingEstimate = Math.floor(creditsRemainingEstimate / cfg.perDeploy);
-
   const lastFailed = await env.DB.prepare(
     `SELECT triggered_at, http_status, error_detail FROM deploy_log
      WHERE status = 'failed' ORDER BY id DESC LIMIT 1`,
@@ -127,17 +121,9 @@ export async function getDeployQuotaStatus(env) {
     blocked_http_status: state?.blocked_http_status ?? null,
     cycle_start: cfg.cycleStart,
     cycle_end: cfg.cycleEnd,
-    monthly_credits: cfg.monthly,
-    credits_per_deploy: cfg.perDeploy,
     deploys_success_this_cycle: deploysSuccess,
-    credits_estimated_deploys: creditsEstimatedDeploys,
-    credits_remaining_estimate: creditsRemainingEstimate,
-    deploys_remaining_estimate: deploysRemainingEstimate,
     last_failed_at: lastFailed?.triggered_at ?? null,
     last_failed_http_status: lastFailed?.http_status ?? null,
-    note:
-      'Estimativa baseada apenas nos deploys disparados por este painel (~15 créditos cada). ' +
-      'Tráfego do site e outros usos também consomem créditos e não aparecem aqui.',
     billing_url: cfg.billingUrl,
   };
 }

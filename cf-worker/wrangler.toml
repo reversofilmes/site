@@ -35,9 +35,7 @@ JWT_TTL_SECONDS = "28800"
 PERSIST_SESSION_COOKIE = "false"
 # POST ao build hook do Netlify: ?trigger_branch=… (sobrescreve a branch configurada no dashboard do hook).
 NETLIFY_DEPLOY_BRANCH = "main"
-# Orçamento Netlify (estimativa no admin; ajuste a cada renovação do plano).
-NETLIFY_MONTHLY_CREDITS = "1000"
-NETLIFY_CREDITS_PER_DEPLOY = "15"
+# Ciclo de billing Netlify (desbloqueio automático após cycle_end; ajuste a cada renovação).
 NETLIFY_CYCLE_START = "2026-08-18"
 NETLIFY_CYCLE_END = "2026-09-17"
 NETLIFY_BILLING_URL = "https://app.netlify.com/teams/reversofilmes/billing"

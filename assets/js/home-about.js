@@ -823,6 +823,122 @@
     );
   }
 
+  function downscaleEquipeImg(img, maxEdge) {
+    return new Promise(function (resolve) {
+      if (!img || img.dataset.resized === "1") {
+        resolve();
+        return;
+      }
+      var nw = img.naturalWidth || 0;
+      var nh = img.naturalHeight || 0;
+      if (!nw || (nw <= maxEdge && nh <= maxEdge)) {
+        img.dataset.resized = "1";
+        resolve();
+        return;
+      }
+      if (typeof createImageBitmap !== "function") {
+        resolve();
+        return;
+      }
+      var rw = nw >= nh ? maxEdge : Math.max(1, Math.round(nw * (maxEdge / nh)));
+      var rh = nh > nw ? maxEdge : Math.max(1, Math.round(nh * (maxEdge / nw)));
+      createImageBitmap(img, {
+        resizeWidth: rw,
+        resizeHeight: rh,
+        resizeQuality: "high",
+      })
+        .then(function (bmp) {
+          var canvas = document.createElement("canvas");
+          canvas.width = bmp.width;
+          canvas.height = bmp.height;
+          var ctx = canvas.getContext("2d", { alpha: false });
+          if (!ctx) {
+            bmp.close();
+            resolve();
+            return;
+          }
+          ctx.drawImage(bmp, 0, 0);
+          bmp.close();
+          canvas.toBlob(
+            function (blob) {
+              if (!blob) {
+                resolve();
+                return;
+              }
+              img.dataset.resized = "1";
+              img.src = URL.createObjectURL(blob);
+              resolve();
+            },
+            "image/jpeg",
+            0.8,
+          );
+        })
+        .catch(function () {
+          resolve();
+        });
+    });
+  }
+
+  function loadEquipeImg(img) {
+    return new Promise(function (resolve) {
+      var src = img.getAttribute("data-equipe-src");
+      if (!src || img.getAttribute("src")) {
+        resolve(img);
+        return;
+      }
+      var done = function () {
+        img.removeEventListener("load", done);
+        img.removeEventListener("error", done);
+        resolve(img);
+      };
+      img.addEventListener("load", done);
+      img.addEventListener("error", done);
+      img.src = src;
+    });
+  }
+
+  function initEquipePhotos() {
+    var section = document.querySelector(".home-sobre-equipe");
+    if (!section) return;
+    var images = Array.prototype.slice.call(
+      section.querySelectorAll("img[data-equipe-src]"),
+    );
+    if (!images.length) return;
+
+    var started = false;
+    var MAX_EDGE = 720;
+
+    function startQueue() {
+      if (started) return;
+      started = true;
+      var chain = Promise.resolve();
+      images.forEach(function (img) {
+        chain = chain
+          .then(function () {
+            return loadEquipeImg(img);
+          })
+          .then(function (loaded) {
+            return downscaleEquipeImg(loaded, MAX_EDGE);
+          });
+      });
+    }
+
+    if (typeof IntersectionObserver === "undefined") {
+      startQueue();
+      return;
+    }
+
+    var observer = new IntersectionObserver(
+      function (entries) {
+        if (!entries.some(function (entry) { return entry.isIntersecting; })) return;
+        observer.disconnect();
+        startQueue();
+      },
+      { rootMargin: "80% 0px", threshold: 0 },
+    );
+    observer.observe(section);
+  }
+
   function initEquipeReveal() {
     var section = document.querySelector(".home-sobre-equipe");
     if (!section) return;
@@ -872,8 +988,14 @@
     var items = grid.querySelectorAll(".home-sobre-equipe__item");
     section.style.setProperty("--equipe-count", String(items.length || 1));
 
-    var hasOverflow = false;
-    var lastWidth = 0;
+    var hasOverflow = null;
+    var measuring = false;
+
+    function visibleSlots() {
+      if (window.matchMedia("(max-width: 768px)").matches) return 2;
+      if (window.matchMedia("(max-width: 1024px)").matches) return 3;
+      return 5;
+    }
 
     function scrollStep(direction) {
       var gap = parseFloat(getComputedStyle(grid).columnGap || getComputedStyle(grid).gap || "0") || 0;
@@ -896,20 +1018,17 @@
     }
 
     function measureOverflow() {
-      section.classList.remove("home-sobre-equipe--fits");
-      section.classList.add("home-sobre-equipe--carousel");
-
-      var overflow = grid.scrollWidth > grid.clientWidth + 2;
-      hasOverflow = overflow;
-
-      section.classList.toggle("home-sobre-equipe--carousel", overflow);
-      section.classList.toggle("home-sobre-equipe--fits", !overflow);
-
-      if (!overflow) {
-        grid.scrollLeft = 0;
+      if (measuring) return;
+      measuring = true;
+      var overflow = items.length > visibleSlots();
+      if (overflow !== hasOverflow) {
+        hasOverflow = overflow;
+        section.classList.toggle("home-sobre-equipe--carousel", overflow);
+        section.classList.toggle("home-sobre-equipe--fits", !overflow);
+        if (!overflow) grid.scrollLeft = 0;
       }
-
       updateNavState();
+      measuring = false;
     }
 
     prev.addEventListener("click", function () {
@@ -920,29 +1039,7 @@
     });
     grid.addEventListener("scroll", updateNavState, { passive: true });
 
-    window.addEventListener("resize", function () {
-      var w = grid.clientWidth;
-      if (w === lastWidth) return;
-      lastWidth = w;
-      measureOverflow();
-    });
-
-    grid.querySelectorAll("img").forEach(function (img) {
-      if (img.complete) return;
-      img.addEventListener("load", measureOverflow, { once: true });
-    });
-
-    if (typeof ResizeObserver !== "undefined") {
-      var ro = new ResizeObserver(function () {
-        var w = grid.clientWidth;
-        if (w === lastWidth) return;
-        lastWidth = w;
-        requestAnimationFrame(measureOverflow);
-      });
-      ro.observe(grid);
-    }
-
-    lastWidth = grid.clientWidth;
+    window.addEventListener("resize", measureOverflow);
     measureOverflow();
   }
 
@@ -1040,6 +1137,7 @@
     initMundoCardVideoPreview();
     initPerspectivasReveal();
     initHomeServicos();
+    initEquipePhotos();
     initEquipeReveal();
     initHomeEquipe();
     initHomeEquipeCarousel();
