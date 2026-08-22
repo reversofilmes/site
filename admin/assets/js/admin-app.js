@@ -1242,18 +1242,18 @@ function adminApp() {
       return this.hasUnpublishedChanges;
     },
 
-    get deployQuotaBarPercent() {
-      const q = this.deployQuota;
-      if (!q?.monthly_credits) return 0;
-      const used = q.credits_estimated_deploys ?? 0;
-      return Math.min(100, Math.round((used / q.monthly_credits) * 100));
-    },
-
     formatQuotaDate(iso) {
       if (!iso) return '—';
       const parts = String(iso).slice(0, 10).split('-');
       if (parts.length !== 3) return iso;
       return `${parts[2]}/${parts[1]}/${parts[0]}`;
+    },
+
+    formatPanelPublishes(n) {
+      const count = Number(n) || 0;
+      if (count === 0) return 'nenhuma publicação pelo painel neste ciclo';
+      if (count === 1) return '1 publicação pelo painel neste ciclo';
+      return `${count} publicações pelo painel neste ciclo`;
     },
 
     async _loadDeployQuota() {
@@ -1273,7 +1273,7 @@ function adminApp() {
       if (this.deployQuota?.blocked) {
         this._toast('Deploy ainda bloqueado. Confira o saldo na Netlify.', 'warning');
       } else {
-        this._toast('Status de créditos atualizado.', 'success');
+        this._toast('Status de publicação atualizado.', 'success');
       }
     },
 
